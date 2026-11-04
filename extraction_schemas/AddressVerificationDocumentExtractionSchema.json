@@ -1,0 +1,92 @@
+{
+  "actionName": "DNAMS-POC-AddressVerificationDocumentExtractionIDP",
+  "actionDescription": "DNAMS POC - Address Verification Document Extraction Schema",
+  "actionType": "GENERIC",
+  "schemaVersion": "2.1.1",
+  "configuration": {
+    "content": {
+      "output": {
+        "fields": {
+          "Landlord": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Landlord' from under the 'PART 2 - ADDRESSES' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealerCode": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Dealer Code' from under the 'PART 1 - DEALER IDENTIFICATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "PremisesHeldBy": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Premises Held By' from under the 'PART 2 - ADDRESSES' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealerLegalName": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Dealer Legal Name' from under the 'PART 1 - DEALER IDENTIFICATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "CountryParcelNumber": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Country Parcel No. (Physical)' from under the 'PART 2 - ADDRESSES' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "ServiceParcelNumber": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Parcel No. (Service, if Separate)' from under the 'PART 2 - ADDRESSES' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          }
+        },
+        "tables": {
+          "AddressTable": {
+            "Status": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "- Set to 'Confirmed' IF 'STATUS' has been checked as 'Confirmed'\n- Else if, 'Corrected' is checked, set to 'Corrected'\n- Else if none of Confirmed or Corrected is checked : set to 'Unchecked'\n- Else if both Confirmed or Corrected are checked : set to 'Both Yes & No are checked'\n---\nLocation: PART 2 - ADDRESSES"
+            },
+            "AddressType": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Address Type' column, of table 'Addresses' from under the 'PART 1 - ADDRESSES' maintaining as is case, formatting and punctuation from one of ['Physical / Dealership', 'Service & Parts', 'Mailing', 'Vehicle Delivery', 'Parts Shipping', 'Remittance / Billing']. No value is to be filled as empty (null)."
+            },
+            "AddressOnFileWithNMC": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'COLUMN A - ON FILE WITH NMC' column, of table 'Addresses' from under the 'PART 1 - ADDRESSES' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            },
+            "AddressCorrectedInformation": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'COLUMN B - CORRECTED INFORMATION' column, of table 'Addresses' from under the 'PART 1 - ADDRESSES' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            }
+          }
+        },
+        "tableExtras": {
+          "AddressTable": {
+            "description": "Extract values from the table 'Addresses' from under the 'PART 2 - ADDRESSES' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          }
+        }
+      },
+      "modelSettings": {
+        "model": "llmgateway__VertexAIGemini35Flash",
+        "multiModal": true,
+        "piiMasking": false,
+        "promptVersion": "1.0.1",
+        "useLlmConfidenceScore": true
+      },
+      "groundingPrompt": "<system>\n    <role>\n        You are an expert document extraction specialist for an automotive manufacturer's Dealer Network Development team. \n        You have deep familiarity with dealer franchise paperwork documents. You read these documents the way a meticulous compliance analyst does: literally, field by field, and without assumptions.\n    </role>\n    \n    <goal>\n        Extract the fields defined in the schema below from the given document and return them as one JSON object that conforms exactly to that schema.\n    </goal>\n    \n    \n    <extraction_principles>\n        <principle id=\"p1\">Extract, don't interpret. Copy values exactly as they appear on the document, preserving spelling, punctuation, hyphens, capitalization and leading zeros. Apply a transformation only where a field's description explicitly asks for one (for example, a date format or splitting a combined value, etc).\n        </principle>\n        <principle id=\"p2\">\n        If a value is blank, illegible, or not present, return empty. Never infer or guess a value from context, from another section, or from what the value \"should\" be.\n        </principle>\n        <principle id=\"p3\">\n        Take each value from the section and label named in the field description. If the same label appears in more than one section, use only the section specified, or the first value - whichever applicable.\n        </principle>\n    <extraction_principles>\n    \n    <output_format>\n        Return only a single valid JSON object that matches the schema. Start with { and end with }. No code fences, preamble or trailing text.\n    </output_format>\n</system>"
+    },
+    "version": "2.1.1"
+  }
+}

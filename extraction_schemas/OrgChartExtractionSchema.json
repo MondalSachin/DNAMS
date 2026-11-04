@@ -1,0 +1,67 @@
+{
+  "actionName": "DNAMS-POC-OrgChartExtractionIDP",
+  "actionDescription": "DNAMS POC - Org Chart Extraction Schema",
+  "actionType": "GENERIC",
+  "schemaVersion": "2.1.1",
+  "configuration": {
+    "content": {
+      "output": {
+        "fields": {
+          "AsOfDate": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the date the ownership structure is stated as accurate as of (as of date). Format as YYYY-MM-DD. If not shown, return null."
+          },
+          "DealerCode": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the dealer code or dealer number of the main entity, as text, exactly as written. If not shown, return null."
+          },
+          "SignerName": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the printed name of the person who signed the document. If there is none, return null."
+          },
+          "SignatureDate": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the date written next to the signature. Format as YYYY-MM-DD. If there is none, return null."
+          },
+          "DealerLegalName": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the full legal name of the main entity whose ownership the document describes, exactly as written. If unclear or not found, return null."
+          },
+          "OwnershipStructure": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Analyze the provided organizational structure and extract **every explicitly stated ownership relationship**.\n\n- Identify all direct owner-to-entity relationships across the **entire structure**, including subsidiaries, affiliates, and parallel branches.\n- Examine all connectors, ownership percentages, labels, tables, and notes. **Do not stop at the primary entity or overlook secondary branches.**\n- Include relationships only when ownership and its percentage are explicitly stated. Do not infer or calculate percentages.\n- Preserve entity names exactly as written.\n- Before finalizing, cross-check that **every explicitly documented ownership relationship** is represented exactly once.\n\nReturn ONLY a JSON array with these keys:\n- `OwnerName`: Name as written\n- `OwnerType`: Individual, Trust, Corporation, LLC, Partnership, Other, etc.\n- `OwnedEntityName`: Name as written\n- `OwnershipPercent`: Number only, without `%`\n\nDo not include explanations or additional text.\n\nE.g. Output:\n---\n[\n  {\n    \"OwnerName\": \"<value>\",\n    \"OwnerType\": \"<value>\",\n    \"OwnedEntityName\": \"<value>\",\n    \"OwnershipPercent\": \"<Percentage Number>\"\n  },\n  {\n    ...\n  },\n  ...\n]\n---"
+          },
+          "isSignaturePresent": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Return true if the document bears a handwritten or electronic signature (by or for the Applicant Dealer). A printed name alone does not count. Otherwise return false."
+          }
+        },
+        "tables": {},
+        "tableExtras": {}
+      },
+      "modelSettings": {
+        "model": "llmgateway__VertexAIGemini35Flash",
+        "multiModal": false,
+        "piiMasking": false,
+        "promptVersion": "1.0.1",
+        "useLlmConfidenceScore": true
+      },
+      "groundingPrompt": "<system>\n    <role>\n        You are an expert document extraction specialist for an automotive manufacturer's Dealer Network Development team. \n        You have deep familiarity with dealer franchise paperwork documents. You read these documents the way a meticulous compliance analyst does: literally, field by field, and without assumptions.\n    </role>\n    \n    <goal>\n        Extract the fields defined in the schema below from the given document and return them as one JSON object that conforms exactly to that schema.\n    </goal>\n    \n    \n    <extraction_principles>\n        <principle id=\"p1\">Extract, don't interpret. Copy values exactly as they appear on the document, preserving spelling, punctuation, hyphens, capitalization and leading zeros. Apply a transformation only where a field's description explicitly asks for one (for example, a date format or splitting a combined value, etc).\n        </principle>\n        <principle id=\"p2\">\n        If a value is blank, illegible, or not present, return empty. Never infer or guess a value from context, from another section, or from what the value \"should\" be.\n        </principle>\n        <principle id=\"p3\">\n        Take each value from the section and label named in the field description. If the same label appears in more than one section, use only the section specified, or the first value - whichever applicable.\n        </principle>\n    <extraction_principles>\n    \n    <output_format>\n        Return only a single valid JSON object that matches the schema. Start with { and end with }. No code fences, preamble or trailing text.\n    </output_format>\n</system>"
+    },
+    "version": "2.1.1"
+  }
+}

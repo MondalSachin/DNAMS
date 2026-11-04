@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ReviewRun__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Review run the error belongs to.</description>
+    <externalId>false</externalId>
+    <label>Review Run</label>
+    <referenceTo>AI_Package_Review_Run__c</referenceTo>
+    <relationshipLabel>Error Logs</relationshipLabel>
+    <relationshipName>ErrorLogs</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

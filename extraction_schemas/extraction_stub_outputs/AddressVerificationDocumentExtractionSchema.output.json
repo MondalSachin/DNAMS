@@ -1,0 +1,46 @@
+{
+  "Landlord": "Morse Rd. Realty Holdings LLC",
+  "DealerCode": "40718",
+  "PremisesHeldBy": "Lease — affiliated landlord",
+  "DealerLegalName": "Ridgeline Northstar of Columbus, LLC",
+  "CountryParcelNumber": "010-247719-00",
+  "ServiceParcelNumber": "010-247722-00",
+  "AddressTable": [
+    {
+      "Status": "Confirmed",
+      "AddressType": "Physical / Dealership",
+      "AddressOnFileWithNMC": "4825 Morse Road\nColumbus, OH 43230\nFranklin County",
+      "AddressCorrectedInformation": ""
+    },
+    {
+      "Status": "Corrected",
+      "AddressType": "Service & Parts",
+      "AddressOnFileWithNMC": "4825 Morse Road\nColumbus, OH 43230",
+      "AddressCorrectedInformation": "4901 Morse Road, Building B\nColumbus, OH 43230-1563\nFranklin County"
+    },
+    {
+      "Status": "Confirmed",
+      "AddressType": "Mailing",
+      "AddressOnFileWithNMC": "P.O. Box 30412\nColumbus, OH 43230-0412",
+      "AddressCorrectedInformation": ""
+    },
+    {
+      "Status": "Confirmed",
+      "AddressType": "Vehicle Delivery",
+      "AddressOnFileWithNMC": "4825 Morse Road — North Lot Gate 2\nColumbus, OH 43230",
+      "AddressCorrectedInformation": ""
+    },
+    {
+      "Status": "Corrected",
+      "AddressType": "Parts Shipping",
+      "AddressOnFileWithNMC": "4825 Morse Road\nColumbus, OH 43230",
+      "AddressCorrectedInformation": "4901 Morse Road, Building B, Dock 3\nColumbus, OH 43230-1563\nReceiving hrs: Mon–Fri 6:00 a.m.–4:00 p.m."
+    },
+    {
+      "Status": "Confirmed",
+      "AddressType": "Remittance / Billing",
+      "AddressOnFileWithNMC": "P.O. Box 30412\nColumbus, OH 43230-0412",
+      "AddressCorrectedInformation": ""
+    }
+  ]
+}

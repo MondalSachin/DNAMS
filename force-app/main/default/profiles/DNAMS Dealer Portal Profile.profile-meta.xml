@@ -30,10 +30,6 @@
         <enabled>false</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>DNAMS_ExtractionStarterQueueable</apexClass>
-        <enabled>false</enabled>
-    </classAccesses>
-    <classAccesses>
         <apexClass>DNAMS_GuestAccessTest</apexClass>
         <enabled>false</enabled>
     </classAccesses>
@@ -169,31 +165,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>ContentVersion.DocumentClassifiedAs__c</field>
-        <readable>false</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>DNAMS_Element_Type__c.Identifying_Definition__c</field>
-        <readable>false</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>DNAMS_Element_Type__c.Instructions__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>DNAMS_Element_Type__c.Is_Active__c</field>
-        <readable>false</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>DNAMS_Element_Type__c.Is_Required__c</field>
-        <readable>false</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>DNAMS_Element_Type__c.Sort_Order__c</field>
         <readable>false</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -395,24 +366,11 @@
         <layout>AI_Package_Review_Run__c-AI Package Review Run Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
-        <layout>DNAMS_Element_Type__c-Element Type Layout</layout>
-    </layoutAssignments>
-    <layoutAssignments>
         <layout>DNAMS_Package_Element__c-Package Element Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
         <layout>DNAMS_Package__c-Package Layout</layout>
     </layoutAssignments>
-    <objectPermissions>
-        <allowCreate>false</allowCreate>
-        <allowDelete>false</allowDelete>
-        <allowEdit>false</allowEdit>
-        <allowRead>true</allowRead>
-        <modifyAllRecords>false</modifyAllRecords>
-        <object>DNAMS_Element_Type__c</object>
-        <viewAllFields>false</viewAllFields>
-        <viewAllRecords>false</viewAllRecords>
-    </objectPermissions>
     <objectPermissions>
         <allowCreate>false</allowCreate>
         <allowDelete>false</allowDelete>
@@ -435,10 +393,6 @@
     </objectPermissions>
     <tabVisibilities>
         <tab>AI_Package_Review_Run__c</tab>
-        <visibility>Hidden</visibility>
-    </tabVisibilities>
-    <tabVisibilities>
-        <tab>DNAMS_Element_Type__c</tab>
         <visibility>Hidden</visibility>
     </tabVisibilities>
     <tabVisibilities>

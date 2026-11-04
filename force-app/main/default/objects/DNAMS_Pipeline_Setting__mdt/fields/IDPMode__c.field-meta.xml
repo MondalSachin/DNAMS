@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>IDPMode__c</fullName>
+    <description>Stub uses static resources and makes no callouts; Live calls MuleSoft IDP through the Named Credential.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <inlineHelpText>Stub: canned outputs, no callouts. Live: real MuleSoft IDP callouts.</inlineHelpText>
+    <label>IDP Mode</label>
+    <required>false</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Stub</fullName>
+                <default>true</default>
+                <label>Stub</label>
+            </value>
+            <value>
+                <fullName>Live</fullName>
+                <default>false</default>
+                <label>Live</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

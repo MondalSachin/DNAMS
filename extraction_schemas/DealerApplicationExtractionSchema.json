@@ -1,0 +1,294 @@
+{
+  "actionName": "DNAMS-POC-DealerApplicationExtractionIDP",
+  "actionDescription": "DNAMS - Dealer Application Extraction Schema",
+  "actionType": "GENERIC",
+  "schemaVersion": "2.1.1",
+  "configuration": {
+    "content": {
+      "output": {
+        "fields": {
+          "TradeName": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Trade Name (DBA)' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealerCode": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Dealer Code' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "FederalEIN": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Federal EIN' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DateOfBirth": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Date of Birth' from under the 'SECTION C - PERSONAL INFORMATION (DEALER OPERATOR)' maintaining as is case, formatting and punctuation. Maintain a format MM-DD-YYYY. No values or other fields are to be filled as empty (null). "
+          },
+          "DealershipZip": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Zip +4' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealershipCity": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'City' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealershipEmail": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Dealership Email' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealershipState": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'State' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "RegionOrDistrict": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Region/District' information from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealershipWebsite": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Website' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "IsBankruptcySigned": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Boolean Field: \n- Set to True IF 'Has the applicant or any owner filed a petition in bankruptcy, made an assignment for the benefit of creditor, or had a receiver appointed within the past ten (10) years?' contains an initials or signature present in the 'initials' block and is not blank, empty or NA. \n- Else, set to False\n---\nLocation: Section G - BACKGROUND QUESTIONS"
+          },
+          "SocialSecurityNumber": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Social Security No.' from under the 'SECTION C - PERSONAL INFORMATION (DEALER OPERATOR)' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealershipMainTelephone": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Main Telephone' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealershipStreetAddress": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Dealership Street Address' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "LegalNameOrDealerEntity": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'Legal Name or Dealer Entity' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "HasApplicantBeenBankrupt": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "- Set to Yes IF 'Has the applicant or any owner filed a petition in bankruptcy, made an assignment for the benefit of creditor, or had a receiver appointed within the past ten (10) years?' has been checked as Yes\n- Else if, No is checked, set to No\n- Else if none of Yes/No are checked : set to Unchecked\n- Else if both Yes/No are checked : set to Both Yes & No are checked\n---\nLocation: Section G - BACKGROUND QUESTIONS"
+          },
+          "StateDealerLicenseNumber": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the 'State Dealer License No.' from under the 'SECTION A - DEALERSHIP INFORMATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealerOperatorPrintedName": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract values from 'Printed Name' for 'Dealer Operator' from under the 'SECTION H - AUTHORIZATION, RELEASE AND CERTIFICATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null).\n\nCheck: Extract only the printed name, and not the title."
+          },
+          "DealerOperatorSigningDate": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract values from 'Date' for 'Dealer Operator' from under the 'SECTION H - AUTHORIZATION, RELEASE AND CERTIFICATION' maintaining as is case, formatting and punctuation. Maintain a format MM-DD-YYYY. No values or other fields are to be filled as empty (null). "
+          },
+          "HasApplicantBeenConvicted": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "- Set to Yes IF 'Has the applicant or any owner ever been convicted of, or pleaded guilty or no test to, a felony, ir any crime involving fraud, dishonesty, or moral turpitude?' has been checked as Yes\n- Else if, No is checked, set to No\n- Else if none of Yes/No are checked : set to Unchecked\n- Else if both Yes/No are checked : set to Both Yes & No are checked\n---\nLocation: Section G - BACKGROUND QUESTIONS"
+          },
+          "DealerOperatorPrintedTitle": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract values from 'Printed Title' for 'Dealer Operator' from under the 'SECTION H - AUTHORIZATION, RELEASE AND CERTIFICATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null).\n\nCheck: Extract only the printed title, and not the name."
+          },
+          "IsConvictedClarificationSigned": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Boolean Field: \n- Set to True IF 'Has the applicant or any owner ever been convicted of, or pleaded guilty or no test to, a felony, ir any crime involving fraud, dishonesty, or moral turpitude?' contains an initials or signature present in the 'initials' block and is not blank, empty or NA. \n- Else, set to False\n--\nLocation: Section G - BACKGROUND QUESTIONS"
+          },
+          "isSignatureOfDealerOperatorPresent": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Boolean Field: \n- Set to True IF 'Signature of Dealer Operator' contains a signature and is not blank, empty or NA. \n- Else, set to False\n--\nLocation: Section H - Authorization, Release, and Certification"
+          },
+          "AuthorizedOfficerOfDealerEntityPrintedName": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract values from 'Printed Name' for 'Authorized Officer Of Dealer Entity' from under the 'SECTION H - AUTHORIZATION, RELEASE AND CERTIFICATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null).\n\nCheck: Extract only the printed name, and not the title."
+          },
+          "AuthorizedOfficerOfDealerEntitySigningDate": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract values from 'Date' for 'Authorized Officer Of Dealer Entity' from under the 'SECTION H - AUTHORIZATION, RELEASE AND CERTIFICATION' maintaining as is case, formatting and punctuation. Maintain a format MM-DD-YYYY. No values or other fields are to be filled as empty (null). "
+          },
+          "AuthorizedOfficerOfDealerEntityPrintedTitle": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract values from 'Printed Title' for 'Authorized Officer Of Dealer Entity' from under the 'SECTION H - AUTHORIZATION, RELEASE AND CERTIFICATION' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null).\n\nCheck: Extract only the printed title, and not the name."
+          },
+          "isSignatureOfAuthorizedOfficerOfDealerEntityPresent": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Boolean Field: \n- Set to True IF 'Signature of Authorized Officer Of Dealer Entity' contains a signature and is not blank, empty or NA. \n- Else, set to False\n--\nLocation: Section H - Authorization, Release, and Certification"
+          }
+        },
+        "tables": {
+          "OwnershipInfoDirectOwners": {
+            "SSNorEIN": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'SSN/EIN' column, of table 'Ownership' from under the 'SECTION D - OWNERSHIP' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            },
+            "DateOfBirth": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Date Of Birth' column, of table 'Ownership' from under the 'SECTION D - OWNERSHIP' maintaining as is case, formatting and punctuation. Maintain a format MM-DD-YYYY. No values or other fields are to be filled as empty (null). "
+            },
+            "NameOfOwner": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Name of Owner (Individual or Entity)' column, of table 'Ownership' from under the 'SECTION D - OWNERSHIP' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            },
+            "VotingPercentage": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Voting %' column, of table 'Ownership' from under the 'SECTION D - OWNERSHIP' maintaining as is case, formatting and punctuation. Extract only the numeric value - not any other characters. No values or other fields are to be filled as empty (null). "
+            },
+            "OwnershipPercentage": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Ownership %' column, of table 'Ownership' from under the 'SECTION D - OWNERSHIP' maintaining as is case, formatting and punctuation. Extract only the numeric value - not any other characters. No values or other fields are to be filled as empty (null). "
+            }
+          },
+          "OwnershipInfoIndirectOwners": {
+            "SSN": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'SSN' column, of table 'Indirect Owners' from under the 'SECTION D - OWNERSHIP' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            },
+            "Name": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Name' column, of table 'Indirect Owners' from under the 'SECTION D - OWNERSHIP' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            },
+            "DateOfBirth": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Date Of Birth' column, of table 'Indirect Owners' from under the 'SECTION D - OWNERSHIP' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null). Maintain a format MM-DD-YYYY. No values or other fields are to be filled as empty (null). "
+            },
+            "HeldThrough": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Held Through' column, of table 'Indirect Owners' from under the 'SECTION D - OWNERSHIP' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            },
+            "EffectivePercentageOfDealer": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Effective % of Of Dealer' column, of table 'Indirect Owners' from under the 'SECTION D - OWNERSHIP' maintaining as is case, formatting and punctuation. Extract only the numeric value - not any other characters. No values or other fields are to be filled as empty (null). "
+            }
+          },
+          "DealerOperatorAndKeyManagement": {
+            "Name": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Name' column, of table 'Dealer Operator & Key Management' from under the 'SECTION B - DEALER OPERATOR & KEY MANAGEMENT' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            },
+            "Email": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Email' column, of table 'Dealer Operator & Key Management' from under the 'SECTION B - DEALER OPERATOR & KEY MANAGEMENT' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            },
+            "Title": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Title' column, of table 'Dealer Operator & Key Management' from under the 'SECTION B - DEALER OPERATOR & KEY MANAGEMENT' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            },
+            "Telephone": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Telephone' column, of table 'Dealer Operator & Key Management' from under the 'SECTION B - DEALER OPERATOR & KEY MANAGEMENT' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            },
+            "DateOfHire": {
+              "required": false,
+              "hidden": false,
+              "confidenceThreshold": 80,
+              "description": "Extract the values for the 'Date Of Hire' column, of table 'Dealer Operator & Key Management' from under the 'SECTION B - DEALER OPERATOR & KEY MANAGEMENT' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+            }
+          }
+        },
+        "tableExtras": {
+          "OwnershipInfoDirectOwners": {
+            "description": "Extract values from the table 'Ownership' from under the 'SECTION D - OWNERSHIP (Direct Owners)' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "OwnershipInfoIndirectOwners": {
+            "description": "Extract values from the table 'Indirect Owners' from under the 'SECTION D - OWNERSHIP (Direct Owners)' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          },
+          "DealerOperatorAndKeyManagement": {
+            "description": "Extract values from the table 'Dealer Operator & Key Management' from under the 'SECTION B - DEALER OPERATOR & KEY MANAGEMENT' maintaining as is case, formatting and punctuation. No value is to be filled as empty (null)."
+          }
+        }
+      },
+      "modelSettings": {
+        "model": "llmgateway__VertexAIGemini35Flash",
+        "multiModal": true,
+        "piiMasking": false,
+        "promptVersion": "1.0.1",
+        "useLlmConfidenceScore": true
+      },
+      "groundingPrompt": "<system>\n    <role>\n        You are an expert document extraction specialist for an automotive manufacturer's Dealer Network Development team. \n        You have deep familiarity with dealer franchise paperwork documents. You read these documents the way a meticulous compliance analyst does: literally, field by field, and without assumptions.\n    </role>\n    \n    <goal>\n        Extract the fields defined in the schema below from the given document and return them as one JSON object that conforms exactly to that schema.\n    </goal>\n    \n    \n    <extraction_principles>\n        <principle id=\"p1\">Extract, don't interpret. Copy values exactly as they appear on the document, preserving spelling, punctuation, hyphens, capitalization and leading zeros. Apply a transformation only where a field's description explicitly asks for one (for example, a date format or splitting a combined value, etc).\n        </principle>\n        <principle id=\"p2\">\n        If a value is blank, illegible, or not present, return empty. Never infer or guess a value from context, from another section, or from what the value \"should\" be.\n        </principle>\n        <principle id=\"p3\">\n        Take each value from the section and label named in the field description. If the same label appears in more than one section, use only the section specified, or the first value - whichever applicable.\n        </principle>\n    <extraction_principles>\n    \n    <output_format>\n        Return only a single valid JSON object that matches the schema. Start with { and end with }. No code fences, preamble or trailing text.\n    </output_format>\n</system>"
+    },
+    "version": "2.1.1"
+  }
+}

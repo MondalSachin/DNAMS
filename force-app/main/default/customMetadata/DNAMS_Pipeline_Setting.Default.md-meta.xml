@@ -4,7 +4,7 @@
     <protected>false</protected>
     <values>
         <field>Batch_Size__c</field>
-        <value xsi:type="xsd:double">4.0</value>
+        <value xsi:type="xsd:double">1.0</value>
     </values>
     <values>
         <field>Max_Attempts__c</field>
@@ -25,5 +25,37 @@
     <values>
         <field>Prompt_Template__c</field>
         <value xsi:type="xsd:string">DNAMS_DocumentClassifier_Prompt</value>
+    </values>
+    <values>
+        <field>AdminQueue__c</field>
+        <value xsi:type="xsd:string">DNAMSAdminTeam</value>
+    </values>
+    <values>
+        <field>ExtractionBatchSize__c</field>
+        <value xsi:type="xsd:double">1.0</value>
+    </values>
+    <values>
+        <field>IDPCallbackSiteURL__c</field>
+        <value xsi:type="xsd:string">https://cl1793616242225.my.salesforce-sites.com/idpcallback</value>
+    </values>
+    <values>
+        <field>IDPMode__c</field>
+        <value xsi:type="xsd:string">Stub</value>
+    </values>
+    <values>
+        <field>IDPNamedCredential__c</field>
+        <value xsi:type="xsd:string">DNAMSMuleSoftIDP</value>
+    </values>
+    <values>
+        <field>IDPTimeoutMinutes__c</field>
+        <value xsi:type="xsd:double">10.0</value>
+    </values>
+    <values>
+        <field>AllowedFileExtensions__c</field>
+        <value xsi:type="xsd:string">pdf</value>
+    </values>
+    <values>
+        <field>MaxFileSizeMB__c</field>
+        <value xsi:type="xsd:double">3.0</value>
     </values>
 </CustomMetadata>

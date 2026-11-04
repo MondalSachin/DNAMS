@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Mapping 2: document type to MuleSoft IDP action (id, version, paths, expected output schema, stub).</description>
+    <label>DNAMS IDP Action</label>
+    <pluralLabel>DNAMS IDP Actions</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>

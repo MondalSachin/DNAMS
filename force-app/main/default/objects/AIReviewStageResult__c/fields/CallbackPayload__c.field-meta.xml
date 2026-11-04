@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CallbackPayload__c</fullName>
+    <description>What the IDP callback request contained (method, path with the signature masked, parameters, headers, start of body), for troubleshooting.</description>
+    <externalId>false</externalId>
+    <label>Callback Payload</label>
+    <length>32768</length>
+    <trackTrending>false</trackTrending>
+    <type>LongTextArea</type>
+    <visibleLines>5</visibleLines>
+</CustomField>

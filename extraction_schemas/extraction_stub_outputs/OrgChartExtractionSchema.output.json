@@ -1,0 +1,9 @@
+{
+  "AsOfDate": "2026-10-01",
+  "DealerCode": "40718",
+  "SignerName": "Marcus J. Whitfield",
+  "SignatureDate": "2026-10-14",
+  "DealerLegalName": "RIDGELINE NORTHSTAR OF COLUMBUS, LLC",
+  "OwnershipStructure": "[{\"OwnerName\": \"Marcus J. Whitfield\", \"OwnerType\": \"Individual\", \"OwnedEntityName\": \"RIDGELINE NORTHSTAR OF COLUMBUS, LLC\", \"OwnershipPercent\": \"60\"}, {\"OwnerName\": \"Ridgeline Auto Group, Inc.\", \"OwnerType\": \"Corporation\", \"OwnedEntityName\": \"RIDGELINE NORTHSTAR OF COLUMBUS, LLC\", \"OwnershipPercent\": \"40\"}, {\"OwnerName\": \"Whitfield Family Trust\", \"OwnerType\": \"Trust\", \"OwnedEntityName\": \"Ridgeline Auto Group, Inc.\", \"OwnershipPercent\": \"70\"}, {\"OwnerName\": \"Gregory T. Hollis\", \"OwnerType\": \"Individual\", \"OwnedEntityName\": \"Ridgeline Auto Group, Inc.\", \"OwnershipPercent\": \"30\"}, {\"OwnerName\": \"Ridgeline Auto Group, Inc.\", \"OwnerType\": \"Corporation\", \"OwnedEntityName\": \"Ridgeline Kestrel Motors of Dublin, LLC\", \"OwnershipPercent\": \"100\"}, {\"OwnerName\": \"Marcus J. Whitfield\", \"OwnerType\": \"Individual\", \"OwnedEntityName\": \"Morse Rd. Realty Holdings LLC\", \"OwnershipPercent\": \"100\"}]",
+  "isSignaturePresent": "true"
+}

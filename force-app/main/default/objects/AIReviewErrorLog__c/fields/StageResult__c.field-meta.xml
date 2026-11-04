@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>StageResult__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Stage result row the error relates to.</description>
+    <externalId>false</externalId>
+    <label>Stage Result</label>
+    <referenceTo>AIReviewStageResult__c</referenceTo>
+    <relationshipLabel>Error Logs</relationshipLabel>
+    <relationshipName>ErrorLogs</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

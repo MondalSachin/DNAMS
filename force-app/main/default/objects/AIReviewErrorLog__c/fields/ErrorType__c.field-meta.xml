@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ErrorType__c</fullName>
+    <description>Category of the error.</description>
+    <inlineHelpText>POST Error: submit failed. IDP Failure: IDP reported failure or GET failed. Timeout: no result in time. Schema Mismatch: output keys differ from schema. Processing Error: unexpected exception. File Too Large / Invalid File Type: pre-flight gate rejected a file before any AI step. Callback Rejected: an IDP callback was refused or ignored (request details in Raw Payload).</inlineHelpText>
+    <label>Error Type</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>POST Error</fullName>
+                <default>false</default>
+                <label>POST Error</label>
+            </value>
+            <value>
+                <fullName>IDP Failure</fullName>
+                <default>false</default>
+                <label>IDP Failure</label>
+            </value>
+            <value>
+                <fullName>Timeout</fullName>
+                <default>false</default>
+                <label>Timeout</label>
+            </value>
+            <value>
+                <fullName>Schema Mismatch</fullName>
+                <default>false</default>
+                <label>Schema Mismatch</label>
+            </value>
+            <value>
+                <fullName>Processing Error</fullName>
+                <default>false</default>
+                <label>Processing Error</label>
+            </value>
+            <value>
+                <fullName>File Too Large</fullName>
+                <default>false</default>
+                <label>File Too Large</label>
+            </value>
+            <value>
+                <fullName>Invalid File Type</fullName>
+                <default>false</default>
+                <label>Invalid File Type</label>
+            </value>
+            <value>
+                <fullName>Callback Rejected</fullName>
+                <default>false</default>
+                <label>Callback Rejected</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
