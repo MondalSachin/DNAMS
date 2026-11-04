@@ -17,6 +17,11 @@
                 <label>Green</label>
             </value>
             <value>
+                <fullName>Amber</fullName>
+                <default>false</default>
+                <label>Amber</label>
+            </value>
+            <value>
                 <fullName>Red</fullName>
                 <default>false</default>
                 <label>Red</label>

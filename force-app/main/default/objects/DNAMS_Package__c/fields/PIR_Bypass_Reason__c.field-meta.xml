@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PIR_Bypass_Reason__c</fullName>
+    <description>Exception reason recorded with the PIR bypass.</description>
+    <externalId>false</externalId>
+    <label>PIR Bypass Reason</label>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <unique>false</unique>
+</CustomField>

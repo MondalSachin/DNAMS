@@ -21,6 +21,11 @@
                 <default>false</default>
                 <label>Extraction</label>
             </value>
+            <value>
+                <fullName>Rule Validation</fullName>
+                <default>false</default>
+                <label>Rule Validation</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

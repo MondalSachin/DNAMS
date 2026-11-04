@@ -71,4 +71,30 @@ public inherited sharing class DNAMSPipelineConstants {
     // Order of the callback path segments after CALLBACK_PATH; the signature is the last segment
     public static final List<String> PATH_PARAM_ORDER = new List<String>{ PARAM_TOKEN, PARAM_ACTION_ID, PARAM_ACTION_VERSION };
     public static final String ERROR_CALLBACK_REJECTED = 'Callback Rejected';
+
+    // Rule validation stage (AIReviewStageResult__c rows with Stage__c = STAGE_RULE_VALIDATION, one per rule)
+    public static final String STAGE_RULE_VALIDATION = 'Rule Validation';
+    public static final String STAGE_TRANSMITTAL = 'Transmittal Drafting';
+    public static final String VERDICT_PASS = 'PASS';
+    public static final String VERDICT_FAIL = 'FAIL';
+    public static final String VERDICT_CANNOT_DECIDE = 'CANNOT_DECIDE';
+    public static final String VERDICT_NOT_APPLICABLE = 'NOT_APPLICABLE';
+    public static final String METHOD_EXACT = 'ExactMatch';
+    public static final String METHOD_AI = 'AIMatch';
+    public static final String METHOD_PIR = 'PIR';
+    public static final String RULE_TYPE_COMPLETENESS = 'Completeness';
+    public static final String APPLIED_TO_PACKAGE = 'Package';
+    public static final String FIELD_TYPE_EXTRACTION = 'Extraction';
+    public static final String FIELD_TYPE_RECORD = 'Record';
+    public static final String FIELD_TYPE_STATIC = 'Static';
+    public static final String PIR_RULE_ID = 'PIR';
+    public static final String PIR_RULE_NAME = 'PIR Clearance';
+
+    // RAG bands (Package Health__c) from the rule pass rate: 100% Green, >= 85% Amber, below Red
+    public static final String HEALTH_GREEN = 'Green';
+    public static final String HEALTH_AMBER = 'Amber';
+    public static final String HEALTH_RED = 'Red';
+    public static final Decimal GREEN_PASS_RATE = 100;
+    public static final Decimal AMBER_PASS_RATE = 85;
+    public static final Integer DEFAULT_RULE_BATCH_SIZE = 50;
 }

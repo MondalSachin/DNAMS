@@ -332,3 +332,22 @@ and then **fully reverted at the user's request**. Current state is the slice 5 
 - Step 23: the extraction design (spec needed).
 - The golden test set (G8.05) and review of the 22 identifying definitions.
 - Review timeout / escalation (G1.15) if wanted.
+
+## Rule validation (2026-11-04) — rule validation diagram steps 1–23 (built on top of Abhishek's extraction branch)
+- Rules: `DNAMSRule__mdt` (30 records, source of truth `rule_validation/DNAMSRules.json`; DeveloperName = rule id, e.g.
+  `DA_V01`). Keys: `extraction.<IDP action>.<field>` (top-level fields only), `Package.<lookup>__r[.<rel>].<field>`
+  (≤3 levels), Static literals / JSON lists, `{TODAY-n}`. User asked: no `[*]`, filters or `sum()`.
+- Flow: extraction completion → `DNAMSRuleValidationStarterQueueable` (rules + PIR, ExactMatch in `DNAMSRuleEvaluator`)
+  → `DNAMSAIRuleValidationQueueable` (AIMatch, prompt `DNAMS_RuleValidation_Prompt`, ≤50 per call, retries → CANNOT_DECIDE)
+  → `DNAMSRuleValidationCompletionHelper` (pass rate excl. NOT_APPLICABLE; 100% Green / ≥85% Amber / else Red; failed
+  PIR → Red). Green: package Under Review, owner email, run stays Running → `DNAMSTransmittalStarterQueueable`
+  (placeholder, completes Passed). Amber/Red: package RMR Pending, run Completed/Needs Review, narrative + email.
+- Results: one `AIReviewStageResult__c` per rule (`Stage__c` Rule Validation; RuleId/RuleName/ComparisonMethod/
+  SourceValue/ReferenceValue/Verdict). Run: `RuleValidationProcessingStatus__c` + 3 pass-rate fields. Package
+  `Health__c` gained Amber; PIR checkboxes `PIR_Linked__c`, `PIR_Cleared__c`, `PIR_Bypass_Acknowledged__c`,
+  `PIR_Bypass_Reason__c`; settings `PIRRequiredPackageTypes__c` (Buy/Sell; Dealer Principal Change),
+  `RuleValidationBatchSize__c`, `RuleValidationPromptTemplate__c`.
+- Tests: `DNAMSRuleValidationTest` (10). Deploy only changed paths: `sf project deploy start -d force-app` would
+  overwrite the two profiles that differ in the org, and this org runs **no tests on deploy/validate** — run
+  `sf apex run test` afterwards.
+- Not yet verified live: AIMatch prompt call as the IDP integration user (needs Einstein access).

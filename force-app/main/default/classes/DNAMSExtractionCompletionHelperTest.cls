@@ -103,6 +103,7 @@ private class DNAMSExtractionCompletionHelperTest {
     @IsTest
     static void allRowsPassConsolidatesAndStartsRuleValidation() {
         System.runAs(DNAMSPipelineTestHelper.getAdminUser()) {
+            DNAMSRuleUtil.rulesOverride = new List<DNAMSRule__mdt>();
             useTestConfig();
             DNAMSPipelineTestHelper.PipelineFixture fixture = DNAMSPipelineTestHelper.createExtractionFixture();
             Map<String, AIReviewStageResult__c> rows = DNAMSPipelineTestHelper.createStageResults(fixture, DNAMSPipelineConstants.ROW_COMPLETED);
@@ -126,7 +127,7 @@ private class DNAMSExtractionCompletionHelperTest {
             Assert.areEqual(String.valueOf(fixture.versionIdByDocumentType.get('Utility Bill')), utilityBill.get('contentVersionId'), 'Version Id kept');
             Assert.areEqual('Address Verification', utilityBill.get('elementType'), 'Element type kept');
             Assert.areEqual('TCE00087', ((Map<String, Object>) utilityBill.get('data')).get('DealerCode'), 'Normalized data kept');
-            Assert.isTrue(queuedClasses().contains('DNAMSRuleValidationStarterQueueable'), 'Rule validation placeholder queued');
+            Assert.isTrue(queuedClasses().contains('DNAMSRuleValidationStarterQueueable'), 'Rule validation queued');
             Assert.areEqual(
                 DNAMS_PackageReviewPipelineService.STAGE_PASSED,
                 elementsByName(fixture.packageId).get('Org Chart').Extraction_Status__c,

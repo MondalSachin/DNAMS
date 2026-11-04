@@ -9,9 +9,16 @@ public without sharing class DNAMS_PackageNarrativeQueueable implements Queueabl
     private static DNAMS_NarrativeWriter writer = new DNAMS_EinsteinNarrativeWriter();
 
     private final Id runId;
+    private final String subjectSuffix;
 
     public DNAMS_PackageNarrativeQueueable(Id runId) {
+        this(runId, 'document review found issues');
+    }
+
+    // Rule validation passes its RAG band in the subject (diagram rule validation step 21).
+    public DNAMS_PackageNarrativeQueueable(Id runId, String subjectSuffix) {
         this.runId = runId;
+        this.subjectSuffix = subjectSuffix;
     }
 
     public void execute(QueueableContext context) {
@@ -32,7 +39,7 @@ public without sharing class DNAMS_PackageNarrativeQueueable implements Queueabl
 
         DNAMS_PackageReviewPipelineService.notifyOwners(
             new Map<Id, AI_Package_Review_Run__c>{ run.Package__c => run },
-            'document review found issues',
+            subjectSuffix,
             AI_LABEL + '\n' + narrative + '\n\nIssues by element:\n' + run.Issue_Summary__c
         );
     }

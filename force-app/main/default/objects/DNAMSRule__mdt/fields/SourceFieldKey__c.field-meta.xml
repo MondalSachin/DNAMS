@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SourceFieldKey__c</fullName>
+    <description>Path of the value to compare from (extraction.&lt;action&gt;.&lt;field&gt;, Package.&lt;path&gt;, or a static value); a JSON array for several keys.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <externalId>false</externalId>
+    <label>Source Field Key</label>
+    <type>LongTextArea</type>
+    <length>5000</length>
+    <visibleLines>5</visibleLines>
+</CustomField>

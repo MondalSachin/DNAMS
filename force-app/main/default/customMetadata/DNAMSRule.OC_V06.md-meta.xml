@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Dealer Group Shown As Owner</label>
+    <protected>false</protected>
+    <values>
+        <field>AIInstructions__c</field>
+        <value xsi:type="xsd:string">The reference is the org chart's list of ownership relationships (OwnerName, OwnedEntityName, OwnershipPercent). PASS when the source entity appears as an OwnerName anywhere in the chain (directly or indirectly owning the dealer entity). Ignore case, punctuation and entity-suffix variants (LLC / L.L.C., Inc / Incorporated). FAIL when it does not appear. CANNOT_DECIDE when the ownership list is unreadable.</value>
+    </values>
+    <values>
+        <field>Comparator__c</field>
+        <value xsi:type="xsd:string">IN</value>
+    </values>
+    <values>
+        <field>Description__c</field>
+        <value xsi:type="xsd:string">Verify that the dealer group recorded as the Dealer Account's parent account appears as an owner in the org chart. Not Applicable when the Dealer Account has no parent account.</value>
+    </values>
+    <values>
+        <field>IsActive__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>ReferenceFieldKey__c</field>
+        <value xsi:type="xsd:string">extraction.OrgChart.OwnershipStructure</value>
+    </values>
+    <values>
+        <field>ReferenceFieldType__c</field>
+        <value xsi:type="xsd:string">Extraction</value>
+    </values>
+    <values>
+        <field>RelativeElementType__c</field>
+        <value xsi:type="xsd:string">Org Chart</value>
+    </values>
+    <values>
+        <field>RelativePackageType__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>RuleAppliedTo__c</field>
+        <value xsi:type="xsd:string">Element</value>
+    </values>
+    <values>
+        <field>RuleType__c</field>
+        <value xsi:type="xsd:string">Validation</value>
+    </values>
+    <values>
+        <field>SortOrder__c</field>
+        <value xsi:type="xsd:double">290</value>
+    </values>
+    <values>
+        <field>SourceFieldKey__c</field>
+        <value xsi:type="xsd:string">Package.Buying_Dealer__r.Parent.Name</value>
+    </values>
+    <values>
+        <field>SourceFieldType__c</field>
+        <value xsi:type="xsd:string">Record</value>
+    </values>
+    <values>
+        <field>ValidationMethod__c</field>
+        <value xsi:type="xsd:string">AIMatch</value>
+    </values>
+</CustomMetadata>

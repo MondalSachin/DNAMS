@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AIInstructions__c</fullName>
+    <description>Instructions passed to the AI for this rule; required only when Validation Method is AIMatch.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <externalId>false</externalId>
+    <label>AI Instructions</label>
+    <type>LongTextArea</type>
+    <length>5000</length>
+    <visibleLines>5</visibleLines>
+</CustomField>

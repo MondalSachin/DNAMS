@@ -58,4 +58,16 @@
         <field>MaxFileSizeMB__c</field>
         <value xsi:type="xsd:double">3.0</value>
     </values>
+    <values>
+        <field>PIRRequiredPackageTypes__c</field>
+        <value xsi:type="xsd:string">Buy/Sell change of Ownership;Dealer Principal Change</value>
+    </values>
+    <values>
+        <field>RuleValidationBatchSize__c</field>
+        <value xsi:type="xsd:double">50.0</value>
+    </values>
+    <values>
+        <field>RuleValidationPromptTemplate__c</field>
+        <value xsi:type="xsd:string">DNAMS_RuleValidation_Prompt</value>
+    </values>
 </CustomMetadata>

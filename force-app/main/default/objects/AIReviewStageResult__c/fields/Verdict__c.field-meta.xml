@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Verdict__c</fullName>
+    <description>Rule validation verdict. NOT_APPLICABLE rows are left out of the pass rate.</description>
+    <externalId>false</externalId>
+    <label>Verdict</label>
+    <required>false</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>PASS</fullName>
+                <default>false</default>
+                <label>PASS</label>
+            </value>
+            <value>
+                <fullName>FAIL</fullName>
+                <default>false</default>
+                <label>FAIL</label>
+            </value>
+            <value>
+                <fullName>CANNOT_DECIDE</fullName>
+                <default>false</default>
+                <label>CANNOT_DECIDE</label>
+            </value>
+            <value>
+                <fullName>NOT_APPLICABLE</fullName>
+                <default>false</default>
+                <label>NOT_APPLICABLE</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

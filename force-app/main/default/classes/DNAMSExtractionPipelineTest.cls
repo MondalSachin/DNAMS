@@ -52,7 +52,7 @@ public class DNAMSExtractionPipelineTest {
     public static AI_Package_Review_Run__c reloadRun(Id runId) {
         return [
             SELECT Status__c, Overall_Result__c, Reason__c, Ended_At__c, ExtractionProcessingStatus__c, ExtractionSchemaValidation__c,
-                ConsolidatedExtractionJSON__c, Package__r.Health__c
+                ConsolidatedExtractionJSON__c, Package__r.Health__c, RuleValidationProcessingStatus__c
             FROM AI_Package_Review_Run__c
             WHERE Id = :runId
         ];
@@ -70,7 +70,7 @@ public class DNAMSExtractionPipelineTest {
                 RawStageResponseJSON__c, ProcessingErrorDetails__c, ProcessingCompletedAt__c, CallbackToken__c, IDPActionName__c,
                 ContentVersionId__c, PackageElement__c
             FROM AIReviewStageResult__c
-            WHERE ReviewRun__c = :runId
+            WHERE ReviewRun__c = :runId AND Stage__c = :DNAMSPipelineConstants.STAGE_EXTRACTION
         ]) {
             rowByType.put(row.DocumentType__c, row);
         }
@@ -119,13 +119,19 @@ public class DNAMSExtractionPipelineTest {
                 Assert.areEqual(DNAMS_PackageReviewPipelineService.STAGE_PASSED, element.Extraction_Status__c, 'Extraction_Status__c has the expected value');
             }
 
-            // Nested async does not run in tests: run the rule validation placeholder that completion queued
+            // Nested async does not run in tests: run the rule validation that completion queued (no rules -> GREEN),
+            // then the transmittal placeholder that rule validation queued
+            DNAMSRuleUtil.rulesOverride = new List<DNAMSRule__mdt>();
             new DNAMSRuleValidationStarterQueueable(fixture.runId).execute(null);
+            AI_Package_Review_Run__c validated = reloadRun(fixture.runId);
+            Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_COMPLETED, validated.RuleValidationProcessingStatus__c, 'Rule validation completes');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_RUNNING, validated.Status__c, 'A GREEN run waits for transmittal drafting');
+            new DNAMSTransmittalStarterQueueable(fixture.runId).execute(null);
             AI_Package_Review_Run__c completed = reloadRun(fixture.runId);
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_COMPLETED, completed.Status__c, 'Status__c has the expected value');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_PASSED, completed.Overall_Result__c, 'Overall_Result__c has the expected value');
             Assert.isNotNull(completed.Ended_At__c, 'Ended_At__c is set');
-            Assert.isTrue(completed.Reason__c.contains(DNAMSRuleValidationStarterQueueable.PLACEHOLDER_REASON), completed.Reason__c);
+            Assert.isTrue(completed.Reason__c.contains(DNAMSTransmittalStarterQueueable.PLACEHOLDER_REASON), completed.Reason__c);
         }
     }
 
@@ -181,6 +187,7 @@ public class DNAMSExtractionPipelineTest {
     @IsTest
     static void testStarterNothingMappedRunCompletesWithoutIdp() {
         System.runAs(DNAMSPipelineTestHelper.getAdminUser()) {
+            DNAMSRuleUtil.rulesOverride = new List<DNAMSRule__mdt>();
             DNAMSPipelineTestHelper.PipelineFixture fixture = DNAMSPipelineTestHelper.createExtractionFixture();
             useSettings(DNAMSPipelineConstants.IDP_MODE_LIVE);
             Test.setMock(HttpCalloutMock.class, new DNAMSIDPCalloutMock(201, '{"id":"exec-1"}', 200, '{}'));
@@ -192,14 +199,14 @@ public class DNAMSExtractionPipelineTest {
 
             Test.startTest();
             new DNAMSExtractionStarterQueueable(new Set<Id>{ fixture.runId }).execute(null);
-            Test.stopTest(); // the rule validation placeholder queued by completion runs here
+            Test.stopTest(); // the rule validation queued by completion runs here (no rules -> GREEN)
 
             Assert.areEqual(0, DNAMSIDPCalloutMock.postCount, 'Nothing is sent to IDP');
             Assert.isTrue(rowsByDocumentType(fixture.runId).isEmpty(), 'isEmpty holds');
             AI_Package_Review_Run__c run = reloadRun(fixture.runId);
             Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_COMPLETED, run.ExtractionProcessingStatus__c, 'ExtractionProcessingStatus__c has the expected value');
-            Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_COMPLETED, run.Status__c, 'Status__c has the expected value');
-            Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_PASSED, run.Overall_Result__c, 'Overall_Result__c has the expected value');
+            Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_COMPLETED, run.RuleValidationProcessingStatus__c, 'Rule validation completes');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_RUNNING, run.Status__c, 'A GREEN run waits for transmittal drafting');
         }
     }
 

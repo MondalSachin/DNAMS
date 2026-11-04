@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PIR_Bypass_Acknowledged__c</fullName>
+    <description>The PIR requirement is bypassed for this package (exception approved).</description>
+    <externalId>false</externalId>
+    <label>PIR Bypass Acknowledged</label>
+    <defaultValue>false</defaultValue>
+    <type>Checkbox</type>
+</CustomField>

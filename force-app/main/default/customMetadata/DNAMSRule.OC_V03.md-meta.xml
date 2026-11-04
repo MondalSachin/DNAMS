@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Org Chart Is Current</label>
+    <protected>false</protected>
+    <values>
+        <field>AIInstructions__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>Comparator__c</field>
+        <value xsi:type="xsd:string">GE</value>
+    </values>
+    <values>
+        <field>Description__c</field>
+        <value xsi:type="xsd:string">Verify that the ownership structure is stated as accurate as of a date within the last 90 days.</value>
+    </values>
+    <values>
+        <field>IsActive__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>ReferenceFieldKey__c</field>
+        <value xsi:type="xsd:string">{TODAY-90}</value>
+    </values>
+    <values>
+        <field>ReferenceFieldType__c</field>
+        <value xsi:type="xsd:string">Static</value>
+    </values>
+    <values>
+        <field>RelativeElementType__c</field>
+        <value xsi:type="xsd:string">Org Chart</value>
+    </values>
+    <values>
+        <field>RelativePackageType__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>RuleAppliedTo__c</field>
+        <value xsi:type="xsd:string">Element</value>
+    </values>
+    <values>
+        <field>RuleType__c</field>
+        <value xsi:type="xsd:string">Validation</value>
+    </values>
+    <values>
+        <field>SortOrder__c</field>
+        <value xsi:type="xsd:double">260</value>
+    </values>
+    <values>
+        <field>SourceFieldKey__c</field>
+        <value xsi:type="xsd:string">extraction.OrgChart.AsOfDate</value>
+    </values>
+    <values>
+        <field>SourceFieldType__c</field>
+        <value xsi:type="xsd:string">Extraction</value>
+    </values>
+    <values>
+        <field>ValidationMethod__c</field>
+        <value xsi:type="xsd:string">ExactMatch</value>
+    </values>
+</CustomMetadata>

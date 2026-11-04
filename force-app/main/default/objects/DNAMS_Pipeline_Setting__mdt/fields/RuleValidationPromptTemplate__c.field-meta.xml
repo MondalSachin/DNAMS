@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RuleValidationPromptTemplate__c</fullName>
+    <description>API name of the rule validation prompt template.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <externalId>false</externalId>
+    <label>Rule Validation Prompt Template</label>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <unique>false</unique>
+</CustomField>

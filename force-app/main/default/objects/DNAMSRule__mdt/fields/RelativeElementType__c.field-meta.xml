@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RelativeElementType__c</fullName>
+    <description>Element Type name the rule applies to (e.g. Org Chart); blank for package-level rules.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <externalId>false</externalId>
+    <label>Relative Element Type</label>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <unique>false</unique>
+</CustomField>

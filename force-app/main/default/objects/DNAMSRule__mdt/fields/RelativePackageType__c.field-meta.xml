@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RelativePackageType__c</fullName>
+    <description>Package Type__c value the rule applies to; required for package-level rules, blank = all package types.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <externalId>false</externalId>
+    <label>Relative Package Type</label>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <unique>false</unique>
+</CustomField>
