@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Upload_Token__c</fullName>
+    <caseSensitive>true</caseSensitive>
+    <description>Random secret in the dealer upload link. Generated on insert; grants upload/submit for this package only.</description>
+    <externalId>false</externalId>
+    <label>Upload Token</label>
+    <length>64</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>true</unique>
+</CustomField>

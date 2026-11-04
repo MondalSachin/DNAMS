@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DigitalExperienceConfig xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>DNAMS Dealer Portal</label>
+    <site>
+        <urlPathPrefix>dnamsdealer</urlPathPrefix>
+    </site>
+    <space>site/DNAMS_Dealer_Portal1</space>
+</DigitalExperienceConfig>

@@ -1,0 +1,157 @@
+{
+  "actionName": "DNAMS-POC-FacilityImageExtractionIDP",
+  "actionDescription": "DNAMS POC - Facility Image Extraction Schema",
+  "actionType": "GENERIC",
+  "schemaVersion": "2.1.1",
+  "configuration": {
+    "content": {
+      "output": {
+        "fields": {
+          "DealerCode": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the dealer code or dealer number stated anywhere in the document, as text, exactly as written, preserving leading zeros. If not stated, return empty."
+          },
+          "DealerName": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the dealership's legal name stated in the document text, exactly as written, including any entity suffix such as LLC or Inc. If not stated, return empty."
+          },
+          "PartsAreaShown": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Based only on what the photographs show, return true if any parts area is visible (parts storage, shelving or parts counter); otherwise return false."
+          },
+          "SalesAreaShown": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Based only on what the photographs show, return true if any vehicle sales area is visible (showroom or vehicle display lot); otherwise return false."
+          },
+          "RoadSignVisible": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Based only on what the photographs show, return true if a freestanding road-facing sign (pylon, monument or pole sign) for the dealership is visible; otherwise return false."
+          },
+          "ServiceAreaShown": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Based only on what the photographs show, return true if any vehicle service area is visible (service drive, repair bays or workshop); otherwise return false."
+          },
+          "SitePlanIncluded": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Return true if the document includes a site plan, floor plan or map of the facility; otherwise return false."
+          },
+          "AreasPhotographed": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Based only on what the photographs visibly show (not titles, captions or indexes), list every area that appears, using only these labels: Exterior, RoadSign, Showroom, ServiceDrive, ServiceShop, Parts, CustomerLounge, UsedVehicleLot. Return as a JSON array of labels, or an empty array if none are shown."
+          },
+          "CustomerAreaShown": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Based only on what the photographs show, return true if any customer waiting area or lounge is visible; otherwise return false."
+          },
+          "DealerCode_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, state where in the document the dealer code was found, or that it was not stated."
+          },
+          "DealerName_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, state where in the document the dealership name was found, or that it was not stated."
+          },
+          "BrandSignageVisible": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Based only on what the photographs show, return true if a vehicle manufacturer's brand name or logo is clearly visible on signage; otherwise return false."
+          },
+          "PartsAreaShown_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, explain why PartsAreaShown is true or false, citing what is visible."
+          },
+          "SalesAreaShown_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, explain why SalesAreaShown is true or false, citing what is visible."
+          },
+          "RoadSignVisible_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, explain why RoadSignVisible is true or false, citing what is visible."
+          },
+          "ServiceAreaShown_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, explain why ServiceAreaShown is true or false, citing what is visible."
+          },
+          "SitePlanIncluded_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, explain why SitePlanIncluded is true or false."
+          },
+          "AreasPhotographed_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, explain which photographs show the listed areas, or why none were listed."
+          },
+          "CustomerAreaShown_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, explain why CustomerAreaShown is true or false, citing what is visible."
+          },
+          "DealerNameSignageVisible": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Based only on what the photographs show, return true if the dealership's name is clearly visible on signage; otherwise return false."
+          },
+          "BrandSignageVisible_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, explain why BrandSignageVisible is true or false, citing what is visible."
+          },
+          "DealerNameSignageVisible_Reason": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 0,
+            "description": "In 15 words or fewer, explain why DealerNameSignageVisible is true or false, citing what is visible."
+          }
+        },
+        "tables": {},
+        "tableExtras": {}
+      },
+      "modelSettings": {
+        "model": "llmgateway__VertexAIGemini35Flash",
+        "multiModal": true,
+        "piiMasking": false,
+        "promptVersion": "1.0.1",
+        "useLlmConfidenceScore": true
+      },
+      "groundingPrompt": "<system>\n    <role>\n        You are an expert document extraction specialist for an automotive manufacturer's Dealer Network Development team.\n        You have deep familiarity with dealer franchise paperwork and facility photographs. You read these documents the way a meticulous compliance analyst does: literally, field by field, and without assumptions.\n    </role>\n\n    <goal>\n        Extract the fields defined in the schema from the given document, following each field's description exactly.\n    </goal>\n\n    <extraction_principles>\n        <principle id=\"p1\">Extract, don't interpret. Copy values exactly as they appear on the document, preserving spelling, punctuation, hyphens, capitalization and leading zeros. Apply a transformation only where a field's description explicitly asks for one.</principle>\n        <principle id=\"p2\">If a value is blank, illegible or not present, return empty. Never infer or guess a value from context, from another section, or from what the value \"should\" be.</principle>\n        <principle id=\"p3\">Take each value from the section and label named in the field description. If the same label appears in more than one section, use only the section specified, or the first value, whichever applies.</principle>\n        <principle id=\"p4\">For any field about what the photographs show, answer only from visible evidence in the images. Ignore titles, captions, indexes and descriptive text, and return false when the relevant area or item is not visibly shown.</principle>\n        <principle id=\"p5\">For each field ending in _Reason, give a short justification of 15 words or fewer for the value of the matching field, consistent with that value.</principle>\n    </extraction_principles>\n\n    <output_format>\n        Return each field's value exactly as its description specifies. Do not add commentary, explanations or extra fields.\n    </output_format>\n</system>"
+    },
+    "version": "2.1.1"
+  }
+}

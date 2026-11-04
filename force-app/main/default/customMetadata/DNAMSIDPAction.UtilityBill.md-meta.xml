@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Utility Bill</label>
+    <protected>false</protected>
+    <values>
+        <field>ActionId__c</field>
+        <value xsi:type="xsd:string">d0450432-32d3-4c49-89ec-2b8835bc553c</value>
+    </values>
+    <values>
+        <field>ActionVersion__c</field>
+        <value xsi:type="xsd:string">1.0.0</value>
+    </values>
+    <values>
+        <field>DocumentType__c</field>
+        <value xsi:type="xsd:string">Utility Bill</value>
+    </values>
+    <values>
+        <field>ExpectedStructure__c</field>
+        <value xsi:type="xsd:string">{&quot;actionName&quot;:&quot;DNAMS-POC-AddressVerificationElectricBillExtractionIDP&quot;,&quot;actionDescription&quot;:&quot;DNAMS POC - Address Verification Electric Bill Extraction Schema&quot;,&quot;actionType&quot;:&quot;GENERIC&quot;,&quot;schemaVersion&quot;:&quot;2.1.1&quot;,&quot;configuration&quot;:{&quot;content&quot;:{&quot;output&quot;:{&quot;fields&quot;:{&quot;AccountHolderName&quot;:{&quot;required&quot;:false,&quot;hidden&quot;:false,&quot;confidenceThreshold&quot;:80,&quot;description&quot;:&quot;Extract the billed customer’s name from the first line of the customer mailing block (the name and address block near the “Amount due” box, not the utility’s own address). Return it exactly as written, including any entity suffix. If not present, return null.&quot;},&quot;UtilityProviderName&quot;:{&quot;required&quot;:false,&quot;hidden&quot;:false,&quot;confidenceThreshold&quot;:80,&quot;description&quot;:&quot;Extract the name of the utility company printed in the header at the top of page. Return it exactly as written, without any logo letter or symbol. If no provider name is printed, return null.&quot;},&quot;AccountHolderAddress&quot;:{&quot;required&quot;:false,&quot;hidden&quot;:false,&quot;confidenceThreshold&quot;:80,&quot;description&quot;:&quot;Extract the value labelled “Service address” in the account details block. Return it as a single line in the format “Street, City, State ZIP”, including any building, suite or unit text. \nIf no service address is printed, return null.&quot;},&quot;UtilityProviderEmail&quot;:{&quot;required&quot;:false,&quot;hidden&quot;:false,&quot;confidenceThreshold&quot;:80,&quot;description&quot;:&quot;Extract the utility company’s email address, which contains an “@” symbol, from anywhere on the bill. Do not return a website URL in place of an email address. Do not use any email address belonging to the customer. If no provider email address is printed, return null.&quot;},&quot;UtilityProviderPhone&quot;:{&quot;required&quot;:false,&quot;hidden&quot;:false,&quot;confidenceThreshold&quot;:80,&quot;description&quot;:&quot;Extract the utility company’s customer service phone number printed in the header near the provider name. Return it exactly as written, including hyphens. Do not use any phone number belonging to the customer. If no provider phone number is printed, return null.&quot;},&quot;UtilityProviderAddress&quot;:{&quot;required&quot;:false,&quot;hidden&quot;:false,&quot;confidenceThreshold&quot;:80,&quot;description&quot;:&quot;Extract the utility company’s address printed in the header at the top of page, as a single line in the format “Street or P.O. Box, City, State ZIP”. Use only the header address; do not use the payment remittance address on the detachable stub. Return the values exactly as written. If no provider address is printed in the header, return null.&quot;}},&quot;tables&quot;:{},&quot;tableExtras&quot;:{}},&quot;modelSettings&quot;:{&quot;model&quot;:&quot;llmgateway__VertexAIGemini35Flash&quot;,&quot;multiModal&quot;:false,&quot;piiMasking&quot;:false,&quot;promptVersion&quot;:&quot;1.0.1&quot;,&quot;useLlmConfidenceScore&quot;:true},&quot;groundingPrompt&quot;:&quot;&lt;system&gt;\n    &lt;role&gt;\n        You are an expert document extraction specialist for an automotive manufacturer's Dealer Network Development team. \n        You have deep familiarity with dealer franchise paperwork documents. You read these documents the way a meticulous compliance analyst does: literally, field by field, and without assumptions.\n    &lt;/role&gt;\n    \n    &lt;goal&gt;\n        Extract the fields defined in the schema below from the given document and return them as one JSON object that conforms exactly to that schema.\n    &lt;/goal&gt;\n    \n    \n    &lt;extraction_principles&gt;\n        &lt;principle id=\&quot;p1\&quot;&gt;Extract, don't interpret. Copy values exactly as they appear on the document, preserving spelling, punctuation, hyphens, capitalization and leading zeros. Apply a transformation only where a field's description explicitly asks for one (for example, a date format or splitting a combined value, etc).\n        &lt;/principle&gt;\n        &lt;principle id=\&quot;p2\&quot;&gt;\n        If a value is blank, illegible, or not present, return empty. Never infer or guess a value from context, from another section, or from what the value \&quot;should\&quot; be.\n        &lt;/principle&gt;\n        &lt;principle id=\&quot;p3\&quot;&gt;\n        Take each value from the section and label named in the field description. If the same label appears in more than one section, use only the section specified, or the first value - whichever applicable.\n        &lt;/principle&gt;\n    &lt;extraction_principles&gt;\n    \n    &lt;output_format&gt;\n        Return only a single valid JSON object that matches the schema. Start with { and end with }. No code fences, preamble or trailing text.\n    &lt;/output_format&gt;\n&lt;/system&gt;&quot;},&quot;version&quot;:&quot;2.1.1&quot;}}</value>
+    </values>
+    <values>
+        <field>GetPath__c</field>
+        <value xsi:type="xsd:string">/api/v1/organizations/6d547eb8-5c9e-4267-8c35-851d73df8d0f/actions/d0450432-32d3-4c49-89ec-2b8835bc553c/versions/1.0.0/executions/{executionId}</value>
+    </values>
+    <values>
+        <field>IsActive__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>PostPath__c</field>
+        <value xsi:type="xsd:string">/api/v1/organizations/6d547eb8-5c9e-4267-8c35-851d73df8d0f/actions/d0450432-32d3-4c49-89ec-2b8835bc553c/versions/1.0.0/executions</value>
+    </values>
+    <values>
+        <field>StubResource__c</field>
+        <value xsi:type="xsd:string">DNAMSIDPStubUtilityBill</value>
+    </values>
+</CustomMetadata>

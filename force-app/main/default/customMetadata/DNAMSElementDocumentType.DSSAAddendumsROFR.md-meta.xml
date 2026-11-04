@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>DSSA Addendums - ROFR</label>
+    <protected>false</protected>
+    <values>
+        <field>DocumentType__c</field>
+        <value xsi:type="xsd:string">DSSA Addendums - ROFR</value>
+    </values>
+    <values>
+        <field>ElementType__c</field>
+        <value xsi:type="xsd:string">DSSA Addendums - ROFR</value>
+    </values>
+    <values>
+        <field>IdentifyingInstructions__c</field>
+        <value xsi:type="xsd:string">An addendum to the DSSA granting the manufacturer a Right of First Refusal (ROFR) on a sale or transfer of the dealership, with signature blocks.</value>
+    </values>
+    <values>
+        <field>IsActive__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>SortOrder__c</field>
+        <value xsi:type="xsd:double">3.0</value>
+    </values>
+</CustomMetadata>

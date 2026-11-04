@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Trigger_Source__c</fullName>
+    <description>What started the run.</description>
+    <label>Trigger Source</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Dealer Submit</fullName>
+                <default>false</default>
+                <label>Dealer Submit</label>
+            </value>
+            <value>
+                <fullName>Dealer Resubmit</fullName>
+                <default>false</default>
+                <label>Dealer Resubmit</label>
+            </value>
+            <value>
+                <fullName>RMR Rerun</fullName>
+                <default>false</default>
+                <label>RMR Rerun</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

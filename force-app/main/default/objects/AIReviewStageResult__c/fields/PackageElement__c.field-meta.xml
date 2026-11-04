@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PackageElement__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Package element the document was uploaded to.</description>
+    <externalId>false</externalId>
+    <label>Package Element</label>
+    <referenceTo>DNAMS_Package_Element__c</referenceTo>
+    <relationshipLabel>Stage Results</relationshipLabel>
+    <relationshipName>StageResults</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

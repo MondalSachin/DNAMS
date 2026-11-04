@@ -1,0 +1,61 @@
+{
+  "actionName": "DNAMS-POC-AddressVerificationElectricBillExtractionIDP",
+  "actionDescription": "DNAMS POC - Address Verification Electric Bill Extraction Schema",
+  "actionType": "GENERIC",
+  "schemaVersion": "2.1.1",
+  "configuration": {
+    "content": {
+      "output": {
+        "fields": {
+          "AccountHolderName": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the billed customer’s name from the first line of the customer mailing block (the name and address block near the “Amount due” box, not the utility’s own address). Return it exactly as written, including any entity suffix. If not present, return null."
+          },
+          "UtilityProviderName": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the name of the utility company printed in the header at the top of page. Return it exactly as written, without any logo letter or symbol. If no provider name is printed, return null."
+          },
+          "AccountHolderAddress": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the value labelled “Service address” in the account details block. Return it as a single line in the format “Street, City, State ZIP”, including any building, suite or unit text. \nIf no service address is printed, return null."
+          },
+          "UtilityProviderEmail": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the utility company’s email address, which contains an “@” symbol, from anywhere on the bill. Do not return a website URL in place of an email address. Do not use any email address belonging to the customer. If no provider email address is printed, return null."
+          },
+          "UtilityProviderPhone": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the utility company’s customer service phone number printed in the header near the provider name. Return it exactly as written, including hyphens. Do not use any phone number belonging to the customer. If no provider phone number is printed, return null."
+          },
+          "UtilityProviderAddress": {
+            "required": false,
+            "hidden": false,
+            "confidenceThreshold": 80,
+            "description": "Extract the utility company’s address printed in the header at the top of page, as a single line in the format “Street or P.O. Box, City, State ZIP”. Use only the header address; do not use the payment remittance address on the detachable stub. Return the values exactly as written. If no provider address is printed in the header, return null."
+          }
+        },
+        "tables": {},
+        "tableExtras": {}
+      },
+      "modelSettings": {
+        "model": "llmgateway__VertexAIGemini35Flash",
+        "multiModal": false,
+        "piiMasking": false,
+        "promptVersion": "1.0.1",
+        "useLlmConfidenceScore": true
+      },
+      "groundingPrompt": "<system>\n    <role>\n        You are an expert document extraction specialist for an automotive manufacturer's Dealer Network Development team. \n        You have deep familiarity with dealer franchise paperwork documents. You read these documents the way a meticulous compliance analyst does: literally, field by field, and without assumptions.\n    </role>\n    \n    <goal>\n        Extract the fields defined in the schema below from the given document and return them as one JSON object that conforms exactly to that schema.\n    </goal>\n    \n    \n    <extraction_principles>\n        <principle id=\"p1\">Extract, don't interpret. Copy values exactly as they appear on the document, preserving spelling, punctuation, hyphens, capitalization and leading zeros. Apply a transformation only where a field's description explicitly asks for one (for example, a date format or splitting a combined value, etc).\n        </principle>\n        <principle id=\"p2\">\n        If a value is blank, illegible, or not present, return empty. Never infer or guess a value from context, from another section, or from what the value \"should\" be.\n        </principle>\n        <principle id=\"p3\">\n        Take each value from the section and label named in the field description. If the same label appears in more than one section, use only the section specified, or the first value - whichever applicable.\n        </principle>\n    <extraction_principles>\n    \n    <output_format>\n        Return only a single valid JSON object that matches the schema. Start with { and end with }. No code fences, preamble or trailing text.\n    </output_format>\n</system>"
+    },
+    "version": "2.1.1"
+  }
+}

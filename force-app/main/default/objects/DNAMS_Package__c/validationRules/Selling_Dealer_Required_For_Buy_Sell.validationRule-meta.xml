@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Selling_Dealer_Required_For_Buy_Sell</fullName>
+    <active>true</active>
+    <description>Buy/Sell packages need a selling dealer.</description>
+    <errorConditionFormula>AND(ISPICKVAL(Type__c, &quot;Buy/Sell change of Ownership&quot;), ISBLANK(Selling_Dealer__c))</errorConditionFormula>
+    <errorDisplayField>Selling_Dealer__c</errorDisplayField>
+    <errorMessage>Selling Dealer is required for Buy/Sell change of Ownership.</errorMessage>
+</ValidationRule>
