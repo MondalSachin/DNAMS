@@ -1,0 +1,115 @@
+<template>
+  <template lwc:if={showNoLinkMessage}>
+    <div class="slds-card slds-p-around_large slds-text-align_center">
+      <h1 class="slds-text-heading_medium slds-m-bottom_small">DNAMS Dealer Portal</h1>
+      <p>To upload documents, open the package link from the email you received.</p>
+    </div>
+  </template>
+
+  <template lwc:if={hasToken}>
+    <div class="slds-card slds-p-around_medium dnams-upload">
+      <template lwc:if={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+      </template>
+
+      <template lwc:if={errorMessage}>
+        <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
+          <h2>{errorMessage}</h2>
+        </div>
+      </template>
+
+      <template lwc:if={pkg}>
+        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-start slds-m-bottom_medium">
+          <div>
+            <span class="slds-text-heading_medium">{pkg.packageNumber}</span>
+            <span class="slds-m-left_small"><lightning-badge label={pkg.status}></lightning-badge></span>
+            <p class="slds-m-top_xx-small">{pkg.packageName}</p>
+            <p class="slds-text-color_weak slds-m-top_xx-small">Type: {pkg.packageType}</p>
+          </div>
+          <template lwc:if={pkg.isEditable}>
+            <lightning-button variant="brand" label="Submit Package" onclick={handleSubmit}></lightning-button>
+          </template>
+        </div>
+
+        <template lwc:if={pkg.isReturned}>
+          <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+            <p class="slds-text-title_bold slds-m-bottom_x-small">This package was returned for corrections</p>
+            <template lwc:if={pkg.narrative}>
+              <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_xx-small">{pkg.aiLabel}</p>
+              <p class="dnams-narrative">{pkg.narrative}</p>
+            </template>
+            <p class="slds-m-top_x-small">Fix the elements marked below (remove wrong files, upload the right ones), then click Submit Package.</p>
+          </div>
+        </template>
+        <template lwc:if={pkg.isEditable}>
+          <p class="slds-text-title slds-m-bottom_small">{requiredProgress}</p>
+        </template>
+        <template lwc:else>
+          <div class="slds-notify slds-notify_alert slds-alert_offline slds-m-bottom_medium" role="status">
+            <h2>This package has been submitted. Thank you — documents can no longer be changed.</h2>
+          </div>
+        </template>
+
+        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+          <thead>
+            <tr class="slds-line-height_reset">
+              <th scope="col">#</th>
+              <th scope="col">Element</th>
+              <th scope="col">Instructions</th>
+              <th scope="col">Documents</th>
+              <th scope="col">Upload</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template for:each={elements} for:item="element">
+              <tr key={element.id} class={element.rowClass}>
+                <td>{element.position}</td>
+                <td class="slds-cell-wrap">
+                  {element.name}
+                  <template lwc:if={element.isRequired}>
+                    <lightning-badge label="Required" class="slds-m-left_x-small slds-theme_warning"></lightning-badge>
+                  </template>
+                  <template lwc:if={element.issue}>
+                    <div class="slds-text-color_error slds-text-body_small slds-m-top_xx-small dnams-issue">{element.issue}</div>
+                  </template>
+                </td>
+                <td class="slds-cell-wrap slds-text-body_small">{element.instructions}</td>
+                <td class="slds-cell-wrap">
+                  <template for:each={element.documents} for:item="doc">
+                    <div key={doc.id} class="slds-text-body_small">
+                      {doc.name}
+                      <template lwc:if={element.canRemove}>
+                        <lightning-button-icon
+                          icon-name="utility:delete"
+                          variant="bare"
+                          size="small"
+                          alternative-text="Remove file"
+                          title="Remove file"
+                          data-id={doc.id}
+                          onclick={handleRemove}
+                          class="slds-m-left_xx-small"
+                        ></lightning-button-icon>
+                      </template>
+                    </div>
+                  </template>
+                </td>
+                <td>
+                  <template lwc:if={element.canUpload}>
+                    <lightning-file-upload
+                      label="Upload"
+                      variant="label-hidden"
+                      multiple
+                      file-field-name={uploadField}
+                      file-field-value={element.uploadValue}
+                      onuploadfinished={handleUploadFinished}
+                    ></lightning-file-upload>
+                  </template>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </template>
+    </div>
+  </template>
+</template>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Current_Stage__c</fullName>
+    <description>Pipeline stage this element last reached.</description>
+    <label>Current Stage</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Classification</fullName>
+                <default>false</default>
+                <label>Classification</label>
+            </value>
+            <value>
+                <fullName>Extraction</fullName>
+                <default>false</default>
+                <label>Extraction</label>
+            </value>
+            <value>
+                <fullName>Rule Validation</fullName>
+                <default>false</default>
+                <label>Rule Validation</label>
+            </value>
+            <value>
+                <fullName>Transmittal Drafting</fullName>
+                <default>false</default>
+                <label>Transmittal Drafting</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

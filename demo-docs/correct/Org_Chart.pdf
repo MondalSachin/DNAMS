@@ -1,0 +1,63 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1182 >>
+stream
+BT /F2 18 Tf 60 760 Td (ORGANIZATIONAL CHART - DEALERSHIP OWNERSHIP) Tj ET
+BT /F1 10 Tf 60 736 Td (Northgate Motors LLC - all levels of ownership) Tj ET
+0.6 w 60 723 m 552 723 l S
+0.8 w 206 560 200 52 re S
+BT /F2 9 Tf 212 598 Td (Northgate Motors LLC) Tj ET
+BT /F1 9 Tf 212 585 Td (Dealership entity \(Ohio LLC\)) Tj ET
+0.8 w 306 560 m 306 520 l S
+0.8 w 160 520 m 452 520 l S
+0.8 w 160 520 m 160 480 l S
+0.8 w 452 520 m 452 480 l S
+0.8 w 70 428 180 52 re S
+BT /F2 9 Tf 76 466 Td (Daniel Reyes) Tj ET
+BT /F1 9 Tf 76 453 Td (Individual owner - 60%) Tj ET
+0.8 w 362 428 180 52 re S
+BT /F2 9 Tf 368 466 Td (Reyes Holdings LLC) Tj ET
+BT /F1 9 Tf 368 453 Td (Holding company - 40%) Tj ET
+0.8 w 452 428 m 452 390 l S
+0.8 w 380 390 m 524 390 l S
+0.8 w 380 390 m 380 350 l S
+0.8 w 524 390 m 524 350 l S
+0.8 w 320 298 120 52 re S
+BT /F2 9 Tf 326 336 Td (Daniel Reyes) Tj ET
+BT /F1 9 Tf 326 323 Td (70% of holding co.) Tj ET
+0.8 w 464 298 120 52 re S
+BT /F2 9 Tf 470 336 Td (Maria Reyes) Tj ET
+BT /F1 9 Tf 470 323 Td (30% of holding co.) Tj ET
+BT /F1 10 Tf 60 250 Td (Effective ownership: Daniel Reyes 88%, Maria Reyes 12%.) Tj ET
+BT /F1 10 Tf 60 233 Td (Dealer Principal: Daniel Reyes.) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000001485 00000 n 
+0000001555 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1630
+%%EOF

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CENTRAL_RMR_DNAMS_Package</fullName>
+    <filterScope>Queue</filterScope>
+    <label>CENTRAL RMR</label>
+    <queue>CENTRAL_RMR</queue>
+    <sharedTo>
+        <allInternalUsers></allInternalUsers>
+    </sharedTo>
+</ListView>

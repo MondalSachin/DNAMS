@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Rule_Validation_Icon__c</fullName>
+    <description>Icon for the Rule Validation stage status (tick = Passed, cross = Failed, warning = Needs Review, clock = In Progress).</description>
+    <externalId>false</externalId>
+    <formula>CASE(TEXT(Rule_Validation_Status__c),
+    &quot;Passed&quot;, IMAGE(&quot;/resource/DNAMS_Icon_Passed&quot;, &quot;Passed&quot;, 20, 20),
+    &quot;Failed&quot;, IMAGE(&quot;/resource/DNAMS_Icon_Failed&quot;, &quot;Failed&quot;, 20, 20),
+    &quot;Needs Review&quot;, IMAGE(&quot;/resource/DNAMS_Icon_Needs_Review&quot;, &quot;Needs Review&quot;, 20, 20),
+    &quot;In Progress&quot;, IMAGE(&quot;/resource/DNAMS_Icon_In_Progress&quot;, &quot;In Progress&quot;, 20, 20),
+    &quot;&quot;)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Rule Validation</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

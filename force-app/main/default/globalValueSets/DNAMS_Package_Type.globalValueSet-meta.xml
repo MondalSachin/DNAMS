@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>Buy/Sell change of Ownership</fullName>
+        <default>false</default>
+        <label>Buy/Sell change of Ownership</label>
+    </customValue>
+    <customValue>
+        <fullName>Term Renewal</fullName>
+        <default>false</default>
+        <label>Term Renewal</label>
+    </customValue>
+    <customValue>
+        <fullName>Dealer Principal Change</fullName>
+        <default>false</default>
+        <label>Dealer Principal Change</label>
+    </customValue>
+    <description>DNAMS package types (DNAMS_Package__c.Type__c).</description>
+    <masterLabel>DNAMS Package Type</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>
