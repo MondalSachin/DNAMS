@@ -1,0 +1,79 @@
+<template>
+  <template lwc:if={isVisible}>
+    <div class="slds-card slds-p-around_medium dnams-sender">
+      <template lwc:if={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+      </template>
+
+      <h1 class="slds-text-heading_medium">Packages awaiting documents</h1>
+      <p class="slds-text-color_weak slds-m-bottom_medium">
+        Email a package's upload link to the dealer. Only logged-in users see this section.
+      </p>
+
+      <template lwc:if={errorMessage}>
+        <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_small" role="alert">
+          <h2>{errorMessage}</h2>
+        </div>
+      </template>
+      <template lwc:if={successMessage}>
+        <div class="slds-notify slds-notify_alert slds-alert_offline slds-m-bottom_small" role="status">
+          <h2>{successMessage}</h2>
+        </div>
+      </template>
+
+      <template lwc:if={hasPackages}>
+        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+          <thead>
+            <tr class="slds-line-height_reset">
+              <th scope="col">Package</th>
+              <th scope="col">Dealer</th>
+              <th scope="col">Status</th>
+              <th scope="col">Last sent</th>
+              <th scope="col">Send link to</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <template for:each={rows} for:item="row">
+              <tr key={row.id} class="slds-hint-parent">
+                <td class="slds-cell-wrap">
+                  <a href={row.uploadLink} target="_blank">{row.packageNumber}</a>
+                  <div class="slds-text-body_small slds-text-color_weak">{row.packageName}</div>
+                </td>
+                <td class="slds-cell-wrap">
+                  {row.dealerName}
+                  <div class="slds-text-body_small slds-text-color_weak">{row.primaryContactName}</div>
+                </td>
+                <td><lightning-badge label={row.status}></lightning-badge></td>
+                <td class="slds-cell-wrap slds-text-body_small">{row.lastSent}</td>
+                <td>
+                  <lightning-input
+                    type="email"
+                    label="Recipient email"
+                    variant="label-hidden"
+                    placeholder="name@example.com"
+                    value={row.recipient}
+                    data-id={row.id}
+                    onchange={handleRecipientChange}
+                  ></lightning-input>
+                </td>
+                <td>
+                  <lightning-button
+                    label="Send Link"
+                    icon-name="utility:email"
+                    data-id={row.id}
+                    disabled={row.isSending}
+                    onclick={handleSend}
+                  ></lightning-button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </template>
+      <template lwc:else>
+        <p class="slds-text-color_weak">All packages have been submitted.</p>
+      </template>
+    </div>
+  </template>
+</template>

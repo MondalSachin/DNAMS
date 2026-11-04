@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Min_Auto_Accept_Confidence__c</fullName>
+    <description>At or above this confidence a classification is accepted automatically; between Min Accepted and this it goes to human review.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Min Auto Accept Confidence</label>
+    <required>false</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>FULLY</fullName>
+                <default>false</default>
+                <label>FULLY</label>
+            </value>
+            <value>
+                <fullName>MODERATE</fullName>
+                <default>false</default>
+                <label>MODERATE</label>
+            </value>
+            <value>
+                <fullName>LOW</fullName>
+                <default>false</default>
+                <label>LOW</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

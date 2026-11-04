@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <classAccesses>
+        <apexClass>DNAMS_CancelReviewAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DNAMS_RerunReviewAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DNAMS_ReturnToDealerAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>DNAMS_RMR</name>
+    </customPermissions>
+    <description>RMR users: Re-run / Cancel Review and Return to Dealer buttons. Assign together with DNAMS Package Access.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>DNAMS RMR</label>
+</PermissionSet>

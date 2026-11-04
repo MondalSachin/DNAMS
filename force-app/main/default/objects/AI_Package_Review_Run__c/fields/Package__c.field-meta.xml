@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Package__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Package under review. Restrict delete keeps the audit trail.</description>
+    <label>Package</label>
+    <referenceTo>DNAMS_Package__c</referenceTo>
+    <relationshipLabel>AI Review Runs</relationshipLabel>
+    <relationshipName>AI_Review_Runs</relationshipName>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

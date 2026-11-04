@@ -1,0 +1,12 @@
+.dnams-upload {
+  position: relative;
+}
+
+.dnams-missing td:first-child {
+  border-left: 3px solid var(--slds-g-color-warning-base-60, #fe9339);
+}
+
+.dnams-narrative,
+.dnams-issue {
+  white-space: pre-line;
+}

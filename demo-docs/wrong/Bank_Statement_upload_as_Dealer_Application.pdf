@@ -1,0 +1,49 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 870 >>
+stream
+BT /F2 18 Tf 60 760 Td (BANK STATEMENT) Tj ET
+BT /F1 10 Tf 60 736 Td (First Ohio Commerce Bank - Business Checking) Tj ET
+0.6 w 60 723 m 552 723 l S
+BT /F2 10 Tf 60 709 Td (Account holder:) Tj ET
+BT /F1 10 Tf 230 709 Td (Northgate Motors LLC) Tj ET
+BT /F2 10 Tf 60 692 Td (Account number:) Tj ET
+BT /F1 10 Tf 230 692 Td (****  ****  4410) Tj ET
+BT /F2 10 Tf 60 675 Td (Statement period:) Tj ET
+BT /F1 10 Tf 230 675 Td (09/01/2026 - 09/30/2026) Tj ET
+BT /F1 10 Tf 60 650 Td (09/02  Deposit - vehicle sales        +  412,350.00) Tj ET
+BT /F1 10 Tf 60 633 Td (09/05  Floor plan payment              -  188,200.00) Tj ET
+BT /F1 10 Tf 60 616 Td (09/12  Payroll                         -   96,410.55) Tj ET
+BT /F1 10 Tf 60 599 Td (09/19  Deposit - service revenue       +   74,980.10) Tj ET
+BT /F1 10 Tf 60 582 Td (09/30  Closing balance                    1,204,318.72) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000001172 00000 n 
+0000001242 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1317
+%%EOF
