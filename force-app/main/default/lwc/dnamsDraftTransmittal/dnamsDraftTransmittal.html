@@ -1,0 +1,32 @@
+<template>
+  <lightning-quick-action-panel header="Draft AI Transmittal">
+    <template lwc:if={isLoading}>
+      <div class="spinner-holder">
+        <lightning-spinner alternative-text={loadingText} size="medium"></lightning-spinner>
+      </div>
+      <p class="slds-text-align_center" role="status">{loadingText}</p>
+    </template>
+    <template lwc:elseif={errorMessage}>
+      <p class="slds-text-color_error" role="alert">{errorMessage}</p>
+    </template>
+    <template lwc:else>
+      <p>{state.message}</p>
+    </template>
+
+    <div slot="footer">
+      <template lwc:if={isConfirm}>
+        <lightning-button label="No" disabled={isLoading} onclick={handleClose}></lightning-button>
+        <lightning-button
+          class="slds-m-left_x-small"
+          variant="brand"
+          label="Yes"
+          disabled={isLoading}
+          onclick={handleYes}
+        ></lightning-button>
+      </template>
+      <template lwc:else>
+        <lightning-button label="Close" onclick={handleClose}></lightning-button>
+      </template>
+    </div>
+  </lightning-quick-action-panel>
+</template>

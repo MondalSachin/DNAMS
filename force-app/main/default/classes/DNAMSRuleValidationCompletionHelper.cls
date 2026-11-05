@@ -4,18 +4,19 @@
  *                  passed), sets the RAG band on each element and on the package (step 18: 100% Green, >= 85% Amber,
  *                  below Red; a failed PIR makes the package Red) and publishes them (step 19).
  *                  GREEN: package Under Review, the owner is emailed (steps 20-21) and the run moves on to transmittal
- *                  drafting (step 23, placeholder). AMBER / RED: package RMR Pending, run Completed / Needs Review with
+ *                  drafting (step 23, DNAMSTransmittalStarterQueueable). AMBER / RED: package RMR Pending, run Completed / Needs Review with
  *                  the failed rules in Issue_Summary__c, then the AI narrative and the owner email (steps 19-22).
  *                  Element Rule_Validation_Status__c: Green Passed, Amber Needs Review, Red Failed; blank when none of
  *                  its rules applied.
  * @author          Sachin Mondal
  * @group           DNAMS AI Review
- * @last modified on 2026-11-04
- * @last modified by Sachin Mondal
- * @last modification details Initial version
+ * @last modified on 2026-11-05
+ * @last modified by Abhishek Dutta
+ * @last modification details GREEN sets TransmittalProcessingStatus__c Pending before queueing transmittal drafting
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-04   Sachin Mondal   Initial version
+ * 1.1   2026-11-05   Abhishek Dutta  GREEN sets TransmittalProcessingStatus__c Pending; Failed when it cannot be queued
  **/
 // Exception to guideline: without sharing because the system pipeline must update the package, its elements and the run regardless of ownership
 public without sharing class DNAMSRuleValidationCompletionHelper {
@@ -150,6 +151,8 @@ public without sharing class DNAMSRuleValidationCompletionHelper {
             runUpdate.Status__c = DNAMS_PackageReviewPipelineService.RUN_COMPLETED;
             runUpdate.Overall_Result__c = DNAMS_PackageReviewPipelineService.RESULT_NEEDS_REVIEW;
             runUpdate.Ended_At__c = System.now();
+        } else {
+            runUpdate.TransmittalProcessingStatus__c = DNAMSPipelineConstants.RUN_STAGE_PENDING; // the Draft button shows "in progress"
         }
         Database.update(elements, true, AccessLevel.SYSTEM_MODE);
         Database.update(pkg, true, AccessLevel.SYSTEM_MODE);
@@ -184,6 +187,10 @@ public without sharing class DNAMSRuleValidationCompletionHelper {
             detail.sourceClass = CLASS_NAME;
             detail.message = 'The next job for this run was not queued (' + notQueued + '). The run result stands; re-run to retry.';
             DNAMSErrorLogHelper.insertLogs(new List<AIReviewErrorLog__c>{ DNAMSErrorLogHelper.buildLog(detail) });
+            if (health == DNAMSPipelineConstants.HEALTH_GREEN) {
+                // No job will draft: free the Draft button for the RMR
+                Database.update(new AI_Package_Review_Run__c(Id = runId, TransmittalProcessingStatus__c = DNAMSPipelineConstants.RUN_STAGE_FAILED), true, AccessLevel.SYSTEM_MODE);
+            }
         }
     }
 

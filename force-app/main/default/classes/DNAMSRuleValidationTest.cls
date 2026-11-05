@@ -6,11 +6,12 @@
  * @group           DNAMS AI Review
  * @last modified on 2026-11-05
  * @last modified by Abhishek Dutta
- * @last modification details StageFailureFinalizer test
+ * @last modification details Transmittal drafting replaces the placeholder
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-04   Sachin Mondal   Initial version
  * 1.1   2026-11-05   Abhishek Dutta  StageFailureFinalizer test
+ * 1.2   2026-11-05   Abhishek Dutta  Transmittal drafting replaces the placeholder
  **/
 @IsTest
 private class DNAMSRuleValidationTest {
@@ -124,7 +125,7 @@ private class DNAMSRuleValidationTest {
     private static AI_Package_Review_Run__c reloadRun(Id runId) {
         return [
             SELECT Status__c, Overall_Result__c, Issue_Summary__c, Reason__c, RuleValidationProcessingStatus__c, RuleValidationPassRate__c,
-                ExactMatchPassRate__c, AIMatchPassRate__c, Package__r.Health__c, Package__r.Status__c
+                ExactMatchPassRate__c, AIMatchPassRate__c, Package__r.Health__c, Package__r.Status__c, TransmittalProcessingStatus__c
             FROM AI_Package_Review_Run__c
             WHERE Id = :runId
         ];
@@ -183,6 +184,7 @@ private class DNAMSRuleValidationTest {
             Assert.areEqual(DNAMSPipelineConstants.HEALTH_GREEN, run.Package__r.Health__c, 'Package Green');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW, run.Package__r.Status__c, 'Package Under Review');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_RUNNING, run.Status__c, 'Run waits for transmittal drafting');
+            Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_PENDING, run.TransmittalProcessingStatus__c, 'Transmittal drafting pending');
             DNAMS_Package_Element__c dealerApplication = element(fixture, DA);
             Assert.areEqual(DNAMS_PackageReviewPipelineService.STAGE_PASSED, dealerApplication.Rule_Validation_Status__c, 'Element passed');
             Assert.areEqual(DNAMSPipelineConstants.STAGE_RULE_VALIDATION, dealerApplication.Current_Stage__c, 'Element stage');
@@ -191,7 +193,9 @@ private class DNAMSRuleValidationTest {
             run = reloadRun(fixture.runId);
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_COMPLETED, run.Status__c, 'Run completed');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_PASSED, run.Overall_Result__c, 'Run passed');
-            Assert.isTrue(run.Reason__c.contains(DNAMSTransmittalStarterQueueable.PLACEHOLDER_REASON), run.Reason__c);
+            // No prompt is stubbed here, so drafting may succeed or fail; either way the GREEN run passes
+            Assert.isTrue(run.Reason__c.contains('Rule validation passed (GREEN).'), run.Reason__c);
+            Assert.areNotEqual(DNAMSPipelineConstants.RUN_STAGE_PENDING, run.TransmittalProcessingStatus__c, 'Transmittal drafting settled');
         }
     }
 

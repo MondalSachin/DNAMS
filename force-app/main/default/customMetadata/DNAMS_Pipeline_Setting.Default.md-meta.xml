@@ -70,4 +70,20 @@
         <field>RuleValidationPromptTemplate__c</field>
         <value xsi:type="xsd:string">DNAMS_RuleValidation_Prompt</value>
     </values>
+    <values>
+        <field>OwnershipSummaryPromptTemplate__c</field>
+        <value xsi:type="xsd:string">DNAMS_OwnershipSummary_Prompt</value>
+    </values>
+    <values>
+        <field>ExecutiveSummaryPromptTemplate__c</field>
+        <value xsi:type="xsd:string">DNAMS_ExecutiveSummary_Prompt</value>
+    </values>
+    <values>
+        <field>TransmittalMaxAttempts__c</field>
+        <value xsi:type="xsd:double">3.0</value>
+    </values>
+    <values>
+        <field>TransmittalSummaryMaxWords__c</field>
+        <value xsi:type="xsd:double">50.0</value>
+    </values>
 </CustomMetadata>

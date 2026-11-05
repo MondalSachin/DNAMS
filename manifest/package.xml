@@ -5,6 +5,7 @@
         <members>DNAMSCallbackSignatureUtil</members>
         <members>DNAMSCallbackSignatureUtilTest</members>
         <members>DNAMSEinsteinRuleAIValidator</members>
+        <members>DNAMSEinsteinTransmittalAI</members>
         <members>DNAMSElementDocumentTypeUtil</members>
         <members>DNAMSElementDocumentTypeUtilTest</members>
         <members>DNAMSErrorLogHelper</members>
@@ -49,7 +50,12 @@
         <members>DNAMSStageResultHelperTest</members>
         <members>DNAMSStructureValidationUtil</members>
         <members>DNAMSStructureValidationUtilTest</members>
+        <members>DNAMSTransmittalAI</members>
+        <members>DNAMSTransmittalController</members>
+        <members>DNAMSTransmittalControllerTest</members>
         <members>DNAMSTransmittalStarterQueueable</members>
+        <members>DNAMSTransmittalSummaryService</members>
+        <members>DNAMSTransmittalSummaryServiceTest</members>
         <members>DNAMS_CancelReviewAction</members>
         <members>DNAMS_ClassificationStarterQueueable</members>
         <members>DNAMS_DocumentClassificationBatch</members>
@@ -113,6 +119,7 @@
         <members>AIReviewStageResult__c.DocumentTitle__c</members>
         <members>AIReviewStageResult__c.DocumentType__c</members>
         <members>AIReviewStageResult__c.ElementType__c</members>
+        <members>AIReviewStageResult__c.GeneratedText__c</members>
         <members>AIReviewStageResult__c.IDPActionId__c</members>
         <members>AIReviewStageResult__c.IDPActionName__c</members>
         <members>AIReviewStageResult__c.IDPActionVersion__c</members>
@@ -126,6 +133,7 @@
         <members>AIReviewStageResult__c.RawStageResponseJSON__c</members>
         <members>AIReviewStageResult__c.Reasoning__c</members>
         <members>AIReviewStageResult__c.ReferenceValue__c</members>
+        <members>AIReviewStageResult__c.RequestedBy__c</members>
         <members>AIReviewStageResult__c.ReviewRun__c</members>
         <members>AIReviewStageResult__c.RuleId__c</members>
         <members>AIReviewStageResult__c.RuleName__c</members>
@@ -133,6 +141,7 @@
         <members>AIReviewStageResult__c.SourceValue__c</members>
         <members>AIReviewStageResult__c.Stage__c</members>
         <members>AIReviewStageResult__c.SubmittedAt__c</members>
+        <members>AIReviewStageResult__c.SummaryType__c</members>
         <members>AIReviewStageResult__c.Verdict__c</members>
         <members>AI_Package_Review_Run__c.AIMatchPassRate__c</members>
         <members>AI_Package_Review_Run__c.Classification_Processing_Status__c</members>
@@ -153,6 +162,7 @@
         <members>AI_Package_Review_Run__c.RuleValidationProcessingStatus__c</members>
         <members>AI_Package_Review_Run__c.Started_At__c</members>
         <members>AI_Package_Review_Run__c.Status__c</members>
+        <members>AI_Package_Review_Run__c.TransmittalProcessingStatus__c</members>
         <members>AI_Package_Review_Run__c.Trigger_Source__c</members>
         <members>ContentVersion.Classification_Confidence__c</members>
         <members>ContentVersion.Classification_Status__c</members>
@@ -220,7 +230,9 @@
         <members>DNAMS_Package__c.AI_Narrative__c</members>
         <members>DNAMS_Package__c.Buying_Dealer__c</members>
         <members>DNAMS_Package__c.Dealer_Submit_Validation_Override__c</members>
+        <members>DNAMS_Package__c.Executive_Summary__c</members>
         <members>DNAMS_Package__c.Health__c</members>
+        <members>DNAMS_Package__c.Ownership_Summary__c</members>
         <members>DNAMS_Package__c.PIR_Bypass_Acknowledged__c</members>
         <members>DNAMS_Package__c.PIR_Bypass_Reason__c</members>
         <members>DNAMS_Package__c.PIR_Cleared__c</members>
@@ -229,6 +241,8 @@
         <members>DNAMS_Package__c.Primary_Contact__c</members>
         <members>DNAMS_Package__c.Selling_Dealer__c</members>
         <members>DNAMS_Package__c.Status__c</members>
+        <members>DNAMS_Package__c.Transmittal_Draft_Source__c</members>
+        <members>DNAMS_Package__c.Transmittal_Drafted_At__c</members>
         <members>DNAMS_Package__c.Type__c</members>
         <members>DNAMS_Package__c.Upload_Link_Sent_At__c</members>
         <members>DNAMS_Package__c.Upload_Link_Sent_To__c</members>
@@ -236,6 +250,7 @@
         <members>DNAMS_Pipeline_Setting__mdt.AdminQueue__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.AllowedFileExtensions__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.Batch_Size__c</members>
+        <members>DNAMS_Pipeline_Setting__mdt.ExecutiveSummaryPromptTemplate__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.ExtractionBatchSize__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.IDPCallbackSiteURL__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.IDPMode__c</members>
@@ -246,10 +261,13 @@
         <members>DNAMS_Pipeline_Setting__mdt.Min_Accepted_Confidence__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.Min_Auto_Accept_Confidence__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.Narrative_Prompt_Template__c</members>
+        <members>DNAMS_Pipeline_Setting__mdt.OwnershipSummaryPromptTemplate__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.PIRRequiredPackageTypes__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.Prompt_Template__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.RuleValidationBatchSize__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.RuleValidationPromptTemplate__c</members>
+        <members>DNAMS_Pipeline_Setting__mdt.TransmittalMaxAttempts__c</members>
+        <members>DNAMS_Pipeline_Setting__mdt.TransmittalSummaryMaxWords__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -400,6 +418,8 @@
     </types>
     <types>
         <members>DNAMS_DocumentClassifier_Prompt</members>
+        <members>DNAMS_ExecutiveSummary_Prompt</members>
+        <members>DNAMS_OwnershipSummary_Prompt</members>
         <members>DNAMS_PackageIssueNarrator_Prompt</members>
         <members>DNAMS_RuleValidation_Prompt</members>
         <name>GenAiPromptTemplate</name>
@@ -416,8 +436,11 @@
         <name>Layout</name>
     </types>
     <types>
+        <members>dnamsDraftTransmittal</members>
+        <members>dnamsGenerateTransmittal</members>
         <members>dnamsPackageSender</members>
         <members>dnamsPackageUpload</members>
+        <members>dnamsTransmittalSummaries</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -462,6 +485,8 @@
     </types>
     <types>
         <members>DNAMS_Package__c.Cancel_Review</members>
+        <members>DNAMS_Package__c.Draft_AI_Transmittal</members>
+        <members>DNAMS_Package__c.Generate_Transmittal</members>
         <members>DNAMS_Package__c.Rerun_Review</members>
         <members>DNAMS_Package__c.Return_To_Dealer</members>
         <name>QuickAction</name>

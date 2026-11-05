@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SummaryType__c</fullName>
+    <description>Which transmittal summary this Transmittal Drafting row holds.</description>
+    <externalId>false</externalId>
+    <label>Summary Type</label>
+    <required>false</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Ownership Summary</fullName>
+                <default>false</default>
+                <label>Ownership Summary</label>
+            </value>
+            <value>
+                <fullName>Executive Summary</fullName>
+                <default>false</default>
+                <label>Executive Summary</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

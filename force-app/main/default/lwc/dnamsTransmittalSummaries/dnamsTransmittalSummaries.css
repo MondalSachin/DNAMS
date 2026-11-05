@@ -1,0 +1,5 @@
+/* Long drafts are never trimmed: the box keeps its height and scrolls vertically instead. */
+.summary-box {
+  max-height: 12rem;
+  overflow-y: auto;
+}

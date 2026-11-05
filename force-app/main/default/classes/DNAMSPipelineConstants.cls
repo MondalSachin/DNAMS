@@ -3,12 +3,13 @@
  *                  Classification-stage constants stay in DNAMS_PackageReviewPipelineService.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-05
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details Transmittal drafting sources and summary types
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-05   Abhishek Dutta  Transmittal drafting sources and summary types
  **/
 public inherited sharing class DNAMSPipelineConstants {
     // Stage names (AIReviewStageResult__c.Stage__c, AIReviewErrorLog__c.Stage__c, element Current_Stage__c)
@@ -97,4 +98,12 @@ public inherited sharing class DNAMSPipelineConstants {
     public static final Decimal GREEN_PASS_RATE = 100;
     public static final Decimal AMBER_PASS_RATE = 85;
     public static final Integer DEFAULT_RULE_BATCH_SIZE = 50;
+
+    // Transmittal drafting: DNAMS_Package__c.Transmittal_Draft_Source__c / stage row Outcome__c, and stage row SummaryType__c
+    public static final String DRAFT_SOURCE_AUTO = 'Auto';
+    public static final String DRAFT_SOURCE_RMR_DRAFT = 'RMR Draft';
+    public static final String DRAFT_SOURCE_RMR_REDRAFT = 'RMR Redraft';
+    public static final String DRAFT_SOURCE_RMR_OVERRIDE = 'RMR Override';
+    public static final String SUMMARY_OWNERSHIP = 'Ownership Summary';
+    public static final String SUMMARY_EXECUTIVE = 'Executive Summary';
 }

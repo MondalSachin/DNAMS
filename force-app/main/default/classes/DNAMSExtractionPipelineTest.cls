@@ -4,12 +4,13 @@
  *                  orchestration tests. IDP is reached only through DNAMSIDPCalloutMock or the stub client.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-05
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details Transmittal drafting replaces the placeholder
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-05   Abhishek Dutta  Transmittal drafting replaces the placeholder
  **/
 @IsTest
 public class DNAMSExtractionPipelineTest {
@@ -120,7 +121,7 @@ public class DNAMSExtractionPipelineTest {
             }
 
             // Nested async does not run in tests: run the rule validation that completion queued (no rules -> GREEN),
-            // then the transmittal placeholder that rule validation queued
+            // then the transmittal drafting that rule validation queued
             DNAMSRuleUtil.rulesOverride = new List<DNAMSRule__mdt>();
             new DNAMSRuleValidationStarterQueueable(fixture.runId).execute(null);
             AI_Package_Review_Run__c validated = reloadRun(fixture.runId);
@@ -131,7 +132,8 @@ public class DNAMSExtractionPipelineTest {
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_COMPLETED, completed.Status__c, 'Status__c has the expected value');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_PASSED, completed.Overall_Result__c, 'Overall_Result__c has the expected value');
             Assert.isNotNull(completed.Ended_At__c, 'Ended_At__c is set');
-            Assert.isTrue(completed.Reason__c.contains(DNAMSTransmittalStarterQueueable.PLACEHOLDER_REASON), completed.Reason__c);
+            // No prompt is stubbed here, so drafting may succeed or fail; either way the GREEN run passes
+            Assert.isTrue(completed.Reason__c.contains('Rule validation passed (GREEN).'), completed.Reason__c);
         }
     }
 

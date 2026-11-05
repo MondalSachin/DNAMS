@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Stage__c</fullName>
     <description>Pipeline stage where the error occurred.</description>
-    <inlineHelpText>Classification: document classification. Extraction: MuleSoft IDP extraction.</inlineHelpText>
+    <inlineHelpText>Classification: document classification. Extraction: MuleSoft IDP extraction. Rule Validation: rule checks. Transmittal Drafting: AI transmittal summaries.</inlineHelpText>
     <label>Stage</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
@@ -25,6 +25,11 @@
                 <fullName>Rule Validation</fullName>
                 <default>false</default>
                 <label>Rule Validation</label>
+            </value>
+            <value>
+                <fullName>Transmittal Drafting</fullName>
+                <default>false</default>
+                <label>Transmittal Drafting</label>
             </value>
         </valueSetDefinition>
     </valueSet>

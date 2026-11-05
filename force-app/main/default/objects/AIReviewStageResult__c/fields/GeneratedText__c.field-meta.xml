@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>GeneratedText__c</fullName>
+    <description>Generated summary HTML written to the package for this Transmittal Drafting row.</description>
+    <externalId>false</externalId>
+    <label>Generated Text</label>
+    <length>32768</length>
+    <trackTrending>false</trackTrending>
+    <type>LongTextArea</type>
+    <visibleLines>4</visibleLines>
+</CustomField>
