@@ -6,12 +6,13 @@
  *                  itself while rows remain Pending, then completes the stage (DNAMSRuleValidationCompletionHelper).
  * @author          Sachin Mondal
  * @group           DNAMS AI Review
- * @last modified on 2026-11-04
- * @last modified by Sachin Mondal
- * @last modification details Initial version
+ * @last modified on 2026-11-05
+ * @last modified by Abhishek Dutta
+ * @last modification details Crash finalizer fails the rule validation stage, not extraction
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-04   Sachin Mondal   Initial version
+ * 1.1   2026-11-05   Abhishek Dutta  DNAMSRuleUtil.StageFailureFinalizer
  **/
 // Exception to guideline: without sharing because the system pipeline must update every rule row of the run regardless of ownership
 public without sharing class DNAMSAIRuleValidationQueueable implements Queueable, Database.AllowsCallouts {
@@ -41,7 +42,7 @@ public without sharing class DNAMSAIRuleValidationQueueable implements Queueable
      **/
     public void execute(QueueableContext context) {
         if (context != null) {
-            System.attachFinalizer(new DNAMSExtractionStarterQueueable.RunFailureFinalizer(new Set<Id>{ runId }, CLASS_NAME));
+            System.attachFinalizer(new DNAMSRuleUtil.StageFailureFinalizer(runId, CLASS_NAME));
         }
         Boolean morePending;
         try {

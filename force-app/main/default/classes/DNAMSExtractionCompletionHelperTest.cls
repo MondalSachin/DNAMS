@@ -1,14 +1,16 @@
 /**
  * @description     Tests for DNAMSExtractionCompletionHelper: all-pass consolidation, schema mismatch, error rows,
- *                  in-flight rows, cancelled runs and the Admin Team email hand-off.
+ *                  in-flight rows, cancelled runs, a second completion of a settled run, the stub-mode callback
+ *                  simulation and the Admin Team email hand-off.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-05
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details Tests for the settled-run guard and the stub-mode callback simulation
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-05   Abhishek Dutta  Tests for the settled-run guard and the stub-mode callback simulation
  **/
 @IsTest
 private class DNAMSExtractionCompletionHelperTest {
@@ -138,6 +140,47 @@ private class DNAMSExtractionCompletionHelperTest {
                 [SELECT COUNT() FROM AIReviewStageResult__c WHERE SchemaValidationStatus__c = :DNAMSPipelineConstants.SCHEMA_PASSED],
                 'Every row is marked Passed'
             );
+        }
+    }
+
+    @IsTest
+    static void secondCompletionOfASettledRunDoesNothing() {
+        System.runAs(DNAMSPipelineTestHelper.getAdminUser()) {
+            DNAMSRuleUtil.rulesOverride = new List<DNAMSRule__mdt>();
+            useTestConfig();
+            DNAMSPipelineTestHelper.PipelineFixture fixture = DNAMSPipelineTestHelper.createExtractionFixture();
+            insert DNAMSPipelineTestHelper.createStageResults(fixture, DNAMSPipelineConstants.ROW_COMPLETED).values();
+
+            DNAMSExtractionCompletionHelper.completeExtraction(new Set<Id>{ fixture.runId });
+            DNAMSExtractionCompletionHelper.completeExtraction(new Set<Id>{ fixture.runId }); // e.g. a late callback
+
+            Assert.areEqual(
+                1,
+                [SELECT COUNT() FROM AsyncApexJob WHERE JobType = 'Queueable' AND ApexClass.Name = 'DNAMSRuleValidationStarterQueueable'],
+                'Rule validation is started once'
+            );
+            Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_COMPLETED, reloadRun(fixture.runId).ExtractionProcessingStatus__c, 'Extraction completed');
+        }
+    }
+
+    @IsTest
+    static void stubModeSimulatesTheCallbackLiveModeDoesNot() {
+        System.runAs(DNAMSPipelineTestHelper.getAdminUser()) {
+            useTestConfig();
+            DNAMSPipelineTestHelper.PipelineFixture fixture = DNAMSPipelineTestHelper.createExtractionFixture();
+            List<AIReviewStageResult__c> rows = DNAMSPipelineTestHelper.createStageResults(fixture, DNAMSPipelineConstants.ROW_IN_PROGRESS).values();
+            insert rows;
+            List<Database.SaveResult> saved = Database.update(rows, false, AccessLevel.SYSTEM_MODE); // as the submit batch saves them
+            for (Database.SaveResult result : saved) {
+                Assert.isTrue(result.isSuccess(), 'Row saved: ' + result.getErrors());
+            }
+            DNAMSExtractionSubmitBatch batch = new DNAMSExtractionSubmitBatch(fixture.runId);
+
+            DNAMS_PackageReviewPipelineService.settingsOverride.IDPMode__c = DNAMSPipelineConstants.IDP_MODE_LIVE;
+            Assert.areEqual(0, batch.simulateStubCallbacks(rows, saved), 'Live mode waits for the real IDP callback');
+
+            DNAMS_PackageReviewPipelineService.settingsOverride.IDPMode__c = DNAMSPipelineConstants.IDP_MODE_STUB;
+            Assert.areEqual(rows.size(), batch.simulateStubCallbacks(rows, saved), 'Stub mode publishes one Callback event per submitted row');
         }
     }
 

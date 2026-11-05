@@ -3,12 +3,13 @@
  *                  of the rule validation stage: which rules apply to a package, key parsing and safe job chaining.
  * @author          Sachin Mondal
  * @group           DNAMS AI Review
- * @last modified on 2026-11-04
- * @last modified by Sachin Mondal
- * @last modification details Initial version
+ * @last modified on 2026-11-05
+ * @last modified by Abhishek Dutta
+ * @last modification details StageFailureFinalizer: a crashed rule validation job fails this stage, not extraction
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-04   Sachin Mondal   Initial version
+ * 1.1   2026-11-05   Abhishek Dutta  StageFailureFinalizer for the rule validation queueables
  **/
 public inherited sharing class DNAMSRuleUtil {
     // Tests inject rules here so they never depend on the deployed CMDT records.
@@ -21,13 +22,15 @@ public inherited sharing class DNAMSRuleUtil {
      **/
     @SuppressWarnings('PMD.ApexCRUDViolation')
     public static List<DNAMSRule__mdt> getRules() {
-        // PMD.ApexCRUDViolation suppressed: CMDT is pipeline configuration, read in system mode.
+        // System mode: the pipeline runs as the IDP integration user, whose user-mode SOQL cannot see this type
+        // ("sObject type 'DNAMSRule__mdt' is not supported").
         List<DNAMSRule__mdt> rules = rulesOverride ?? [
             SELECT DeveloperName, MasterLabel, Description__c, AIInstructions__c, RuleType__c, RelativeElementType__c,
                 ValidationMethod__c, RuleAppliedTo__c, RelativePackageType__c, SourceFieldType__c, SourceFieldKey__c,
                 Comparator__c, ReferenceFieldType__c, ReferenceFieldKey__c, IsActive__c, SortOrder__c
             FROM DNAMSRule__mdt
             WHERE IsActive__c = TRUE
+            WITH SYSTEM_MODE
             ORDER BY SortOrder__c ASC NULLS LAST, DeveloperName ASC
         ];
         List<DNAMSRule__mdt> active = new List<DNAMSRule__mdt>();
@@ -137,6 +140,35 @@ public inherited sharing class DNAMSRuleUtil {
             DNAMSErrorLogHelper.insertLogs(new List<AIReviewErrorLog__c>{ DNAMSErrorLogHelper.buildLog(detail) });
         } catch (Exception ignored) {
             System.debug(LoggingLevel.ERROR, 'Rule validation failure could not be recorded: ' + ignored.getMessage());
+        }
+    }
+
+    /**
+     * @description Finalizer for the rule validation queueables: an unhandled exception fails the rule validation
+     *              stage (not the already completed extraction stage).
+     **/
+    public class StageFailureFinalizer implements Finalizer {
+        private Id runId;
+        private String sourceClass;
+
+        /**
+         * @description Creates the finalizer.
+         * @param runId       The run
+         * @param sourceClass Queueable class name for the log
+         **/
+        public StageFailureFinalizer(Id runId, String sourceClass) {
+            this.runId = runId;
+            this.sourceClass = sourceClass;
+        }
+
+        /**
+         * @description Fails the stage after an unhandled exception; does nothing after success.
+         * @param context Finalizer context
+         **/
+        public void execute(FinalizerContext context) {
+            if (context.getResult() == ParentJobResult.UNHANDLED_EXCEPTION) {
+                failStage(runId, context.getException(), sourceClass);
+            }
         }
     }
 }

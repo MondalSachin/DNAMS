@@ -3,12 +3,13 @@
  *                  invocation, and unknown events ignored.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-05
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details Counts the callback processor queued by the stub-mode callback simulation
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-05   Abhishek Dutta  Counts the callback processor queued by the stub-mode callback simulation
  **/
 @IsTest
 private class DNAMSIDPEventTriggerHandlerTest {
@@ -39,7 +40,9 @@ private class DNAMSIDPEventTriggerHandlerTest {
             Test.stopTest();
 
             Assert.areEqual(1, countQueueables(DNAMSExtractionStarterQueueable.class.getName()), 'Start events share one starter');
-            Assert.areEqual(1, countQueueables(DNAMSIDPCallbackQueueable.class.getName()), 'Callback events share one processor');
+            // The handled Callback event queues one processor; the stub-mode submit batch run by the starter queues a second
+            // one for the callback it simulates (DNAMSExtractionSubmitBatch.simulateStubCallbacks).
+            Assert.areEqual(2, countQueueables(DNAMSIDPCallbackQueueable.class.getName()), 'Callback events share one processor per delivery');
             Assert.areEqual(
                 DNAMSPipelineConstants.RUN_STAGE_IN_PROGRESS,
                 DNAMSExtractionPipelineTest.reloadRun(fixture.runId).ExtractionProcessingStatus__c,

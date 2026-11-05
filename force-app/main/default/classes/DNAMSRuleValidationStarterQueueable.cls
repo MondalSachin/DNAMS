@@ -10,13 +10,14 @@
  *                  PIR failure makes the package Red.
  * @author          Sachin Mondal
  * @group           DNAMS AI Review
- * @last modified on 2026-11-04
- * @last modified by Sachin Mondal
- * @last modification details Replaces the phase 3 placeholder with the rule validation stage
+ * @last modified on 2026-11-05
+ * @last modified by Abhishek Dutta
+ * @last modification details Crash finalizer fails the rule validation stage, not extraction
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version (placeholder)
  * 2.0   2026-11-04   Sachin Mondal   Rule validation stage
+ * 2.1   2026-11-05   Abhishek Dutta  DNAMSRuleUtil.StageFailureFinalizer
  **/
 // Exception to guideline: without sharing because the system pipeline runs as the IDP integration user and must read all package files/records regardless of ownership
 public without sharing class DNAMSRuleValidationStarterQueueable implements Queueable {
@@ -24,6 +25,7 @@ public without sharing class DNAMSRuleValidationStarterQueueable implements Queu
     private static final Integer VALUE_LENGTH = 32768;
 
     private Id runId;
+    private Boolean alreadyStarted = false;
 
     /**
      * @description Creates the starter for one run.
@@ -39,7 +41,7 @@ public without sharing class DNAMSRuleValidationStarterQueueable implements Queu
      **/
     public void execute(QueueableContext context) {
         if (context != null) { // null when execute is called directly rather than as a queued job
-            System.attachFinalizer(new DNAMSExtractionStarterQueueable.RunFailureFinalizer(new Set<Id>{ runId }, CLASS_NAME));
+            System.attachFinalizer(new DNAMSRuleUtil.StageFailureFinalizer(runId, CLASS_NAME));
         }
         Savepoint savepoint = Database.setSavepoint();
         Boolean hasPending;
@@ -51,6 +53,9 @@ public without sharing class DNAMSRuleValidationStarterQueueable implements Queu
         } catch (Exception e) {
             Database.rollback(savepoint);
             DNAMSRuleUtil.failStage(runId, e, CLASS_NAME);
+            return;
+        }
+        if (alreadyStarted) {
             return;
         }
         if (!hasPending) {
@@ -68,7 +73,16 @@ public without sharing class DNAMSRuleValidationStarterQueueable implements Queu
      * @return      Whether any AIMatch row is waiting for the model
      **/
     private Boolean startStage() {
-        AI_Package_Review_Run__c run = [SELECT Id, Package__c, ConsolidatedExtractionJSON__c FROM AI_Package_Review_Run__c WHERE Id = :runId WITH SYSTEM_MODE];
+        AI_Package_Review_Run__c run = [
+            SELECT Id, Package__c, ConsolidatedExtractionJSON__c, RuleValidationProcessingStatus__c
+            FROM AI_Package_Review_Run__c
+            WHERE Id = :runId
+            WITH SYSTEM_MODE
+        ];
+        if (run.RuleValidationProcessingStatus__c != null) {
+            alreadyStarted = true; // a duplicate start (e.g. extraction completed twice): the first one owns the stage
+            return false;
+        }
         DNAMS_Package__c pkg = [
             SELECT Id, Type__c, PIR_Bypass_Acknowledged__c, PIR_Bypass_Reason__c, PIR_Linked__c, PIR_Cleared__c
             FROM DNAMS_Package__c

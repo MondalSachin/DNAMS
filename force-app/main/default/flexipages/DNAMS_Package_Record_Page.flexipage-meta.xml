@@ -615,11 +615,16 @@
                 <componentName>flexipage:richText</componentName>
                 <identifier>banner_issues</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
+                    <booleanFilter>(1 OR 2) AND 3</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.Status__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>RMR Pending</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Status__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Under Review</rightValue>
                     </criteria>
                     <criteria>
                         <leftValue>{!Record.Health__c}</leftValue>
@@ -637,11 +642,54 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>richTextValue</name>
-                    <value>&lt;p style=&quot;background-color: rgb(46, 132, 74); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;All documents verified&lt;/b&gt;&lt;br&gt;Every required document matched its expected type.&lt;/p&gt;</value>
+                    <value>&lt;p style=&quot;background-color: rgb(166, 90, 0); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;Review needed&lt;/b&gt;&lt;br&gt;Most checks passed, but some validation rules failed or could not be decided. Open an element to see its rule results.&lt;/p&gt;</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:richText</componentName>
+                <identifier>banner_amber</identifier>
+                <visibilityRule>
+                    <booleanFilter>(1 OR 2) AND 3</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.Status__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>RMR Pending</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Status__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Under Review</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Health__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Amber</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>decorate</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>richTextValue</name>
+                    <value>&lt;p style=&quot;background-color: rgb(46, 132, 74); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;All checks passed&lt;/b&gt;&lt;br&gt;Every required document matched its expected type and passed extraction and the validation rules.&lt;/p&gt;</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:richText</componentName>
                 <identifier>banner_verified</identifier>
                 <visibilityRule>
+                    <booleanFilter>(1 OR 2) AND 3</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.Status__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>RMR Pending</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Status__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Under Review</rightValue>
+                    </criteria>
                     <criteria>
                         <leftValue>{!Record.Health__c}</leftValue>
                         <operator>EQUAL</operator>

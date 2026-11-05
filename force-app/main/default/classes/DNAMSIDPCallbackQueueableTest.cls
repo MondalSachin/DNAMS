@@ -47,7 +47,8 @@ private class DNAMSIDPCallbackQueueableTest {
             DNAMSExtractionCompletionHelper.expectedStructureOverride.put(row.IDPActionName__c, DNAMSPipelineTestHelper.TEST_EXPECTED_STRUCTURE);
             Test.setMock(HttpCalloutMock.class, new DNAMSIDPCalloutMock(201, '{}', 200, DNAMSPipelineTestHelper.TEST_RESPONSE_JSON));
 
-            runCallback(row.Id); // the rule validation placeholder queued by completion runs at stopTest
+            DNAMSRuleUtil.rulesOverride = new List<DNAMSRule__mdt>();
+            runCallback(row.Id); // the rule validation queued by completion runs at stopTest (no rules -> GREEN)
 
             AIReviewStageResult__c saved = reloadRow(row.Id);
             Assert.areEqual(1, DNAMSIDPCalloutMock.getCount, 'getCount has the expected value');
@@ -57,8 +58,8 @@ private class DNAMSIDPCallbackQueueableTest {
             Assert.isNotNull(saved.ProcessingCompletedAt__c, 'ProcessingCompletedAt__c is set');
             AI_Package_Review_Run__c run = DNAMSExtractionPipelineTest.reloadRun(fixture.runId);
             Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_COMPLETED, run.ExtractionProcessingStatus__c, 'ExtractionProcessingStatus__c has the expected value');
-            Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_COMPLETED, run.Status__c, 'Rule validation placeholder completed the run');
-            Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_PASSED, run.Overall_Result__c, 'Overall_Result__c has the expected value');
+            Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_COMPLETED, run.RuleValidationProcessingStatus__c, 'Rule validation completed');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_RUNNING, run.Status__c, 'A GREEN run waits for transmittal drafting');
         }
     }
 

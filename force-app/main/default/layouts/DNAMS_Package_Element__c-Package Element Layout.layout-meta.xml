@@ -112,8 +112,31 @@
         <detailHeading>false</detailHeading>
         <editHeading>false</editHeading>
         <layoutColumns/>
+        <layoutColumns/>
+        <layoutColumns/>
         <style>CustomLinks</style>
     </layoutSections>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>RuleName__c</fields>
+        <fields>Verdict__c</fields>
+        <fields>Stage__c</fields>
+        <fields>ReviewRun__c</fields>
+        <fields>DocumentTitle__c</fields>
+        <fields>ProcessingStatus__c</fields>
+        <fields>ComparisonMethod__c</fields>
+        <fields>Reasoning__c</fields>
+        <relatedList>AIReviewStageResult__c.PackageElement__c</relatedList>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>ErrorType__c</fields>
+        <fields>Stage__c</fields>
+        <fields>DocumentTitle__c</fields>
+        <fields>SourceClass__c</fields>
+        <fields>CREATED_DATE</fields>
+        <relatedList>AIReviewErrorLog__c.PackageElement__c</relatedList>
+    </relatedLists>
     <relatedLists>
         <relatedList>RelatedFileList</relatedList>
     </relatedLists>

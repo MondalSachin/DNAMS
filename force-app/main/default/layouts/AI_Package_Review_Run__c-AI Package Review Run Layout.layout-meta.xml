@@ -51,6 +51,41 @@
         <customLabel>true</customLabel>
         <detailHeading>true</detailHeading>
         <editHeading>true</editHeading>
+        <label>Extraction &amp; Rule Validation</label>
+        <layoutColumns>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>ExtractionProcessingStatus__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>ExtractionSchemaValidation__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>RuleValidationProcessingStatus__c</field>
+            </layoutItems>
+        </layoutColumns>
+        <layoutColumns>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>RuleValidationPassRate__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>ExactMatchPassRate__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>AIMatchPassRate__c</field>
+            </layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+    <layoutSections>
+        <customLabel>true</customLabel>
+        <detailHeading>true</detailHeading>
+        <editHeading>true</editHeading>
         <label>Details</label>
         <layoutColumns>
             <layoutItems>
@@ -104,8 +139,32 @@
         <detailHeading>false</detailHeading>
         <editHeading>false</editHeading>
         <layoutColumns/>
+        <layoutColumns/>
+        <layoutColumns/>
         <style>CustomLinks</style>
     </layoutSections>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>Stage__c</fields>
+        <fields>RuleName__c</fields>
+        <fields>Verdict__c</fields>
+        <fields>PackageElement__c</fields>
+        <fields>DocumentTitle__c</fields>
+        <fields>ProcessingStatus__c</fields>
+        <fields>ComparisonMethod__c</fields>
+        <fields>Reasoning__c</fields>
+        <relatedList>AIReviewStageResult__c.ReviewRun__c</relatedList>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <fields>ErrorType__c</fields>
+        <fields>Stage__c</fields>
+        <fields>PackageElement__c</fields>
+        <fields>DocumentTitle__c</fields>
+        <fields>SourceClass__c</fields>
+        <fields>CREATED_DATE</fields>
+        <relatedList>AIReviewErrorLog__c.ReviewRun__c</relatedList>
+    </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>
     <showInteractionLogPanel>false</showInteractionLogPanel>

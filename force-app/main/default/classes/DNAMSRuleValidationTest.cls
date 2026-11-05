@@ -4,18 +4,53 @@
  *                  and DNAMSRuleUtil. Rules are injected in memory (DNAMSRuleUtil.rulesOverride) and the model is stubbed.
  * @author          Sachin Mondal
  * @group           DNAMS AI Review
- * @last modified on 2026-11-04
- * @last modified by Sachin Mondal
- * @last modification details Initial version
+ * @last modified on 2026-11-05
+ * @last modified by Abhishek Dutta
+ * @last modification details StageFailureFinalizer test
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-04   Sachin Mondal   Initial version
+ * 1.1   2026-11-05   Abhishek Dutta  StageFailureFinalizer test
  **/
 @IsTest
 private class DNAMSRuleValidationTest {
     private static final String DEALER_CODE = 'TCE00087';
     private static final String DEALER_NAME = 'DNAMS Test Dealer';
     private static final String DA = 'Dealer Application';
+
+    /**
+     * @description Finalizer context of a job that ended with an unhandled exception.
+     **/
+    private class CrashedJobContext implements FinalizerContext {
+        /**
+         * @description Job id (unused).
+         * @return      null
+         **/
+        public Id getAsyncApexJobId() {
+            return null;
+        }
+        /**
+         * @description The crash.
+         * @return      A DmlException
+         **/
+        public Exception getException() {
+            return new DmlException('boom');
+        }
+        /**
+         * @description Request id (unused).
+         * @return      null
+         **/
+        public String getRequestId() {
+            return null;
+        }
+        /**
+         * @description Job result.
+         * @return      UNHANDLED_EXCEPTION
+         **/
+        public ParentJobResult getResult() {
+            return ParentJobResult.UNHANDLED_EXCEPTION;
+        }
+    }
 
     private class StubValidator implements DNAMSRuleAIValidator {
         String answer;
@@ -334,6 +369,23 @@ private class DNAMSRuleValidationTest {
         }
     }
 
+    @IsTest
+    static void secondStartOfTheSameRunDoesNothing() {
+        System.runAs(DNAMSPipelineTestHelper.getAdminUser()) {
+            DNAMSPipelineTestHelper.PipelineFixture fixture = setUpRun();
+            DNAMSRuleUtil.rulesOverride = new List<DNAMSRule__mdt>{ passingRule('V1'), failingRule('V2') };
+
+            new DNAMSRuleValidationStarterQueueable(fixture.runId).execute(null);
+            new DNAMSRuleValidationStarterQueueable(fixture.runId).execute(null);
+
+            Assert.areEqual(
+                3,
+                [SELECT COUNT() FROM AIReviewStageResult__c WHERE ReviewRun__c = :fixture.runId AND Stage__c = :DNAMSPipelineConstants.STAGE_RULE_VALIDATION],
+                'Rows are created once (2 rules + PIR)'
+            );
+        }
+    }
+
     // ------------------------------------------------------------------ units
 
     @IsTest
@@ -379,6 +431,28 @@ private class DNAMSRuleValidationTest {
             Assert.fail('Not an array');
         } catch (DNAMSPipelineException expected) {
             Assert.isTrue(expected.getMessage().contains('JSON array'), expected.getMessage());
+        }
+    }
+
+    @IsTest
+    static void crashedRuleJobFailsRuleValidationNotExtraction() {
+        System.runAs(DNAMSPipelineTestHelper.getAdminUser()) {
+            DNAMSPipelineTestHelper.PipelineFixture fixture = setUpRun();
+
+            new DNAMSRuleUtil.StageFailureFinalizer(fixture.runId, 'TestJob').execute(new CrashedJobContext());
+
+            AI_Package_Review_Run__c run = [
+                SELECT ExtractionProcessingStatus__c, RuleValidationProcessingStatus__c
+                FROM AI_Package_Review_Run__c
+                WHERE Id = :fixture.runId
+            ];
+            Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_FAILED, run.RuleValidationProcessingStatus__c, 'Rule validation failed');
+            Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_COMPLETED, run.ExtractionProcessingStatus__c, 'Extraction untouched');
+            Assert.areEqual(
+                1,
+                [SELECT COUNT() FROM AIReviewErrorLog__c WHERE ReviewRun__c = :fixture.runId AND Stage__c = :DNAMSPipelineConstants.STAGE_RULE_VALIDATION],
+                'Logged against rule validation'
+            );
         }
     }
 }

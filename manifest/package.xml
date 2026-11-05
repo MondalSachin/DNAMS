@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
+        <members>DNAMSAIRuleValidationQueueable</members>
         <members>DNAMSCallbackSignatureUtil</members>
         <members>DNAMSCallbackSignatureUtilTest</members>
+        <members>DNAMSEinsteinRuleAIValidator</members>
         <members>DNAMSElementDocumentTypeUtil</members>
         <members>DNAMSElementDocumentTypeUtilTest</members>
         <members>DNAMSErrorLogHelper</members>
@@ -37,11 +39,17 @@
         <members>DNAMSPipelineConstants</members>
         <members>DNAMSPipelineException</members>
         <members>DNAMSPipelineTestHelper</members>
+        <members>DNAMSRuleAIValidator</members>
+        <members>DNAMSRuleEvaluator</members>
+        <members>DNAMSRuleUtil</members>
+        <members>DNAMSRuleValidationCompletionHelper</members>
         <members>DNAMSRuleValidationStarterQueueable</members>
+        <members>DNAMSRuleValidationTest</members>
         <members>DNAMSStageResultHelper</members>
         <members>DNAMSStageResultHelperTest</members>
         <members>DNAMSStructureValidationUtil</members>
         <members>DNAMSStructureValidationUtilTest</members>
+        <members>DNAMSTransmittalStarterQueueable</members>
         <members>DNAMS_CancelReviewAction</members>
         <members>DNAMS_ClassificationStarterQueueable</members>
         <members>DNAMS_DocumentClassificationBatch</members>
@@ -49,6 +57,7 @@
         <members>DNAMS_EinsteinDocumentClassifier</members>
         <members>DNAMS_EinsteinNarrativeWriter</members>
         <members>DNAMS_GuestAccessTest</members>
+        <members>DNAMS_GuestDiagnostic</members>
         <members>DNAMS_GuestUploadController</members>
         <members>DNAMS_NarrativeWriter</members>
         <members>DNAMS_PackageController</members>
@@ -97,6 +106,7 @@
         <members>AIReviewStageResult__c.CallbackPayload__c</members>
         <members>AIReviewStageResult__c.CallbackReceivedAt__c</members>
         <members>AIReviewStageResult__c.CallbackToken__c</members>
+        <members>AIReviewStageResult__c.ComparisonMethod__c</members>
         <members>AIReviewStageResult__c.Confidence__c</members>
         <members>AIReviewStageResult__c.ContentDocumentId__c</members>
         <members>AIReviewStageResult__c.ContentVersionId__c</members>
@@ -115,14 +125,21 @@
         <members>AIReviewStageResult__c.ProcessingStatus__c</members>
         <members>AIReviewStageResult__c.RawStageResponseJSON__c</members>
         <members>AIReviewStageResult__c.Reasoning__c</members>
+        <members>AIReviewStageResult__c.ReferenceValue__c</members>
         <members>AIReviewStageResult__c.ReviewRun__c</members>
+        <members>AIReviewStageResult__c.RuleId__c</members>
+        <members>AIReviewStageResult__c.RuleName__c</members>
         <members>AIReviewStageResult__c.SchemaValidationStatus__c</members>
+        <members>AIReviewStageResult__c.SourceValue__c</members>
         <members>AIReviewStageResult__c.Stage__c</members>
         <members>AIReviewStageResult__c.SubmittedAt__c</members>
+        <members>AIReviewStageResult__c.Verdict__c</members>
+        <members>AI_Package_Review_Run__c.AIMatchPassRate__c</members>
         <members>AI_Package_Review_Run__c.Classification_Processing_Status__c</members>
         <members>AI_Package_Review_Run__c.ConsolidatedExtractionJSON__c</members>
         <members>AI_Package_Review_Run__c.Ended_At__c</members>
         <members>AI_Package_Review_Run__c.Error__c</members>
+        <members>AI_Package_Review_Run__c.ExactMatchPassRate__c</members>
         <members>AI_Package_Review_Run__c.ExtractionProcessingStatus__c</members>
         <members>AI_Package_Review_Run__c.ExtractionSchemaValidation__c</members>
         <members>AI_Package_Review_Run__c.Issue_Summary__c</members>
@@ -132,6 +149,8 @@
         <members>AI_Package_Review_Run__c.Prompt_Template__c</members>
         <members>AI_Package_Review_Run__c.Reason__c</members>
         <members>AI_Package_Review_Run__c.Requested_By__c</members>
+        <members>AI_Package_Review_Run__c.RuleValidationPassRate__c</members>
+        <members>AI_Package_Review_Run__c.RuleValidationProcessingStatus__c</members>
         <members>AI_Package_Review_Run__c.Started_At__c</members>
         <members>AI_Package_Review_Run__c.Status__c</members>
         <members>AI_Package_Review_Run__c.Trigger_Source__c</members>
@@ -157,6 +176,20 @@
         <members>DNAMSIDPEvent__e.ReviewRunId__c</members>
         <members>DNAMSIDPEvent__e.StageResultId__c</members>
         <members>DNAMSIDPSecret__c.SigningKey__c</members>
+        <members>DNAMSRule__mdt.AIInstructions__c</members>
+        <members>DNAMSRule__mdt.Comparator__c</members>
+        <members>DNAMSRule__mdt.Description__c</members>
+        <members>DNAMSRule__mdt.IsActive__c</members>
+        <members>DNAMSRule__mdt.ReferenceFieldKey__c</members>
+        <members>DNAMSRule__mdt.ReferenceFieldType__c</members>
+        <members>DNAMSRule__mdt.RelativeElementType__c</members>
+        <members>DNAMSRule__mdt.RelativePackageType__c</members>
+        <members>DNAMSRule__mdt.RuleAppliedTo__c</members>
+        <members>DNAMSRule__mdt.RuleType__c</members>
+        <members>DNAMSRule__mdt.SortOrder__c</members>
+        <members>DNAMSRule__mdt.SourceFieldKey__c</members>
+        <members>DNAMSRule__mdt.SourceFieldType__c</members>
+        <members>DNAMSRule__mdt.ValidationMethod__c</members>
         <members>DNAMS_Element_Type__c.Identifying_Definition__c</members>
         <members>DNAMS_Element_Type__c.Instructions__c</members>
         <members>DNAMS_Element_Type__c.Is_Active__c</members>
@@ -188,6 +221,10 @@
         <members>DNAMS_Package__c.Buying_Dealer__c</members>
         <members>DNAMS_Package__c.Dealer_Submit_Validation_Override__c</members>
         <members>DNAMS_Package__c.Health__c</members>
+        <members>DNAMS_Package__c.PIR_Bypass_Acknowledged__c</members>
+        <members>DNAMS_Package__c.PIR_Bypass_Reason__c</members>
+        <members>DNAMS_Package__c.PIR_Cleared__c</members>
+        <members>DNAMS_Package__c.PIR_Linked__c</members>
         <members>DNAMS_Package__c.Package_Name__c</members>
         <members>DNAMS_Package__c.Primary_Contact__c</members>
         <members>DNAMS_Package__c.Selling_Dealer__c</members>
@@ -209,7 +246,10 @@
         <members>DNAMS_Pipeline_Setting__mdt.Min_Accepted_Confidence__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.Min_Auto_Accept_Confidence__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.Narrative_Prompt_Template__c</members>
+        <members>DNAMS_Pipeline_Setting__mdt.PIRRequiredPackageTypes__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.Prompt_Template__c</members>
+        <members>DNAMS_Pipeline_Setting__mdt.RuleValidationBatchSize__c</members>
+        <members>DNAMS_Pipeline_Setting__mdt.RuleValidationPromptTemplate__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -241,6 +281,36 @@
         <members>DNAMSIDPAction.OrgChart</members>
         <members>DNAMSIDPAction.PhotographsOfFacility</members>
         <members>DNAMSIDPAction.UtilityBill</members>
+        <members>DNAMSRule.AV_C01</members>
+        <members>DNAMSRule.AV_V01</members>
+        <members>DNAMSRule.AV_V02</members>
+        <members>DNAMSRule.AV_V03</members>
+        <members>DNAMSRule.AV_V04</members>
+        <members>DNAMSRule.DA_C01</members>
+        <members>DNAMSRule.DA_V01</members>
+        <members>DNAMSRule.DA_V02</members>
+        <members>DNAMSRule.DA_V03</members>
+        <members>DNAMSRule.DA_V04</members>
+        <members>DNAMSRule.DA_V05</members>
+        <members>DNAMSRule.DA_V06</members>
+        <members>DNAMSRule.DA_V07</members>
+        <members>DNAMSRule.DA_V08</members>
+        <members>DNAMSRule.DA_V09</members>
+        <members>DNAMSRule.OC_C01</members>
+        <members>DNAMSRule.OC_V01</members>
+        <members>DNAMSRule.OC_V02</members>
+        <members>DNAMSRule.OC_V03</members>
+        <members>DNAMSRule.OC_V04</members>
+        <members>DNAMSRule.OC_V05</members>
+        <members>DNAMSRule.OC_V06</members>
+        <members>DNAMSRule.PF_C01</members>
+        <members>DNAMSRule.PF_V01</members>
+        <members>DNAMSRule.PF_V02</members>
+        <members>DNAMSRule.PF_V03</members>
+        <members>DNAMSRule.PF_V04</members>
+        <members>DNAMSRule.PF_V05</members>
+        <members>DNAMSRule.PF_V06</members>
+        <members>DNAMSRule.PK_V01</members>
         <members>DNAMS_Pipeline_Setting.Default</members>
         <name>CustomMetadata</name>
     </types>
@@ -252,6 +322,7 @@
         <members>DNAMSIDPAction__mdt</members>
         <members>DNAMSIDPEvent__e</members>
         <members>DNAMSIDPSecret__c</members>
+        <members>DNAMSRule__mdt</members>
         <members>DNAMS_Element_Type__c</members>
         <members>DNAMS_Package_Element__c</members>
         <members>DNAMS_Package_Review_Requested__e</members>
@@ -270,6 +341,7 @@
     </types>
     <types>
         <members>AI_Package_Review_Run__c</members>
+        <members>DNAMS_Element_Type__c</members>
         <members>DNAMS_Package_Element__c</members>
         <members>DNAMS_Package__c</members>
         <name>CustomTab</name>
@@ -329,6 +401,7 @@
     <types>
         <members>DNAMS_DocumentClassifier_Prompt</members>
         <members>DNAMS_PackageIssueNarrator_Prompt</members>
+        <members>DNAMS_RuleValidation_Prompt</members>
         <name>GenAiPromptTemplate</name>
     </types>
     <types>
@@ -348,8 +421,10 @@
         <name>LightningComponentBundle</name>
     </types>
     <types>
+        <members>AI_Package_Review_Run__c.All_Runs</members>
         <members>DNAMS_Package__c.All_Packages</members>
         <members>DNAMS_Package__c.CENTRAL_RMR_DNAMS_Package</members>
+        <members>DNAMS_Package__c.DNAMSAdminTeam_DNAMS_Package</members>
         <name>ListView</name>
     </types>
     <types>

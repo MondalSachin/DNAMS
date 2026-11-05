@@ -6,12 +6,13 @@
  *                  and starts rule validation. Runs still waiting on IDP are left untouched.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-05
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details A run whose extraction is already settled is not completed (or dispatched) twice
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-05   Abhishek Dutta  A run whose extraction is already settled is not completed (or dispatched) twice
  **/
 public inherited sharing class DNAMSExtractionCompletionHelper {
     private static final String SOURCE_CLASS = DNAMSExtractionCompletionHelper.class.getName();
@@ -21,6 +22,11 @@ public inherited sharing class DNAMSExtractionCompletionHelper {
     private static final Set<String> IN_FLIGHT_STATUSES = new Set<String>{
         DNAMSPipelineConstants.ROW_PENDING,
         DNAMSPipelineConstants.ROW_IN_PROGRESS
+    };
+    // Runs whose extraction stage is already settled are never completed again (parallel callbacks / batch finish)
+    private static final Set<String> ALREADY_SETTLED = new Set<String>{
+        DNAMSPipelineConstants.RUN_STAGE_COMPLETED,
+        DNAMSPipelineConstants.RUN_STAGE_FAILED
     };
     // Issue label and payload-free reason per failed row status; any other status falls back to the row status.
     private static final Map<String, String> LABEL_BY_STATUS = new Map<String, String>{
@@ -105,7 +111,9 @@ public inherited sharing class DNAMSExtractionCompletionHelper {
         for (AI_Package_Review_Run__c run : [
             SELECT Id, Package__c, Status__c
             FROM AI_Package_Review_Run__c
-            WHERE Id IN :runIds AND Status__c IN :DNAMS_PackageReviewPipelineService.ACTIVE_RUN_STATUSES
+            WHERE Id IN :runIds
+                AND Status__c IN :DNAMS_PackageReviewPipelineService.ACTIVE_RUN_STATUSES
+                AND ExtractionProcessingStatus__c NOT IN :ALREADY_SETTLED
             WITH SYSTEM_MODE
             FOR UPDATE
         ]) {

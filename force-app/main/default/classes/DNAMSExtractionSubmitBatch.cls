@@ -2,16 +2,18 @@
  * @description     LLD page 5 steps [6]-[9]: POSTs each Pending extraction stage row's file to its MuleSoft IDP action,
  *                  with a signed callback URL. All callouts of a scope run first, then one DML: success moves the row to
  *                  In Progress, failure to Error with a POST Error log. finish() schedules the timeout cleanup and asks
- *                  completion to settle the run (it waits while rows are still in flight).
+ *                  completion to settle the run (it waits while rows are still in flight). In Stub mode each submitted
+ *                  row also gets a simulated Callback event, since the stub IDP never calls back.
  *                  Integration: DNAMSIDPActionUtil.getClient() (Named Credential DNAMS_Pipeline_Setting__mdt.IDPNamedCredential__c).
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-05
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details Stub mode simulates the IDP callback instead of waiting for the timeout cleanup
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-05   Abhishek Dutta  Stub mode simulates the IDP callback instead of waiting for the timeout cleanup
  **/
 // Exception to guideline: without sharing because the system pipeline runs as the IDP integration user and must read all package files/records regardless of ownership
 public without sharing class DNAMSExtractionSubmitBatch implements Database.Batchable<SObject>, Database.AllowsCallouts {
@@ -68,11 +70,59 @@ public without sharing class DNAMSExtractionSubmitBatch implements Database.Batc
                     logs.add(log);
                 }
             }
-            Database.update(rows, false, AccessLevel.SYSTEM_MODE);
+            List<Database.SaveResult> saved = Database.update(rows, false, AccessLevel.SYSTEM_MODE);
             DNAMSErrorLogHelper.insertLogs(logs);
+            simulateStubCallbacks(rows, saved);
         } catch (Exception e) {
             DNAMSErrorLogHelper.logException(e, runId, CLASS_NAME);
         }
+    }
+
+    /**
+     * @description Stub mode only: the stub IDP never calls back, so without this the run waits for the timeout
+     *              cleanup. Publishes the same Callback event DNAMSIDPCallbackAPI publishes, one per submitted row; it is
+     *              delivered after this transaction commits and the normal callback path follows. Live mode waits for
+     *              MuleSoft's real callback. A failed publish is logged and left to the timeout cleanup.
+     * @param rows  The scope's rows after applyResult
+     * @param saved Save results of the rows, in the same order
+     * @return      Number of Callback events published (0 in Live mode)
+     **/
+    @TestVisible
+    private Integer simulateStubCallbacks(List<AIReviewStageResult__c> rows, List<Database.SaveResult> saved) {
+        if (DNAMS_PackageReviewPipelineService.settings().IDPMode__c == DNAMSPipelineConstants.IDP_MODE_LIVE) {
+            return 0;
+        }
+        List<DNAMSIDPEvent__e> events = new List<DNAMSIDPEvent__e>();
+        for (Integer index = 0; index < rows.size(); index++) {
+            if (saved[index].isSuccess() && rows[index].ProcessingStatus__c == DNAMSPipelineConstants.ROW_IN_PROGRESS) {
+                events.add(
+                    new DNAMSIDPEvent__e(
+                        EventType__c = DNAMSPipelineConstants.EVENT_CALLBACK,
+                        ReviewRunId__c = runId,
+                        StageResultId__c = rows[index].Id
+                    )
+                );
+            }
+        }
+        if (events.isEmpty()) {
+            return 0;
+        }
+        Integer published = 0;
+        List<AIReviewErrorLog__c> logs = new List<AIReviewErrorLog__c>();
+        for (Database.SaveResult result : EventBus.publish(events)) {
+            if (result.isSuccess()) {
+                published++;
+                continue;
+            }
+            DNAMSErrorLogHelper.LogDetail detail = new DNAMSErrorLogHelper.LogDetail();
+            detail.runId = runId;
+            detail.errorType = DNAMSPipelineConstants.ERROR_PROCESSING;
+            detail.sourceClass = CLASS_NAME;
+            detail.message = 'Stub callback event publish failed; the timeout cleanup settles the row: ' + result.getErrors()[0].getMessage();
+            logs.add(DNAMSErrorLogHelper.buildLog(detail));
+        }
+        DNAMSErrorLogHelper.insertLogs(logs);
+        return published;
     }
 
     /**
