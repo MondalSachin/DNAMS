@@ -1,0 +1,50 @@
+<template>
+    <div class="summary">
+        <div class={bannerClass}>
+            <span class="health-pill">{healthInfo.label}</span>
+            <template lwc:if={hasSummary}>
+                <p class="headline">{headline}</p>
+            </template>
+            <template lwc:else>
+                <p class="headline">No AI summary yet</p>
+            </template>
+        </div>
+
+        <template lwc:if={hasSummary}>
+            <template lwc:if={hasElements}>
+                <ul class="elements">
+                    <template for:each={elements} for:item="element">
+                        <li key={element.key} class={element.cardClass}>
+                            <div class="element-head">
+                                <span class="element-name">{element.name}</span>
+                                <span class={element.chipClass}>{element.statusLabel}</span>
+                            </div>
+                            <ul class="findings">
+                                <template for:each={element.findings} for:item="finding">
+                                    <li key={finding.key}>{finding.text}</li>
+                                </template>
+                            </ul>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+
+            <template lwc:if={showNextSteps}>
+                <p class="section-title">Next steps</p>
+                <ol class="steps">
+                    <template for:each={nextSteps} for:item="step">
+                        <li key={step.key}><span class="step-number">{step.number}</span><span>{step.text}</span></li>
+                    </template>
+                </ol>
+            </template>
+        </template>
+        <template lwc:elseif={plainText}>
+            <p class="plain">{plainText}</p>
+        </template>
+        <template lwc:else>
+            <p class="lead muted">The summary appears here after the AI review of the package finishes.</p>
+        </template>
+
+        <p class="ai-label"><span class="ai-badge">AI</span>{aiLabel}</p>
+    </div>
+</template>

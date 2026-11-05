@@ -175,7 +175,8 @@ public inherited sharing class DNAMSFilePreflightHelper {
             Id = run.Package__c,
             Health__c = HEALTH_RED,
             Status__c = DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING,
-            AI_Narrative__c = null
+            AI_Narrative__c = null,
+            AI_Narrative_JSON__c = null
         );
         run.Status__c = DNAMS_PackageReviewPipelineService.RUN_COMPLETED;
         run.Classification_Processing_Status__c = DNAMSPipelineConstants.RUN_STAGE_FAILED;

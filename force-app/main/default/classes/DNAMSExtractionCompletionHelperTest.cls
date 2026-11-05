@@ -25,11 +25,11 @@ private class DNAMSExtractionCompletionHelperTest {
         /**
          * @description Returns a fixed narrative.
          * @param promptTemplate Ignored
-         * @param runId          Ignored
+         * @param factsJson      Ignored
          * @return The narrative
          **/
-        public String write(String promptTemplate, Id runId) {
-            return 'Stub narrative';
+        public String write(String promptTemplate, String factsJson) {
+            return '{"headline": "Stub narrative", "summary": "", "elements": [], "next_steps": []}';
         }
     }
 
@@ -250,7 +250,7 @@ private class DNAMSExtractionCompletionHelperTest {
             Map<String, DNAMS_Package_Element__c> elements = elementsByName(fixture.packageId);
             Assert.areEqual(DNAMS_PackageReviewPipelineService.STAGE_FAILED, elements.get('Address Verification').Extraction_Status__c, 'Timed-out element fails');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.STAGE_PASSED, elements.get('Dealer Application').Extraction_Status__c, 'Valid element passes');
-            Assert.areEqual('Stub narrative', [SELECT AI_Narrative__c FROM DNAMS_Package__c WHERE Id = :fixture.packageId].AI_Narrative__c, 'Narrative written');
+            Assert.isTrue([SELECT AI_Narrative__c FROM DNAMS_Package__c WHERE Id = :fixture.packageId].AI_Narrative__c.startsWith('Stub narrative'), 'Narrative written');
             Assert.isTrue(DNAMSNotificationHelper.sentEmails.isEmpty(), 'Test queue does not exist here, so no admin email');
         }
     }

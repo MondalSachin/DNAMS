@@ -1,0 +1,58 @@
+<template>
+    <div class="panel">
+        <template lwc:if={error}>
+            <p class="error">{error}</p>
+        </template>
+        <template lwc:elseif={progress}>
+            <div class="head">
+                <span class="title">Overall progress</span>
+                <span class="head-right">
+                    <template lwc:if={passRateLabel}><span class="rate">{passRateLabel} · {progress.runName}</span></template>
+                    <lightning-button-icon icon-name="utility:refresh" alternative-text="Refresh progress" title="Refresh" variant="bare" onclick={handleRefresh}></lightning-button-icon>
+                </span>
+            </div>
+
+            <div class="stats">
+                <template for:each={stats} for:item="stat">
+                    <div key={stat.key} class={stat.className}>
+                        <div class="stat-value">{stat.value}</div>
+                        <div class="stat-label">{stat.label}</div>
+                    </div>
+                </template>
+            </div>
+
+            <table class="stages">
+                <thead>
+                    <tr>
+                        <th>Stage</th>
+                        <th class="col-bar">Result</th>
+                        <th class="num">Passed</th>
+                        <th class="num">Failed</th>
+                        <th class="num">Not run</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={stages} for:item="stage">
+                        <tr key={stage.key}>
+                            <td class="stage-name">{stage.name}</td>
+                            <td class="col-bar">
+                                <div class="bar">
+                                    <template lwc:if={stage.hasResults}>
+                                        <span class="bar-pass" style={stage.passWidth}></span>
+                                        <span class="bar-fail" style={stage.failWidth}></span>
+                                    </template>
+                                </div>
+                            </td>
+                            <td class="num pass">{stage.passed}</td>
+                            <td class="num fail">{stage.failed}</td>
+                            <td class="num muted">{stage.notRun}</td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </template>
+        <template lwc:else>
+            <div class="loading"><lightning-spinner alternative-text="Loading" size="small"></lightning-spinner></div>
+        </template>
+    </div>
+</template>

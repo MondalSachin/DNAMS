@@ -6,6 +6,21 @@
         <externalCredentialPrincipal>DNAMSMuleSoftIDP-IDPClient</externalCredentialPrincipal>
     </externalCredentialPrincipalAccesses>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>AIReviewStageResult__c.Document__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>DNAMS_Package__c.AI_Narrative_JSON__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>AI_Package_Review_Run__c.Narrative_Input__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>AIReviewStageResult__c.RuleId__c</field>
         <readable>true</readable>

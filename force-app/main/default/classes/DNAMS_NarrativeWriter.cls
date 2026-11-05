@@ -1,7 +1,7 @@
 /**
- * Step 18: writes the package AI narrative for a completed run from its Issue Summary.
- * The Einstein implementation is used at runtime; tests inject a stub.
+ * Writes the package summary from the run's facts (JSON). Implemented by DNAMS_EinsteinNarrativeWriter; tests inject
+ * a stub. Returns the raw model text, expected to be the summary JSON object.
  */
 public interface DNAMS_NarrativeWriter {
-    String write(String promptTemplate, Id runId);
+    String write(String promptTemplate, String factsJson);
 }

@@ -1,12 +1,13 @@
 /**
- * Calls the DNAMS_PackageIssueNarrator_Prompt flex template (input: the review run) through the Einstein Trust Layer.
+ * Calls the narrator prompt template with the run's facts (JSON text input "facts") and returns the model's answer,
+ * which should be the structured summary JSON (see DNAMS_PackageNarrativeQueueable).
  */
 public with sharing class DNAMS_EinsteinNarrativeWriter implements DNAMS_NarrativeWriter {
-    public String write(String promptTemplate, Id runId) {
-        ConnectApi.WrappedValue run = new ConnectApi.WrappedValue();
-        run.value = new Map<String, String>{ 'id' => runId };
+    public String write(String promptTemplate, String factsJson) {
+        ConnectApi.WrappedValue facts = new ConnectApi.WrappedValue();
+        facts.value = factsJson;
         ConnectApi.EinsteinPromptTemplateGenerationsInput request = new ConnectApi.EinsteinPromptTemplateGenerationsInput();
-        request.inputParams = new Map<String, ConnectApi.WrappedValue>{ 'Input:run' => run };
+        request.inputParams = new Map<String, ConnectApi.WrappedValue>{ 'Input:facts' => facts };
         request.isPreview = false;
         request.additionalConfig = new ConnectApi.EinsteinLlmAdditionalConfigInput();
         request.additionalConfig.applicationName = 'PromptBuilderPreview';

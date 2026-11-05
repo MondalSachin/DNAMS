@@ -235,7 +235,7 @@ public without sharing class DNAMS_PackageReviewPipelineService {
             }
         }
         Boolean anyIssue = !summary.isEmpty();
-        DNAMS_Package__c pkg = new DNAMS_Package__c(Id = run.Package__c, Health__c = 'Green', Status__c = PACKAGE_UNDER_REVIEW, AI_Narrative__c = null);
+        DNAMS_Package__c pkg = new DNAMS_Package__c(Id = run.Package__c, Health__c = 'Green', Status__c = PACKAGE_UNDER_REVIEW, AI_Narrative__c = null, AI_Narrative_JSON__c = null);
         run.Classification_Processing_Status__c = 'Completed';
         if (anyIssue) {
             pkg.Health__c = 'Red';

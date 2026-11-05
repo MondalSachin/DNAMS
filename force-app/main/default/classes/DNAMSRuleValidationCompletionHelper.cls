@@ -6,7 +6,7 @@
  *                  GREEN: package Under Review, the owner is emailed (steps 20-21) and the run moves on to transmittal
  *                  drafting (step 23, DNAMSTransmittalStarterQueueable). AMBER / RED: package RMR Pending, run Completed / Needs Review with
  *                  the failed rules in Issue_Summary__c, then the AI narrative and the owner email (steps 19-22).
- *                  Element Rule_Validation_Status__c: Green Passed, Amber Needs Review, Red Failed; blank when none of
+ *                  Element Rule_Validation_Status__c is pass/fail only: Passed when every applicable rule passed, else Failed; blank when none of
  *                  its rules applied.
  * @author          Sachin Mondal
  * @group           DNAMS AI Review
@@ -125,7 +125,7 @@ public without sharing class DNAMSRuleValidationCompletionHelper {
             List<String> failed = failedRulesByElement.get(elementId);
             elements.add(new DNAMS_Package_Element__c(
                 Id = elementId,
-                Rule_Validation_Status__c = rate == null ? null : elementStatus(band(rate)),
+                Rule_Validation_Status__c = rate == null ? null : elementStatus(rate),
                 Element_Narrative__c = failed.isEmpty() ? null : ('Rules not met: ' + String.join(failed, '; ')).left(NARRATIVE_LENGTH)
             ));
         }
@@ -137,6 +137,7 @@ public without sharing class DNAMSRuleValidationCompletionHelper {
         );
         if (isGreen) {
             pkg.AI_Narrative__c = null;
+            pkg.AI_Narrative_JSON__c = null;
         }
         AI_Package_Review_Run__c runUpdate = new AI_Package_Review_Run__c(
             Id = runId,
@@ -168,13 +169,8 @@ public without sharing class DNAMSRuleValidationCompletionHelper {
     private static void dispatch(Id runId, String health) {
         Queueable next;
         if (health == DNAMSPipelineConstants.HEALTH_GREEN) {
-            AI_Package_Review_Run__c run = [SELECT Id, Package__c, Reason__c, RuleValidationPassRate__c FROM AI_Package_Review_Run__c WHERE Id = :runId WITH SYSTEM_MODE];
-            DNAMS_PackageReviewPipelineService.notifyOwners(
-                new Map<Id, AI_Package_Review_Run__c>{ run.Package__c => run },
-                'rule validation GREEN',
-                'Package Health: GREEN\nEvery applicable validation rule passed (pass rate ' + run.RuleValidationPassRate__c + '%). The package moves on to transmittal drafting.'
-            );
-            next = new DNAMSTransmittalStarterQueueable(runId);
+            // GREEN also gets the structured AI summary and the owner email; transmittal drafting follows it
+            next = new DNAMS_PackageNarrativeQueueable(runId, 'rule validation GREEN', new DNAMSTransmittalStarterQueueable(runId));
         } else {
             next = new DNAMS_PackageNarrativeQueueable(runId, 'rule validation ' + health.toUpperCase() + ' - review needed');
         }
@@ -207,10 +203,8 @@ public without sharing class DNAMSRuleValidationCompletionHelper {
         return rate >= DNAMSPipelineConstants.AMBER_PASS_RATE ? DNAMSPipelineConstants.HEALTH_AMBER : DNAMSPipelineConstants.HEALTH_RED;
     }
 
-    private static String elementStatus(String health) {
-        if (health == DNAMSPipelineConstants.HEALTH_GREEN) {
-            return DNAMS_PackageReviewPipelineService.STAGE_PASSED;
-        }
-        return health == DNAMSPipelineConstants.HEALTH_AMBER ? DNAMS_PackageReviewPipelineService.STAGE_NEEDS_REVIEW : DNAMS_PackageReviewPipelineService.STAGE_FAILED;
+    // Pass/fail only at element level (user decision 2026-11-05): no Needs Review for rule validation.
+    private static String elementStatus(Decimal rate) {
+        return rate >= DNAMSPipelineConstants.GREEN_PASS_RATE ? DNAMS_PackageReviewPipelineService.STAGE_PASSED : DNAMS_PackageReviewPipelineService.STAGE_FAILED;
     }
 }

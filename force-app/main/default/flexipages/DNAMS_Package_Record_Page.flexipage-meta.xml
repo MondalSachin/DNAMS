@@ -326,6 +326,12 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>dnamsElementProgressSummary</componentName>
+                <identifier>dnamsElementProgressSummary</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
                 </componentInstanceProperties>
@@ -361,9 +367,6 @@
                             <value>Rule_Validation_Icon__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>Transmittal_Icon__c</value>
-                        </valueListItems>
-                        <valueListItems>
                             <value>Element_Narrative__c</value>
                         </valueListItems>
                     </valueList>
@@ -394,28 +397,8 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>parentFieldApiName</name>
-                    <value>DNAMS_Package__c.Id</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListApiName</name>
-                    <value>AttachedContentDocuments</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListComponentOverride</name>
-                    <value>NONE</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>rowsToDisplay</name>
-                    <value>30</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>showActionBar</name>
-                    <value>true</value>
-                </componentInstanceProperties>
-                <componentName>force:relatedListSingleContainer</componentName>
-                <identifier>related_files</identifier>
+                <componentName>dnamsPackageDocuments</componentName>
+                <identifier>dnamsPackageDocuments</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-documents</name>
@@ -630,26 +613,6 @@
                     <name>uiBehavior</name>
                     <value>readonly</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Health__c</fieldItem>
-                <identifier>RecordHealthField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.AI_Narrative__c</fieldItem>
-                <identifier>RecordAI_NarrativeField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
                 <fieldItem>Record.Upload_Link_Sent_To__c</fieldItem>
                 <identifier>RecordUpload_Link_Sent_ToField</identifier>
             </fieldInstance>
@@ -843,6 +806,12 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
+                <componentName>dnamsPackageAiSummary</componentName>
+                <identifier>dnamsPackageAiSummary</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>columns</name>
                     <value>Facet-ai-columns</value>
@@ -853,7 +822,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>label</name>
-                    <value>AI Summary</value>
+                    <value>Upload Link</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:fieldSection</componentName>
                 <identifier>flexipage_fieldSection_ai</identifier>

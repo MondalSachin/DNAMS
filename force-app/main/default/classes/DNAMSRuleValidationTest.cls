@@ -212,7 +212,8 @@ private class DNAMSRuleValidationTest {
 
             Map<String, AIReviewStageResult__c> rows = rowsByRuleId(fixture.runId);
             Assert.areEqual(DNAMSPipelineConstants.VERDICT_FAIL, rows.get('C1').Verdict__c, 'Blank field fails completeness');
-            Assert.isTrue(rows.get('C1').Reasoning__c.contains('FederalEIN'), rows.get('C1').Reasoning__c);
+            Assert.isTrue(rows.get('C1').Reasoning__c.contains('Federal EIN'), rows.get('C1').Reasoning__c);
+            Assert.isTrue(rows.get('V1').Reasoning__c.contains('does not match'), rows.get('V1').Reasoning__c);
             Assert.areEqual(DNAMSPipelineConstants.VERDICT_FAIL, rows.get('V1').Verdict__c, 'Different value fails');
 
             AI_Package_Review_Run__c run = reloadRun(fixture.runId);
@@ -243,7 +244,7 @@ private class DNAMSRuleValidationTest {
             AI_Package_Review_Run__c run = reloadRun(fixture.runId);
             Assert.areEqual(85.71, run.RuleValidationPassRate__c.setScale(2), 'Six of seven');
             Assert.areEqual(DNAMSPipelineConstants.HEALTH_AMBER, run.Package__r.Health__c, 'Package Amber');
-            Assert.areEqual(DNAMS_PackageReviewPipelineService.STAGE_NEEDS_REVIEW, element(fixture, DA).Rule_Validation_Status__c, 'Element Amber');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.STAGE_FAILED, element(fixture, DA).Rule_Validation_Status__c, 'Elements are pass/fail only; the package is Amber');
         }
     }
 
@@ -411,6 +412,11 @@ private class DNAMSRuleValidationTest {
         Assert.isTrue(DNAMSRuleEvaluator.satisfies('LE', '3', new List<Object>{ '3' }), 'LE');
         Assert.isTrue(DNAMSRuleEvaluator.satisfies('LT', '2', new List<Object>{ '3' }), 'LT');
         Assert.isTrue(DNAMSRuleEvaluator.satisfies('GT', '4', new List<Object>{ '3' }), 'GT');
+        Assert.areEqual('"ABC" does not match "ABC LLC".', DNAMSRuleEvaluator.sentence('EQUALS', 'ABC', new List<Object>{ 'ABC LLC' }, false), 'Plain English');
+        Assert.isTrue(DNAMSRuleEvaluator.sentence('GE', '2020-01-01', new List<Object>{ '{TODAY-90}' }, false).contains('too early'), 'Date wording');
+        Assert.isTrue(DNAMSRuleEvaluator.sentence('IN', 'X', new List<Object>{ 'A', 'B' }, false).contains('"A" or "B"'), 'List wording');
+        Assert.isTrue(DNAMSRuleEvaluator.sentence('NOT EQUALS', 'A', new List<Object>{ 'A' }, false).contains('should be different'), 'Not equals wording');
+        Assert.areEqual('Signature Of Dealer Operator Present', DNAMSRuleEvaluator.fieldLabel('extraction.DealerApplication.isSignatureOfDealerOperatorPresent'), 'Field label');
         try {
             DNAMSRuleEvaluator.compare('abc', 'def');
             Assert.fail('Text cannot be ordered');

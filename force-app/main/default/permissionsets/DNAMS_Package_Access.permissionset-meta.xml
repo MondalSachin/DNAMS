@@ -9,6 +9,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>DNAMS_PackageInsightsController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>DNAMS_GuestUploadController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -17,6 +21,21 @@
         <enabled>true</enabled>
     </classAccesses>
     <description>Create and work DNAMS packages, elements and element type config.</description>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>AIReviewStageResult__c.Document__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>DNAMS_Package__c.AI_Narrative_JSON__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>AI_Package_Review_Run__c.Narrative_Input__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
         <field>AIReviewErrorLog__c.DocumentTitle__c</field>

@@ -35,8 +35,7 @@
           <div class="slds-box slds-theme_shade slds-m-bottom_medium">
             <p class="slds-text-title_bold slds-m-bottom_x-small">This package was returned for corrections</p>
             <template lwc:if={pkg.narrative}>
-              <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_xx-small">{pkg.aiLabel}</p>
-              <p class="dnams-narrative">{pkg.narrative}</p>
+              <c-dnams-ai-summary-view summary-json={pkg.summaryJson} plain-text={pkg.narrative} health={pkg.health} ai-label={pkg.aiLabel} audience="dealer"></c-dnams-ai-summary-view>
             </template>
             <p class="slds-m-top_x-small">Fix the elements marked below (remove wrong files, upload the right ones), then click Submit Package.</p>
           </div>

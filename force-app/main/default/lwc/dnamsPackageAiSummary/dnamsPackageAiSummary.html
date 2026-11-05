@@ -1,0 +1,26 @@
+<template>
+    <lightning-card title="AI Summary" icon-name="utility:einstein">
+        <lightning-button-icon slot="actions" icon-name="utility:refresh" alternative-text="Refresh summary" title="Refresh" variant="border-filled" size="small" onclick={handleRefresh}></lightning-button-icon>
+        <div class="slds-p-horizontal_medium">
+            <template lwc:if={error}>
+                <p class="slds-text-color_error">{error}</p>
+            </template>
+            <template lwc:elseif={view}>
+                <c-dnams-ai-summary-view summary-json={view.summaryJson} plain-text={view.plainText} health={view.health} ai-label={view.aiLabel} audience="rmr"></c-dnams-ai-summary-view>
+            </template>
+            <template lwc:else>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+        </div>
+        <template lwc:if={hasRun}>
+            <div slot="footer" class="footer">
+                <a href="#" onclick={openRun}>{view.runName}</a>
+                <span>{view.runStatus}</span>
+                <template lwc:if={passRateLabel}><span>{passRateLabel}</span></template>
+                <template lwc:if={view.runEndedAt}>
+                    <span><lightning-formatted-date-time value={view.runEndedAt} year="numeric" month="short" day="2-digit" hour="2-digit" minute="2-digit"></lightning-formatted-date-time></span>
+                </template>
+            </div>
+        </template>
+    </lightning-card>
+</template>

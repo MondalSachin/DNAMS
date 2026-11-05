@@ -21,7 +21,9 @@ public without sharing class DNAMS_GuestUploadController {
         view.isEditable = DNAMS_PackageService.EDITABLE_STATUSES.contains(pkg.Status__c);
         view.isReturned = pkg.Status__c == DNAMS_PackageService.STATUS_RETURNED;
         view.narrative = view.isReturned ? pkg.AI_Narrative__c : null;
+        view.summaryJson = view.isReturned ? pkg.AI_Narrative_JSON__c : null; // rendered by dnamsAiSummaryView
         view.aiLabel = DNAMS_PackageNarrativeQueueable.AI_LABEL;
+        view.health = pkg.Health__c;
 
         Map<Id, ElementView> elementsById = new Map<Id, ElementView>();
         for (DNAMS_Package_Element__c element : [
@@ -99,7 +101,7 @@ public without sharing class DNAMS_GuestUploadController {
             throw error(NOT_FOUND);
         }
         List<DNAMS_Package__c> packages = [
-            SELECT Id, Name, Package_Name__c, Type__c, Status__c, AI_Narrative__c, Upload_Token__c
+            SELECT Id, Name, Package_Name__c, Type__c, Status__c, Health__c, AI_Narrative__c, AI_Narrative_JSON__c, Upload_Token__c
             FROM DNAMS_Package__c
             WHERE Upload_Token__c = :token
             WITH SYSTEM_MODE
@@ -133,6 +135,10 @@ public without sharing class DNAMS_GuestUploadController {
         public Boolean isReturned;
         @AuraEnabled
         public String narrative;
+        @AuraEnabled
+        public String summaryJson;
+        @AuraEnabled
+        public String health;
         @AuraEnabled
         public String aiLabel;
         @AuraEnabled

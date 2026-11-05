@@ -1,0 +1,89 @@
+<template>
+    <div class="wrapper">
+        <div class="header">
+            <div>
+                <p class="title">Documents</p>
+                <template lwc:if={groups}><p class="subtitle">{totalLabel}</p></template>
+            </div>
+            <div class="controls">
+                <lightning-button-group>
+                    <lightning-button label="By element" variant={groupedVariant} onclick={showGrouped}></lightning-button>
+                    <lightning-button label="All files" variant={listVariant} onclick={showList}></lightning-button>
+                </lightning-button-group>
+                <lightning-button-icon icon-name="utility:refresh" alternative-text="Refresh documents" title="Refresh" variant="border-filled" onclick={handleRefresh}></lightning-button-icon>
+            </div>
+        </div>
+
+        <template lwc:if={error}>
+            <p class="slds-text-color_error">{error}</p>
+        </template>
+        <template lwc:elseif={groups}>
+            <template lwc:if={isGrouped}>
+                <div class="groups">
+                    <template for:each={groups} for:item="group">
+                        <section key={group.elementId} class={group.sectionClass}>
+                            <div class="group-head">
+                                <a href="#" class="group-name" data-id={group.elementId} onclick={openElement}>{group.name}</a>
+                            </div>
+                            <template lwc:if={group.hasFiles}>
+                                <ul class="files">
+                                    <template for:each={group.files} for:item="file">
+                                        <li key={file.key} class="file">
+                                            <lightning-icon icon-name={file.icon} size="small" alternative-text={file.extension}></lightning-icon>
+                                            <div class="file-main">
+                                                <a href="#" class="file-title" data-id={file.contentDocumentId} onclick={preview}>{file.title}</a>
+                                                <span class="file-meta">
+                                                    {file.sizeLabel} ·
+                                                    <lightning-formatted-date-time value={file.uploadedAt} year="numeric" month="short" day="2-digit" hour="2-digit" minute="2-digit"></lightning-formatted-date-time>
+                                                    <template lwc:if={file.uploadedBy}> · {file.uploadedBy}</template>
+                                                </span>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                            <template lwc:else>
+                                <p class="empty">No document uploaded.</p>
+                            </template>
+                        </section>
+                    </template>
+                </div>
+            </template>
+            <template lwc:else>
+                <template lwc:if={hasAnyFiles}>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Element</th>
+                                <th>Size</th>
+                                <th>Uploaded</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={allFiles} for:item="file">
+                                <tr key={file.key}>
+                                    <td>
+                                        <span class="cell-file">
+                                            <lightning-icon icon-name={file.icon} size="x-small" alternative-text={file.extension}></lightning-icon>
+                                            <a href="#" data-id={file.contentDocumentId} onclick={preview}>{file.title}</a>
+                                        </span>
+                                    </td>
+                                    <td>{file.elementName}</td>
+                                    <td>{file.sizeLabel}</td>
+                                    <td><lightning-formatted-date-time value={file.uploadedAt} year="numeric" month="short" day="2-digit"></lightning-formatted-date-time></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </template>
+                <template lwc:else>
+                    <p class="empty">No documents uploaded yet.</p>
+                </template>
+            </template>
+        </template>
+        <template lwc:else>
+            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+        </template>
+    </div>
+</template>

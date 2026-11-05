@@ -146,14 +146,14 @@
     <relatedLists>
         <fields>NAME</fields>
         <fields>Stage__c</fields>
-        <fields>RuleName__c</fields>
-        <fields>Verdict__c</fields>
         <fields>PackageElement__c</fields>
-        <fields>DocumentTitle__c</fields>
         <fields>ProcessingStatus__c</fields>
-        <fields>ComparisonMethod__c</fields>
-        <fields>Reasoning__c</fields>
+        <fields>Document__c</fields>
+        <fields>CREATED_DATE</fields>
+        <fields>CREATEDBY_USER</fields>
         <relatedList>AIReviewStageResult__c.ReviewRun__c</relatedList>
+        <sortField>CREATED_DATE</sortField>
+        <sortOrder>Desc</sortOrder>
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>

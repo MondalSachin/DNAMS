@@ -143,7 +143,7 @@ public without sharing class DNAMSRuleEvaluator {
             return result;
         }
         if (!source.blankKeys.isEmpty()) {
-            return decided(result, DNAMSPipelineConstants.VERDICT_FAIL, 'No value was extracted for ' + String.join(source.blankKeys, ', ') + '.');
+            return decided(result, DNAMSPipelineConstants.VERDICT_FAIL, 'The document does not show a value for ' + labels(source.blankKeys) + '.');
         }
         return exactMatch(result, rule.Comparator__c, source.flat(), reference.flat());
     }
@@ -159,13 +159,9 @@ public without sharing class DNAMSRuleEvaluator {
             return decided(result, DNAMSPipelineConstants.VERDICT_NOT_APPLICABLE, String.join(source.missing, '; '));
         }
         if (!source.blankKeys.isEmpty()) {
-            List<String> names = new List<String>();
-            for (String key : source.blankKeys) {
-                names.add(key.substringAfterLast('.'));
-            }
-            return decided(result, DNAMSPipelineConstants.VERDICT_FAIL, 'Required fields without a value: ' + String.join(names, ', ') + '.');
+            return decided(result, DNAMSPipelineConstants.VERDICT_FAIL, 'These required fields are blank on the document: ' + labels(source.blankKeys) + '.');
         }
-        return decided(result, DNAMSPipelineConstants.VERDICT_PASS, 'All ' + source.valuesByKey.size() + ' required fields have a value.');
+        return decided(result, DNAMSPipelineConstants.VERDICT_PASS, 'All ' + source.valuesByKey.size() + ' required fields are filled in.');
     }
 
     /**
@@ -183,14 +179,62 @@ public without sharing class DNAMSRuleEvaluator {
         try {
             for (Object sourceValue : sources) {
                 if (!satisfies(comparator, sourceValue, references)) {
-                    return decided(result, DNAMSPipelineConstants.VERDICT_FAIL,
-                        'Value "' + text(sourceValue) + '" is not ' + comparator + ' ' + describe(references) + '.');
+                    return decided(result, DNAMSPipelineConstants.VERDICT_FAIL, sentence(comparator, sourceValue, references, false));
                 }
             }
         } catch (NotComparableException notComparable) {
             return decided(result, DNAMSPipelineConstants.VERDICT_CANNOT_DECIDE, notComparable.getMessage());
         }
-        return decided(result, DNAMSPipelineConstants.VERDICT_PASS, 'Value ' + describe(sources) + ' is ' + comparator + ' ' + describe(references) + '.');
+        return decided(result, DNAMSPipelineConstants.VERDICT_PASS, sentence(comparator, sources.size() == 1 ? sources[0] : null, references, true));
+    }
+
+    /**
+     * @description Plain-English result of a comparison, e.g. "ABC Motors LLC" does not match "ABC Motors, LLC".
+     * @param comparator The comparator
+     * @param value      The source value (null: several values, all satisfied)
+     * @param references The reference values
+     * @param passed     Whether the comparison passed
+     * @return           The sentence
+     **/
+    @TestVisible
+    private static String sentence(String comparator, Object value, List<Object> references, Boolean passed) {
+        String subject = value == null ? 'Every value' : quote(value);
+        String reference = describe(references);
+        Boolean isDate = value != null && toDate(value) != null && toDate(references[0]) != null;
+        switch on (comparator ?? 'EQUALS') {
+            when 'NOT EQUALS' {
+                return passed ? subject + ' is different from ' + reference + ', as expected.' : subject + ' should be different from ' + reference + ', but it is the same.';
+            }
+            when 'IN' {
+                return passed ? subject + ' is one of the accepted values (' + reference + ').' : subject + ' is not one of the accepted values (' + reference + ').';
+            }
+            when 'NOT IN' {
+                return passed ? subject + ' is not one of the values that are not allowed (' + reference + ').' : subject + ' is one of the values that are not allowed (' + reference + ').';
+            }
+            when 'GE' {
+                return isDate
+                    ? (passed ? subject + ' is on or after ' + reference + '.' : subject + ' is before ' + reference + ', which is too early.')
+                    : (passed ? subject + ' is at least ' + reference + '.' : subject + ' is below the minimum of ' + reference + '.');
+            }
+            when 'GT' {
+                return isDate
+                    ? (passed ? subject + ' is after ' + reference + '.' : subject + ' is not after ' + reference + '.')
+                    : (passed ? subject + ' is more than ' + reference + '.' : subject + ' is not more than ' + reference + '.');
+            }
+            when 'LE' {
+                return isDate
+                    ? (passed ? subject + ' is on or before ' + reference + '.' : subject + ' is after ' + reference + ', which is too late.')
+                    : (passed ? subject + ' is at most ' + reference + '.' : subject + ' is above the maximum of ' + reference + '.');
+            }
+            when 'LT' {
+                return isDate
+                    ? (passed ? subject + ' is before ' + reference + '.' : subject + ' is not before ' + reference + '.')
+                    : (passed ? subject + ' is less than ' + reference + '.' : subject + ' is not less than ' + reference + '.');
+            }
+            when else {
+                return passed ? subject + ' matches ' + reference + '.' : subject + ' does not match ' + reference + '.';
+            }
+        }
     }
 
     /**
@@ -495,9 +539,37 @@ public without sharing class DNAMSRuleEvaluator {
     private static String describe(List<Object> values) {
         List<String> texts = new List<String>();
         for (Object value : values) {
-            texts.add('"' + text(value) + '"');
+            texts.add(quote(value));
         }
-        return texts.size() == 1 ? texts[0] : '[' + String.join(texts, ', ') + ']';
+        if (texts.size() <= 1) {
+            return texts.isEmpty() ? '' : texts[0];
+        }
+        String last = texts.remove(texts.size() - 1);
+        return String.join(texts, ', ') + ' or ' + last;
+    }
+
+    private static String labels(List<String> keys) {
+        List<String> names = new List<String>();
+        for (String key : keys) {
+            names.add(fieldLabel(key));
+        }
+        return String.join(names, ', ');
+    }
+
+    // Quoted value; date tokens such as {TODAY-90} are shown as the date they stand for.
+    private static String quote(Object value) {
+        String raw = text(value).trim();
+        if (TODAY_TOKEN.matcher(raw.toUpperCase()).matches()) {
+            Date day = toDate(raw);
+            return Datetime.newInstance(day, Time.newInstance(0, 0, 0, 0)).format('MMM d, yyyy');
+        }
+        return '"' + raw + '"';
+    }
+
+    // extraction.DealerApplication.LegalNameOrDealerEntity -> "Legal Name Or Dealer Entity"
+    @TestVisible
+    private static String fieldLabel(String key) {
+        return key.substringAfterLast('.').replaceAll('([a-z0-9])([A-Z])', '$1 $2').replaceAll('^is ', '').trim();
     }
 
     private static Outcome decided(Outcome result, String verdict, String reasoning) {

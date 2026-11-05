@@ -45,14 +45,16 @@ public class DNAMS_RmrReviewTest {
         /**
          * @description Returns a fixed narrative or throws like a model outage.
          * @param promptTemplate Prompt template name (unused)
-         * @param runId          Review run (unused)
-         * @return               Narrative text
+         * @param factsJson      Run facts (unused)
+         * @return               Summary JSON, wrapped in a code fence like a real model answer
          **/
-        public String write(String promptTemplate, Id runId) {
+        public String write(String promptTemplate, String factsJson) {
             if (fail) {
                 throw new DNAMS_PackageReviewPipelineService.PipelineException('model down');
             }
-            return 'Org Chart: a bank statement was uploaded instead of the ownership chart.';
+            return '```json\n{"headline": "One element needs a new document", "overall_health": "GREEN", "summary": "The Org Chart is wrong.", '
+                + '"elements": [{"element": "Org Chart", "status": "failed", "findings": ["A bank statement was uploaded instead of the ownership chart."], '
+                + '"dealer_action": "Upload the signed org chart."}], "next_steps": ["Return the package to the dealer."]}\n```';
         }
     }
 
@@ -319,8 +321,14 @@ public class DNAMS_RmrReviewTest {
 
             new DNAMS_PackageNarrativeQueueable(run.Id).execute(null);
 
-            String narrative = pkg().AI_Narrative__c;
-            Assert.isTrue(narrative.contains('bank statement'), narrative);
+            DNAMS_Package__c saved = [SELECT AI_Narrative__c, AI_Narrative_JSON__c, Health__c FROM DNAMS_Package__c WHERE Id = :pkg().Id];
+            Assert.isTrue(saved.AI_Narrative__c.contains('bank statement'), saved.AI_Narrative__c);
+            Map<String, Object> summary = (Map<String, Object>) JSON.deserializeUntyped(saved.AI_Narrative_JSON__c);
+            Assert.areEqual('One element needs a new document', summary.get('headline'), 'Headline kept');
+            Assert.areNotEqual('GREEN', summary.get('overall_health'), 'Health comes from the package, not the model');
+            Map<String, Object> element = (Map<String, Object>) ((List<Object>) summary.get('elements'))[0];
+            Assert.areEqual('FAILED', element.get('status'), 'Status normalised');
+            Assert.isNotNull([SELECT Narrative_Input__c FROM AI_Package_Review_Run__c WHERE Id = :run.Id].Narrative_Input__c, 'Facts kept for audit');
             String reason = reload(run.Id).Reason__c;
             Assert.isTrue(reason.contains('emailed the package owner'), reason);
         }
@@ -342,6 +350,7 @@ public class DNAMS_RmrReviewTest {
 
             String narrative = pkg().AI_Narrative__c;
             Assert.isTrue(narrative.contains('missing'), narrative);
+            Assert.isNotNull([SELECT AI_Narrative_JSON__c FROM DNAMS_Package__c WHERE Id = :pkg().Id].AI_Narrative_JSON__c, 'The rule-based summary has the same structure');
             AI_Package_Review_Run__c after = reload(run.Id);
             Assert.isTrue(after.Error__c.contains('fell back'), after.Error__c);
             Assert.isTrue(after.Reason__c.contains('RMR not emailed'), 'Queue/non-RMR owner is recorded only');
