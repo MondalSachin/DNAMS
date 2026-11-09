@@ -1,8 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
-        <name>Return_To_Dealer</name>
-        <label>Return To Dealer</label>
+        <name>Check_Availability</name>
+        <label>Check Availability</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>DNAMS_ReviewActionCheck</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Can_Proceed</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>action</name>
+            <value>
+                <stringValue>SendReturn</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>packageId</name>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>DNAMS_ReviewActionCheck</nameSegment>
+        <outputParameters>
+            <assignToReference>canProceed</assignToReference>
+            <name>canProceed</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>checkMessage</assignToReference>
+            <name>message</name>
+        </outputParameters>
+    </actionCalls>
+    <actionCalls>
+        <name>Send_Or_Return</name>
+        <label>Initiate or Return</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <actionName>DNAMS_ReturnToDealerAction</actionName>
@@ -17,12 +50,6 @@
                 <elementReference>recordId</elementReference>
             </value>
         </inputParameters>
-        <inputParameters>
-            <name>recipientEmail</name>
-            <value>
-                <elementReference>Recipient_Email</elementReference>
-            </value>
-        </inputParameters>
         <nameSegment>DNAMS_ReturnToDealerAction</nameSegment>
         <outputParameters>
             <assignToReference>resultMessage</assignToReference>
@@ -31,10 +58,35 @@
     </actionCalls>
     <apiVersion>68.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
-    <description>Quick Action on Package: sets Returned and emails the dealer the upload link, AI narrative and issues (step 21).</description>
+    <decisions>
+        <name>Can_Proceed</name>
+        <label>Can Proceed</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Not_Available</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Not available</defaultConnectorLabel>
+        <rules>
+            <name>Available</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>canProceed</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Confirm</targetReference>
+            </connector>
+            <label>Available</label>
+        </rules>
+    </decisions>
+    <description>Quick Action &quot;Initiate Package/Return to Dealer&quot; on Package: Draft sends the upload link and sets Initiated; Initiated offers a resend; later statuses return the package (step 21) when History shows the first send. Uses Document Uploading Email.</description>
     <environments>Default</environments>
-    <interviewLabel>DNAMS Return to Dealer {!$Flow.CurrentDateTime}</interviewLabel>
-    <label>DNAMS Return to Dealer</label>
+    <interviewLabel>DNAMS Initiate Package/Return to Dealer {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>DNAMS Initiate Package/Return to Dealer</label>
     <processMetadataValues>
         <name>BuilderType</name>
         <value>
@@ -48,62 +100,20 @@
         </value>
     </processMetadataValues>
     <processType>Flow</processType>
-    <recordLookups>
-        <name>Get_Package</name>
-        <label>Get Package</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <assignNullValuesIfNoRecordsFound>true</assignNullValuesIfNoRecordsFound>
-        <connector>
-            <targetReference>Get_Primary_Contact</targetReference>
-        </connector>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>Id</field>
-            <operator>EqualTo</operator>
-            <value>
-                <elementReference>recordId</elementReference>
-            </value>
-        </filters>
-        <getFirstRecordOnly>true</getFirstRecordOnly>
-        <object>DNAMS_Package__c</object>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
-    </recordLookups>
-    <recordLookups>
-        <name>Get_Primary_Contact</name>
-        <label>Get Primary Contact</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <assignNullValuesIfNoRecordsFound>true</assignNullValuesIfNoRecordsFound>
-        <connector>
-            <targetReference>Enter_Email</targetReference>
-        </connector>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>Id</field>
-            <operator>EqualTo</operator>
-            <value>
-                <elementReference>Get_Package.Primary_Contact__c</elementReference>
-            </value>
-        </filters>
-        <getFirstRecordOnly>true</getFirstRecordOnly>
-        <object>Contact</object>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
-    </recordLookups>
     <screens>
-        <name>Enter_Email</name>
-        <label>Enter Email</label>
+        <name>Confirm</name>
+        <label>Confirm</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <allowBack>false</allowBack>
         <allowFinish>true</allowFinish>
         <allowPause>false</allowPause>
         <connector>
-            <targetReference>Return_To_Dealer</targetReference>
+            <targetReference>Send_Or_Return</targetReference>
         </connector>
         <fields>
-            <name>Intro</name>
-            <fieldText>&lt;p&gt;Return package &lt;b&gt;{!Get_Package.Name}&lt;/b&gt; to the dealer for corrections.&lt;/p&gt;&lt;p&gt;The dealer receives the upload link, the AI narrative and the list of issues, and the package status becomes &lt;b&gt;Returned&lt;/b&gt;.&lt;/p&gt;</fieldText>
+            <name>ConfirmText</name>
+            <fieldText>&lt;p&gt;{!checkMessage}&lt;/p&gt;&lt;p&gt;Click &lt;b&gt;Next&lt;/b&gt; to go ahead.&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
             <styleProperties>
                 <verticalAlignment>
@@ -114,15 +124,21 @@
                 </width>
             </styleProperties>
         </fields>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <name>Not_Available</name>
+        <label>Not Available</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
         <fields>
-            <name>Recipient_Email</name>
-            <dataType>String</dataType>
-            <defaultValue>
-                <elementReference>Get_Primary_Contact.Email</elementReference>
-            </defaultValue>
-            <fieldText>Send the upload link to</fieldText>
-            <fieldType>InputField</fieldType>
-            <isRequired>true</isRequired>
+            <name>NotAvailableText</name>
+            <fieldText>&lt;p&gt;&lt;b&gt;{!checkMessage}&lt;/b&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
             <styleProperties>
                 <verticalAlignment>
                     <stringValue>top</stringValue>
@@ -163,10 +179,24 @@
         <locationX>0</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Get_Package</targetReference>
+            <targetReference>Check_Availability</targetReference>
         </connector>
     </start>
     <status>Active</status>
+    <variables>
+        <name>canProceed</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>checkMessage</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
     <variables>
         <name>recordId</name>
         <dataType>String</dataType>

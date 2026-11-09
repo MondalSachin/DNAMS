@@ -1,0 +1,41 @@
+<template>
+  <lightning-quick-action-panel header="Create Package">
+    <lightning-record-edit-form object-api-name={objectApiName} onsuccess={handleSuccess} onerror={handleError}>
+      <div class="form-body">
+        <template lwc:if={isSaving}>
+          <lightning-spinner alternative-text="Saving" size="medium"></lightning-spinner>
+        </template>
+        <lightning-messages></lightning-messages>
+        <lightning-input-field field-name={typeField} required></lightning-input-field>
+        <div class="slds-form-element_stacked slds-p-horizontal_xx-small slds-p-bottom_x-small">
+          <!-- lightning-input-field does not apply the dependent lookup filter on Primary_Contact__c,
+               so the contact is picked here, limited to this account's contacts. -->
+          <template lwc:if={recordId}>
+            <lightning-record-picker
+              label="Primary Contact"
+              placeholder="Search Contacts..."
+              object-api-name="Contact"
+              filter={contactFilter}
+              display-info={contactDisplayInfo}
+              value={contactId}
+              required
+              onchange={handleContactChange}
+            ></lightning-record-picker>
+          </template>
+        </div>
+        <lightning-input-field field-name={sellingDealerField}></lightning-input-field>
+      </div>
+    </lightning-record-edit-form>
+
+    <div slot="footer">
+      <lightning-button label="Cancel" disabled={isSaving} onclick={handleCancel}></lightning-button>
+      <lightning-button
+        class="slds-m-left_x-small"
+        variant="brand"
+        label="Save"
+        disabled={isSaving}
+        onclick={handleSave}
+      ></lightning-button>
+    </div>
+  </lightning-quick-action-panel>
+</template>

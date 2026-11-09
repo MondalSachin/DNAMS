@@ -61,11 +61,13 @@ private class DNAMS_PackageReviewPipelineTest {
     static void setup() {
         Account dealer = new Account(Name = 'Dealer', AccountNumber = 'TCE00087');
         insert dealer;
-        insert new List<DNAMS_Element_Type__c>{
+        List<DNAMS_Element_Type__c> types = new List<DNAMS_Element_Type__c>{
             new DNAMS_Element_Type__c(Name = 'Dealer Application', Sort_Order__c = 1, Is_Required__c = true),
             new DNAMS_Element_Type__c(Name = 'Org Chart', Sort_Order__c = 2, Is_Required__c = true),
             new DNAMS_Element_Type__c(Name = 'Miscellaneous Documents', Sort_Order__c = 3)
         };
+        insert types;
+        DNAMSPipelineTestHelper.mapElementTypes('Term Renewal', types);
         insert new DNAMS_Package__c(Type__c = 'Term Renewal', Status__c = 'Initiated', Buying_Dealer__c = dealer.Id);
     }
 

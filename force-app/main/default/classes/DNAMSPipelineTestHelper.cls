@@ -1,15 +1,17 @@
 /**
  * @description     Shared test data for the DNAMS AI review extraction tests: an admin user, a Term Renewal package
  *                  ready for extraction (classified files on four elements and a Running run), in-memory pipeline
- *                  settings and stage result builders. Insert the user first, then build data inside System.runAs.
+ *                  settings, stage result builders and Package Type Element Map rows for test element types.
+ *                  Insert the user first, then build data inside System.runAs.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-09
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details Adds Package Type Element Map rows (mapElementTypes)
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-09   Abhishek Dutta  Adds Package Type Element Map rows (mapElementTypes)
  **/
 @IsTest
 public inherited sharing class DNAMSPipelineTestHelper {
@@ -98,7 +100,9 @@ public inherited sharing class DNAMSPipelineTestHelper {
      **/
     public static PipelineFixture createExtractionFixture() {
         PipelineFixture fixture = new PipelineFixture();
-        Database.insert(elementTypes(), AccessLevel.SYSTEM_MODE);
+        List<DNAMS_Element_Type__c> types = elementTypes();
+        Database.insert(types, AccessLevel.SYSTEM_MODE);
+        mapElementTypes('Term Renewal', types);
         Account dealer = new Account(Name = 'DNAMS Test Dealer', AccountNumber = 'TCE00087');
         Database.insert(dealer, AccessLevel.SYSTEM_MODE);
         DNAMS_Package__c packageObj = new DNAMS_Package__c(Type__c = 'Term Renewal', Status__c = 'Initiated', Buying_Dealer__c = dealer.Id);
@@ -200,6 +204,36 @@ public inherited sharing class DNAMSPipelineTestHelper {
             rowByDocumentType.put(documentType, createStageResult(fixture, documentType, processingStatus));
         }
         return rowByDocumentType;
+    }
+
+    /**
+     * @description Inserts one DNAMS_Package_Type_Element_Map__c row per saved element type for a package type,
+     *              mirroring the saved Is_Active__c and Is_Required__c of each type,
+     *              so packages of that type get the same elements as before the mapping existed.
+     * @param packageType  Package Type picklist value
+     * @param elementTypes Saved element types
+     * @return             The inserted mapping rows
+     **/
+    public static List<DNAMS_Package_Type_Element_Map__c> mapElementTypes(String packageType, List<DNAMS_Element_Type__c> elementTypes) {
+        List<DNAMS_Package_Type_Element_Map__c> mappings = new List<DNAMS_Package_Type_Element_Map__c>();
+        // Re-read the saved flags: an unset checkbox reads false in memory even when the field default made it true.
+        for (DNAMS_Element_Type__c elementType : [
+            SELECT Id, Is_Active__c, Is_Required__c
+            FROM DNAMS_Element_Type__c
+            WHERE Id IN :new Map<Id, DNAMS_Element_Type__c>(elementTypes).keySet()
+            WITH SYSTEM_MODE
+        ]) {
+            mappings.add(
+                new DNAMS_Package_Type_Element_Map__c(
+                    Package_Type__c = packageType,
+                    Element_Type__c = elementType.Id,
+                    Is_Active__c = elementType.Is_Active__c,
+                    Is_Required__c = elementType.Is_Required__c
+                )
+            );
+        }
+        Database.insert(mappings, AccessLevel.SYSTEM_MODE);
+        return mappings;
     }
 
     /**

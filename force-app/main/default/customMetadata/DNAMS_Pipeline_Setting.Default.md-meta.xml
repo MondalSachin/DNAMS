@@ -86,4 +86,8 @@
         <field>TransmittalSummaryMaxWords__c</field>
         <value xsi:type="xsd:double">250.0</value>
     </values>
+    <values>
+        <field>SenderEmailAddress__c</field>
+        <value xsi:type="xsd:string">abhishek.dutta@cloudkaptan.com</value>
+    </values>
 </CustomMetadata>

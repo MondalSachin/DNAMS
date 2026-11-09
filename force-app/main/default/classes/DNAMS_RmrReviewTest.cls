@@ -88,10 +88,12 @@ public class DNAMS_RmrReviewTest {
         insert dealer;
         Contact principal = new Contact(LastName = 'Principal', AccountId = dealer.Id, Email = 'principal@example.com');
         insert principal;
-        insert new List<DNAMS_Element_Type__c>{
+        List<DNAMS_Element_Type__c> types = new List<DNAMS_Element_Type__c>{
             new DNAMS_Element_Type__c(Name = 'Dealer Application', Sort_Order__c = 1, Is_Required__c = true),
             new DNAMS_Element_Type__c(Name = 'Org Chart', Sort_Order__c = 2, Is_Required__c = true)
         };
+        insert types;
+        DNAMSPipelineTestHelper.mapElementTypes('Term Renewal', types);
         insert new DNAMS_Package__c(Type__c = 'Term Renewal', Status__c = 'Initiated', Buying_Dealer__c = dealer.Id, Primary_Contact__c = principal.Id);
     }
 
@@ -191,15 +193,13 @@ public class DNAMS_RmrReviewTest {
     }
 
     /**
-     * @description Calls the Return to Dealer invocable as the flow does.
+     * @description Calls the Initiate Package/Return to Dealer invocable as the flow does.
      * @param packageId Package id
-     * @param email     Dealer email address
      * @return Message for the flow screen
      **/
-    private static String returnViaFlow(Id packageId, String email) {
+    private static String sendReturnViaFlow(Id packageId) {
         DNAMS_ReturnToDealerAction.Request request = new DNAMS_ReturnToDealerAction.Request();
         request.packageId = packageId;
-        request.recipientEmail = email;
         return DNAMS_ReturnToDealerAction.run(new List<DNAMS_ReturnToDealerAction.Request>{ request })[0].message;
     }
 
@@ -297,7 +297,7 @@ public class DNAMS_RmrReviewTest {
     // ------------------------------------------------------------------ 21 return to dealer
 
     /**
-     * @description Return to Dealer needs an email, sets Returned, records the recipient and shows element issues on the dealer page.
+     * @description Return needs the first send in History and an email; it sets Returned, stamps the send and shows element issues on the dealer page.
      **/
     @IsTest
     static void returnToDealerSetsReturnedAndEmailsLink() {
@@ -307,21 +307,60 @@ public class DNAMS_RmrReviewTest {
             submitAndClassify(); // Dealer Application missing, Org Chart wrong type -> Needs Review
             Assert.areEqual('RMR Pending', pkg().Status__c, 'Issues send the package to the RMR');
 
-            String noEmail = returnViaFlow(pkg().Id, '');
-            Assert.isTrue(noEmail.contains('Enter the dealer email'), noEmail);
-            String message = returnViaFlow(pkg().Id, 'principal@example.com');
+            DNAMS_RmrReviewService.sentHistoryStub = false;
+            String neverSent = sendReturnViaFlow(pkg().Id);
+            Assert.isTrue(neverSent.contains('cannot be returned'), neverSent);
+
+            DNAMS_RmrReviewService.sentHistoryStub = true;
+            update new DNAMS_Package__c(Id = pkg().Id, Upload_Link_Sent_To__c = null);
+            String noEmail = sendReturnViaFlow(pkg().Id);
+            Assert.isTrue(noEmail.contains(DNAMS_RmrReviewService.MISSING_EMAIL), noEmail);
+
+            update new DNAMS_Package__c(Id = pkg().Id, Upload_Link_Sent_To__c = 'principal@example.com');
+            DNAMS_ReviewActionCheck.Result check = checkViaFlow(pkg().Id, 'SendReturn');
+            Assert.isTrue(check.canProceed && check.message.contains('Return package'), check.message);
+            String message = sendReturnViaFlow(pkg().Id);
 
             Assert.isTrue(message.contains('was returned'), message);
-            DNAMS_Package__c returned = pkg();
+            DNAMS_Package__c returned = [SELECT Status__c, Upload_Link_Sent_At__c FROM DNAMS_Package__c WHERE Id = :pkg().Id];
             Assert.areEqual('Returned', returned.Status__c, 'Package is Returned');
-            Assert.areEqual('principal@example.com', returned.Upload_Link_Sent_To__c, 'Recipient is recorded');
-            String again = returnViaFlow(pkg().Id, 'principal@example.com');
-            Assert.isTrue(again.contains('Return to Dealer is not available'), again);
+            Assert.isNotNull(returned.Upload_Link_Sent_At__c, 'The send is stamped');
 
             // The dealer page shows each stuck element's narrative after the return.
             String token = [SELECT Upload_Token__c FROM DNAMS_Package__c LIMIT 1].Upload_Token__c;
             DNAMS_GuestUploadController.PackageView view = DNAMS_GuestUploadController.getPackage(token);
             Assert.isTrue(view.elements[1].issue.contains('Found Bank Statement instead of Org Chart'), view.elements[1].issue);
+        }
+    }
+
+    /**
+     * @description Draft: a missing email blocks the send; with an email the link is sent and the package becomes Initiated.
+     * Initiated: the check offers a resend, which keeps the status.
+     **/
+    @IsTest
+    static void sendFromDraftThenOfferResend() {
+        Id packageId = pkg().Id;
+        System.runAs(createRmrUser()) {
+            update new DNAMS_Package__c(Id = packageId, Status__c = 'Draft', Upload_Link_Sent_To__c = null);
+            DNAMS_ReviewActionCheck.Result noEmail = checkViaFlow(packageId, 'SendReturn');
+            Assert.isFalse(noEmail.canProceed, 'A missing email blocks the send');
+            Assert.areEqual(DNAMS_RmrReviewService.MISSING_EMAIL, noEmail.message, 'The missing email is explained');
+
+            update new DNAMS_Package__c(Id = packageId, Upload_Link_Sent_To__c = 'principal@example.com');
+            DNAMS_ReviewActionCheck.Result ready = checkViaFlow(packageId, 'SendReturn');
+            Assert.isTrue(ready.canProceed && ready.message.contains('Send the upload link'), ready.message);
+
+            String sent = sendReturnViaFlow(packageId);
+            Assert.isTrue(sent.contains('is now Initiated'), sent);
+            DNAMS_Package__c initiated = [SELECT Status__c, Upload_Link_Sent_At__c FROM DNAMS_Package__c WHERE Id = :packageId];
+            Assert.areEqual('Initiated', initiated.Status__c, 'Sending moves the package to Initiated');
+            Assert.isNotNull(initiated.Upload_Link_Sent_At__c, 'The send is stamped');
+
+            DNAMS_ReviewActionCheck.Result resend = checkViaFlow(packageId, 'SendReturn');
+            Assert.isTrue(resend.canProceed && resend.message.contains('resend it anyway'), resend.message);
+            String again = sendReturnViaFlow(packageId);
+            Assert.isTrue(again.contains('emailed again'), again);
+            Assert.areEqual('Initiated', pkg().Status__c, 'A resend keeps the status');
         }
     }
 

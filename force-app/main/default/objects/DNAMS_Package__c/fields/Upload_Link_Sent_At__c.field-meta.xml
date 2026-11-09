@@ -4,7 +4,7 @@
     <description>When the upload link was last emailed.</description>
     <label>Upload Link Sent At</label>
     <required>false</required>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>DateTime</type>
 </CustomField>

@@ -1,0 +1,4 @@
+.slds-modal__content {
+  position: relative;
+  min-height: 8rem;
+}

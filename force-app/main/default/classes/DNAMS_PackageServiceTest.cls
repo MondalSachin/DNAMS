@@ -2,6 +2,7 @@
 private class DNAMS_PackageServiceTest {
     private static final String TERM_RENEWAL = 'Term Renewal';
     private static final String BUY_SELL = 'Buy/Sell change of Ownership';
+    private static final String PRINCIPAL_CHANGE = 'Dealer Principal Change';
 
     @TestSetup
     static void setup() {
@@ -10,11 +11,31 @@ private class DNAMS_PackageServiceTest {
         insert new List<Account>{ buying, selling };
         insert new Contact(LastName = 'Principal', AccountId = buying.Id, Email = 'principal@example.com');
 
-        insert new List<DNAMS_Element_Type__c>{
-            new DNAMS_Element_Type__c(Name = 'Org Chart', Sort_Order__c = 2, Is_Required__c = true),
-            new DNAMS_Element_Type__c(Name = 'Dealer Application', Instructions__c = 'All fields are completed.', Sort_Order__c = 1, Is_Required__c = true),
-            new DNAMS_Element_Type__c(Name = 'Miscellaneous Documents', Sort_Order__c = 3),
-            new DNAMS_Element_Type__c(Name = 'Retired Type', Sort_Order__c = 4, Is_Active__c = false)
+        DNAMS_Element_Type__c orgChart = new DNAMS_Element_Type__c(Name = 'Org Chart', Sort_Order__c = 2, Is_Required__c = true);
+        DNAMS_Element_Type__c application = new DNAMS_Element_Type__c(
+            Name = 'Dealer Application',
+            Instructions__c = 'All fields are completed.',
+            Sort_Order__c = 1,
+            Is_Required__c = true
+        );
+        DNAMS_Element_Type__c misc = new DNAMS_Element_Type__c(Name = 'Miscellaneous Documents', Sort_Order__c = 3);
+        DNAMS_Element_Type__c retired = new DNAMS_Element_Type__c(Name = 'Retired Type', Sort_Order__c = 4, Is_Active__c = false);
+        List<DNAMS_Element_Type__c> types = new List<DNAMS_Element_Type__c>{ orgChart, application, misc, retired };
+        insert types;
+
+        // Term Renewal mirrors the types; the Retired Type mapping is active but its Element Type is not.
+        DNAMSPipelineTestHelper.mapElementTypes(TERM_RENEWAL, types);
+        DNAMS_Package_Type_Element_Map__c retiredMapping = [
+            SELECT Id
+            FROM DNAMS_Package_Type_Element_Map__c
+            WHERE Package_Type__c = :TERM_RENEWAL AND Element_Type__c = :retired.Id
+        ];
+        update new DNAMS_Package_Type_Element_Map__c(Id = retiredMapping.Id, Is_Active__c = true, Is_Required__c = true);
+        // Buy/Sell: required flags differ from the types, Org Chart is mapped but inactive. Dealer Principal Change: none.
+        insert new List<DNAMS_Package_Type_Element_Map__c>{
+            new DNAMS_Package_Type_Element_Map__c(Package_Type__c = BUY_SELL, Element_Type__c = application.Id, Is_Active__c = true, Is_Required__c = false),
+            new DNAMS_Package_Type_Element_Map__c(Package_Type__c = BUY_SELL, Element_Type__c = misc.Id, Is_Active__c = true, Is_Required__c = true),
+            new DNAMS_Package_Type_Element_Map__c(Package_Type__c = BUY_SELL, Element_Type__c = orgChart.Id, Is_Active__c = false, Is_Required__c = true)
         };
     }
 
@@ -83,19 +104,106 @@ private class DNAMS_PackageServiceTest {
     }
 
     @IsTest
-    static void initiatedCreatesOwnElementsFromActiveTypesOnce() {
-        DNAMS_Package__c first = newPackage(TERM_RENEWAL, 'Initiated');
+    static void insertInDraftCreatesElements() {
+        DNAMS_Package__c draft = newPackage(TERM_RENEWAL, 'Draft');
+
+        List<DNAMS_Package_Element__c> draftElements = elements(draft.Id);
+        Assert.areEqual('Draft', draft.Status__c);
+        Assert.areEqual(3, draftElements.size(), 'Elements exist right after a Draft insert');
+        Assert.areEqual('Dealer Application', draftElements[0].Name);
+    }
+
+    @IsTest
+    static void insertCreatesOwnElementsOnceAndInitiatedDoesNotDuplicate() {
+        DNAMS_Package__c first = newPackage(TERM_RENEWAL, 'Draft');
         DNAMS_Package__c second = newPackage(TERM_RENEWAL, 'Initiated');
 
+        update new DNAMS_Package__c(Id = first.Id, Status__c = 'Initiated');
         update new DNAMS_Package__c(Id = first.Id, Status__c = 'Returned');
         update new DNAMS_Package__c(Id = first.Id, Status__c = 'Initiated');
 
         List<DNAMS_Package_Element__c> firstElements = elements(first.Id);
-        Assert.areEqual(3, firstElements.size(), 'Inactive types are skipped; no duplicates on re-initiate');
+        Assert.areEqual(3, firstElements.size(), 'Inactive types are skipped; no duplicates on Initiated or re-initiate');
         Assert.areEqual('Dealer Application', firstElements[0].Name);
         Assert.isTrue(firstElements[0].Is_Required__c);
         Assert.areEqual(3, elements(second.Id).size(), 'Each package gets its own new elements');
         Assert.areNotEqual(firstElements[0].Id, elements(second.Id)[0].Id);
+    }
+
+    @IsTest
+    static void elementsComeFromActiveMappingsOfThePackageType() {
+        DNAMS_Package__c buySell = newPackage(BUY_SELL, 'Initiated');
+
+        List<DNAMS_Package_Element__c> buySellElements = elements(buySell.Id);
+        Assert.areEqual(2, buySellElements.size(), 'Only active Buy/Sell mappings; the inactive Org Chart mapping is skipped');
+        Assert.areEqual('Dealer Application', buySellElements[0].Name, 'Ordered by Element Type Sort Order');
+        Assert.isFalse(buySellElements[0].Is_Required__c, 'Required comes from the mapping, not the Element Type');
+        Assert.areEqual('Miscellaneous Documents', buySellElements[1].Name);
+        Assert.isTrue(buySellElements[1].Is_Required__c, 'Required comes from the mapping, not the Element Type');
+        Assert.areEqual(1, [SELECT COUNT() FROM DNAMS_Package_Element__c WHERE Package__c = :buySell.Id AND Sort_Order__c = 3], 'Sort Order comes from the Element Type');
+    }
+
+    @IsTest
+    static void inactiveElementTypeIsExcludedEvenWhenMapped() {
+        DNAMS_Package__c pkg = newPackage(TERM_RENEWAL, 'Initiated');
+        Assert.areEqual(0, [SELECT COUNT() FROM DNAMS_Package_Element__c WHERE Package__c = :pkg.Id AND Name = 'Retired Type'], 'Inactive Element Type is skipped');
+    }
+
+    @IsTest
+    static void insertWithTypeWithoutActiveMappingsFails() {
+        DNAMS_Package__c pkg = new DNAMS_Package__c(Type__c = PRINCIPAL_CHANGE, Status__c = 'Draft', Buying_Dealer__c = dealer('TCE00087').Id);
+        Database.SaveResult result = Database.insert(pkg, false);
+        Assert.isFalse(result.isSuccess(), 'No mapping for the type blocks the insert');
+        Assert.areEqual('No active elements are mapped for package type ' + PRINCIPAL_CHANGE + '.', result.getErrors()[0].getMessage());
+        Assert.areEqual(0, [SELECT COUNT() FROM DNAMS_Package__c WHERE Type__c = :PRINCIPAL_CHANGE]);
+    }
+
+    @IsTest
+    static void oldDraftPackageWithoutElementsGetsThemAtInitiated() {
+        // Simulates a package created before elements were made on insert: Draft with no elements.
+        DNAMS_Package__c draft = newPackage(TERM_RENEWAL, 'Draft');
+        delete [SELECT Id FROM DNAMS_Package_Element__c WHERE Package__c = :draft.Id];
+        Assert.areEqual(0, elements(draft.Id).size());
+
+        update new DNAMS_Package__c(Id = draft.Id, Status__c = 'Initiated');
+
+        List<DNAMS_Package_Element__c> created = elements(draft.Id);
+        Assert.areEqual(3, created.size(), 'Initiated creates the missing elements');
+        Assert.areEqual('Dealer Application', created[0].Name);
+    }
+
+    @IsTest
+    static void oldDraftPackageWithoutMappingsIsBlockedAtInitiated() {
+        DNAMS_Package__c draft = newPackage(TERM_RENEWAL, 'Draft');
+        delete [SELECT Id FROM DNAMS_Package_Element__c WHERE Package__c = :draft.Id];
+        List<DNAMS_Package_Type_Element_Map__c> mappings = [SELECT Id FROM DNAMS_Package_Type_Element_Map__c WHERE Package_Type__c = :TERM_RENEWAL];
+        for (DNAMS_Package_Type_Element_Map__c mapping : mappings) {
+            mapping.Is_Active__c = false;
+        }
+        update mappings;
+
+        Database.SaveResult result = Database.update(new DNAMS_Package__c(Id = draft.Id, Status__c = 'Initiated'), false);
+        Assert.isFalse(result.isSuccess(), 'No active mapping for the type blocks Initiated');
+        Assert.areEqual('No active elements are mapped for package type ' + TERM_RENEWAL + '.', result.getErrors()[0].getMessage());
+        Assert.areEqual('Draft', reload(draft.Id).Status__c);
+    }
+
+    @IsTest
+    static void bulkInitiateAcrossPackageTypes() {
+        Id buyingId = dealer('TCE00087').Id;
+        List<DNAMS_Package__c> packages = new List<DNAMS_Package__c>{
+            new DNAMS_Package__c(Type__c = TERM_RENEWAL, Status__c = 'Initiated', Buying_Dealer__c = buyingId),
+            new DNAMS_Package__c(Type__c = BUY_SELL, Status__c = 'Initiated', Buying_Dealer__c = buyingId, Selling_Dealer__c = dealer('IL081').Id),
+            new DNAMS_Package__c(Type__c = PRINCIPAL_CHANGE, Status__c = 'Initiated', Buying_Dealer__c = buyingId)
+        };
+        Test.startTest();
+        List<Database.SaveResult> results = Database.insert(packages, false);
+        Test.stopTest();
+
+        Assert.isTrue(results[0].isSuccess() && results[1].isSuccess(), 'Mapped types save');
+        Assert.isFalse(results[2].isSuccess(), 'The unmapped type fails on its own');
+        Assert.areEqual(3, elements(packages[0].Id).size());
+        Assert.areEqual(2, elements(packages[1].Id).size());
     }
 
     @IsTest
@@ -295,5 +403,26 @@ private class DNAMS_PackageServiceTest {
         } catch (AuraHandledException e) {
             Assert.isTrue(e.getMessage().contains('already submitted'), e.getMessage());
         }
+    }
+
+    @IsTest
+    static void createCopiesPrimaryContactEmailUnlessFilled() {
+        Account buying = [SELECT Id FROM Account WHERE Name = 'Buying Dealer'];
+        Contact principal = [SELECT Id FROM Contact WHERE Email = 'principal@example.com'];
+        Contact noEmail = new Contact(LastName = 'No Email', AccountId = buying.Id);
+        insert noEmail;
+        DNAMS_Package__c copied = new DNAMS_Package__c(Type__c = 'Term Renewal', Buying_Dealer__c = buying.Id, Primary_Contact__c = principal.Id);
+        DNAMS_Package__c kept = new DNAMS_Package__c(
+            Type__c = 'Term Renewal', Buying_Dealer__c = buying.Id, Primary_Contact__c = principal.Id, Upload_Link_Sent_To__c = 'other@example.com'
+        );
+        DNAMS_Package__c blank = new DNAMS_Package__c(Type__c = 'Term Renewal', Buying_Dealer__c = buying.Id, Primary_Contact__c = noEmail.Id);
+        insert new List<DNAMS_Package__c>{ copied, kept, blank };
+
+        Map<Id, DNAMS_Package__c> saved = new Map<Id, DNAMS_Package__c>(
+            [SELECT Upload_Link_Sent_To__c FROM DNAMS_Package__c WHERE Id IN :new List<Id>{ copied.Id, kept.Id, blank.Id }]
+        );
+        Assert.areEqual('principal@example.com', saved.get(copied.Id).Upload_Link_Sent_To__c, 'Contact email is copied on create');
+        Assert.areEqual('other@example.com', saved.get(kept.Id).Upload_Link_Sent_To__c, 'An entered email is kept');
+        Assert.isNull(saved.get(blank.Id).Upload_Link_Sent_To__c, 'No contact email leaves it blank for the send check to ask');
     }
 }

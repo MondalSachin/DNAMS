@@ -1,0 +1,89 @@
+<template>
+  <lightning-record-edit-form
+    object-api-name={objectApiName}
+    onsubmit={handleSubmit}
+    onsuccess={handleSuccess}
+    onerror={handleError}
+  >
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      aria-labelledby="dnams-new-package-heading"
+      class="slds-modal slds-fade-in-open slds-modal_medium"
+      onkeydown={handleKeydown}
+    >
+      <div class="slds-modal__container">
+        <button
+          type="button"
+          class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+          title="Cancel and close"
+          disabled={isSaving}
+          onclick={handleCancel}
+        >
+          <lightning-icon icon-name="utility:close" size="small" variant="inverse" alternative-text="Cancel and close">
+          </lightning-icon>
+          <span class="slds-assistive-text">Cancel and close</span>
+        </button>
+
+        <div class="slds-modal__header">
+          <h1 id="dnams-new-package-heading" class="slds-modal__title slds-hyphenate">New Package</h1>
+        </div>
+
+        <div class="slds-modal__content slds-p-around_medium">
+          <template lwc:if={isSaving}>
+            <lightning-spinner alternative-text="Saving" size="medium"></lightning-spinner>
+          </template>
+          <lightning-messages></lightning-messages>
+          <div class="slds-grid slds-wrap slds-gutters_small">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+              <lightning-input-field key={typeKey} field-name={typeField} value={defaults.Type__c} required>
+              </lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+              <lightning-input-field
+                key={dealerKey}
+                field-name={buyingDealerField}
+                value={defaults.Buying_Dealer__c}
+                required
+                onchange={handleDealerChange}
+              ></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-bottom_x-small">
+              <!-- lightning-input-field does not apply dependent lookup filters ($Source.Buying_Dealer__c),
+                   so the contact is picked here, filtered to the selected buying dealer. -->
+              <lightning-record-picker
+                key={contactKey}
+                label="Primary Contact"
+                placeholder={contactPlaceholder}
+                object-api-name="Contact"
+                filter={contactFilter}
+                display-info={contactDisplayInfo}
+                value={contactId}
+                disabled={noDealer}
+                required
+                onchange={handleContactChange}
+              ></lightning-record-picker>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+              <lightning-input-field key={sellingKey} field-name={sellingDealerField} value={defaults.Selling_Dealer__c}>
+              </lightning-input-field>
+            </div>
+          </div>
+        </div>
+
+        <div class="slds-modal__footer">
+          <lightning-button label="Cancel" disabled={isSaving} onclick={handleCancel}></lightning-button>
+          <lightning-button
+            class="slds-m-left_x-small"
+            variant="brand"
+            type="submit"
+            label="Save"
+            disabled={isSaving}
+          ></lightning-button>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+  </lightning-record-edit-form>
+</template>

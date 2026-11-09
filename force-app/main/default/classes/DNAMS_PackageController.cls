@@ -58,6 +58,7 @@ public with sharing class DNAMS_PackageController {
                 'Thank you,\nHarbor Motors Dealer Network'
         );
         message.setSaveAsActivity(false);
+        DNAMSEmailSender.applySender(message);
         try {
             Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ message });
         } catch (EmailException e) {

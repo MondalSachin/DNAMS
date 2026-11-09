@@ -2,7 +2,10 @@
  * Package lifecycle rules for DNAMS_Package__c and the files attached to its elements.
  *  - Every package gets a random Upload Token (the secret in the dealer upload link).
  *  - Package Name is derived from dealer codes and type.
- *  - Status -> Initiated creates the package's own elements from the active DNAMS_Element_Type__c records.
+ *  - Creating a package (any status, normally Draft) creates its own elements from the active
+ *    DNAMS_Package_Type_Element_Map__c rows of its Package Type (Element Type also active; Is Required from the
+ *    mapping). Status -> Initiated (upload link emailed) only creates them for an older package that has none.
+ *    A later Type change does not resync the elements.
  *  - Status -> Dealer Submitted checks required elements have documents and assigns the CENTRAL RMR queue.
  *  - Documents on elements are locked once the package leaves an editable status.
  *  - Guest uploads (ContentVersion.DNAMS_Upload_Token_fileupload__c = "elementId:token") are validated
@@ -33,6 +36,7 @@ public without sharing class DNAMS_PackageService {
             for (DNAMS_Package__c pkg : packages) {
                 pkg.Upload_Token__c = newUploadToken();
             }
+            copyPrimaryContactEmail(packages);
         }
         setPackageNames(packages, oldById);
 
@@ -59,12 +63,34 @@ public without sharing class DNAMS_PackageService {
         }
     }
 
+    /** On create, Document Uploading Email defaults to the Primary Contact's email (kept if already filled). */
+    private static void copyPrimaryContactEmail(List<DNAMS_Package__c> packages) {
+        Set<Id> contactIds = new Set<Id>();
+        for (DNAMS_Package__c pkg : packages) {
+            if (pkg.Primary_Contact__c != null && String.isBlank(pkg.Upload_Link_Sent_To__c)) {
+                contactIds.add(pkg.Primary_Contact__c);
+            }
+        }
+        if (contactIds.isEmpty()) {
+            return;
+        }
+        Map<Id, Contact> contacts = new Map<Id, Contact>([SELECT Id, Email FROM Contact WHERE Id IN :contactIds WITH SYSTEM_MODE]);
+        for (DNAMS_Package__c pkg : packages) {
+            Contact primary = contacts.get(pkg.Primary_Contact__c);
+            if (primary != null && String.isBlank(pkg.Upload_Link_Sent_To__c) && String.isNotBlank(primary.Email)) {
+                pkg.Upload_Link_Sent_To__c = primary.Email;
+            }
+        }
+    }
+
     public static void afterSave(List<DNAMS_Package__c> packages, Map<Id, DNAMS_Package__c> oldById) {
-        List<DNAMS_Package__c> initiated = new List<DNAMS_Package__c>();
+        // Elements are created with the package (any status). Initiated is a safety net for packages created before
+        // that rule that still have no elements; createElements skips packages that already have elements.
+        List<DNAMS_Package__c> needElements = new List<DNAMS_Package__c>();
         List<DNAMS_Package_Review_Requested__e> reviewRequests = new List<DNAMS_Package_Review_Requested__e>();
         for (DNAMS_Package__c pkg : packages) {
-            if (statusChangedTo(pkg, oldById, STATUS_INITIATED)) {
-                initiated.add(pkg);
+            if (oldById == null || statusChangedTo(pkg, oldById, STATUS_INITIATED)) {
+                needElements.add(pkg);
             }
             // Step 2: only Initiated -> Dealer Submitted or Returned -> Dealer Submitted start the AI review.
             String previous = oldById == null ? null : oldById.get(pkg.Id).Status__c;
@@ -80,8 +106,8 @@ public without sharing class DNAMS_PackageService {
                 );
             }
         }
-        if (!initiated.isEmpty()) {
-            createElements(initiated);
+        if (!needElements.isEmpty()) {
+            createElements(needElements);
         }
         if (!reviewRequests.isEmpty()) {
             // Published after commit; the subscriber runs as the configured pipeline user, not the site guest.
@@ -339,10 +365,16 @@ public without sharing class DNAMS_PackageService {
         return String.isNotBlank(dealer.AccountNumber) ? dealer.AccountNumber : dealer.Name;
     }
 
-    /** Each package gets its own new elements; only the element types are shared. */
+    /**
+     * Each package gets its own new elements from the active DNAMS_Package_Type_Element_Map__c rows of its Package
+     * Type whose Element Type is also active. Is Required comes from the mapping row, Sort Order from the Element Type.
+     * Called on insert and on Status -> Initiated; packages that already have elements are skipped (no duplicates).
+     * A package whose type has no active mapping fails to save with noMappedElementsMessage.
+     */
     private static void createElements(List<DNAMS_Package__c> packages) {
         Set<Id> packageIds = new Map<Id, DNAMS_Package__c>(packages).keySet();
         Set<Id> alreadyStarted = new Set<Id>();
+        Set<String> packageTypes = new Set<String>();
         for (AggregateResult row : [
             SELECT Package__c packageId
             FROM DNAMS_Package_Element__c
@@ -352,37 +384,58 @@ public without sharing class DNAMS_PackageService {
         ]) {
             alreadyStarted.add((Id) row.get('packageId'));
         }
+        for (DNAMS_Package__c pkg : packages) {
+            if (!alreadyStarted.contains(pkg.Id) && String.isNotBlank(pkg.Type__c)) {
+                packageTypes.add(pkg.Type__c);
+            }
+        }
 
-        List<DNAMS_Element_Type__c> elementTypes = [
-            SELECT Id, Name, Sort_Order__c, Is_Required__c
-            FROM DNAMS_Element_Type__c
-            WHERE Is_Active__c = TRUE
-            WITH SYSTEM_MODE
-            ORDER BY Sort_Order__c ASC NULLS LAST, Name
-        ];
+        Map<String, List<DNAMS_Package_Type_Element_Map__c>> mappingsByType = new Map<String, List<DNAMS_Package_Type_Element_Map__c>>();
+        if (!packageTypes.isEmpty()) {
+            for (DNAMS_Package_Type_Element_Map__c mapping : [
+                SELECT Package_Type__c, Is_Required__c, Element_Type__c, Element_Type__r.Name, Element_Type__r.Sort_Order__c
+                FROM DNAMS_Package_Type_Element_Map__c
+                WHERE Package_Type__c IN :packageTypes AND Is_Active__c = TRUE AND Element_Type__r.Is_Active__c = TRUE
+                WITH SYSTEM_MODE
+                ORDER BY Element_Type__r.Sort_Order__c ASC NULLS LAST, Element_Type__r.Name
+            ]) {
+                if (!mappingsByType.containsKey(mapping.Package_Type__c)) {
+                    mappingsByType.put(mapping.Package_Type__c, new List<DNAMS_Package_Type_Element_Map__c>());
+                }
+                mappingsByType.get(mapping.Package_Type__c).add(mapping);
+            }
+        }
 
         List<DNAMS_Package_Element__c> elements = new List<DNAMS_Package_Element__c>();
         for (DNAMS_Package__c pkg : packages) {
             if (alreadyStarted.contains(pkg.Id)) {
-                continue; // Returned -> Initiated again must not duplicate elements.
+                continue; // Created on insert, or Returned -> Initiated again: never duplicate elements.
             }
-            if (elementTypes.isEmpty()) {
-                pkg.addError('No active element types are configured.');
+            // Both fields use the restricted DNAMS_Package_Type value set, so the stored values match exactly.
+            List<DNAMS_Package_Type_Element_Map__c> mappings = String.isBlank(pkg.Type__c) ? null : mappingsByType.get(pkg.Type__c);
+            if (mappings == null || mappings.isEmpty()) {
+                pkg.addError(noMappedElementsMessage(pkg.Type__c));
                 continue;
             }
-            for (DNAMS_Element_Type__c elementType : elementTypes) {
+            for (DNAMS_Package_Type_Element_Map__c mapping : mappings) {
                 elements.add(
                     new DNAMS_Package_Element__c(
-                        Name = elementType.Name,
+                        Name = mapping.Element_Type__r.Name,
                         Package__c = pkg.Id,
-                        Element_Type__c = elementType.Id,
-                        Is_Required__c = elementType.Is_Required__c,
-                        Sort_Order__c = elementType.Sort_Order__c
+                        Element_Type__c = mapping.Element_Type__c,
+                        Is_Required__c = mapping.Is_Required__c,
+                        Sort_Order__c = mapping.Element_Type__r.Sort_Order__c
                     )
                 );
             }
         }
         Database.insert(elements, AccessLevel.SYSTEM_MODE);
+    }
+
+    /** Error shown when a package's type has no active element mappings. */
+    @TestVisible
+    private static String noMappedElementsMessage(String packageType) {
+        return 'No active elements are mapped for package type ' + packageType + '.';
     }
 
     private static void validateRequiredDocuments(List<DNAMS_Package__c> packages) {

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Required__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Copied to the package element's Is Required when the element is created. Overrides the Element Type's own Is Required.</description>
+    <label>Is Required</label>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

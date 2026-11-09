@@ -41,7 +41,7 @@ export default class DnamsPackageUpload extends LightningElement {
       position: index + 1,
       uploadValue: `${element.id}:${this.token}`,
       // Required elements, and any element the reviewer flagged, can take uploads while editable.
-      canUpload: this.pkg.isEditable && (element.isRequired || Boolean(element.issue)),
+      canUpload: this.pkg.isEditable,
       canRemove: this.pkg.isEditable,
       rowClass:
         (element.isRequired && element.documents.length === 0) || element.issue

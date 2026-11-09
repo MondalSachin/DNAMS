@@ -1,0 +1,3 @@
+<aura:component implements="lightning:actionOverride" access="global" description="New action override for DNAMS_Package__c. Wraps the LWC dnamsNewPackage, because an LWC cannot be an action override directly.">
+    <c:dnamsNewPackage />
+</aura:component>

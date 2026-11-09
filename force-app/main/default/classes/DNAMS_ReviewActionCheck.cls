@@ -3,7 +3,7 @@
  * now, so the modal shows the confirmation only when it is, and otherwise explains why straight away. Never throws.
  */
 public with sharing class DNAMS_ReviewActionCheck {
-    @InvocableMethod(label='DNAMS: Check Review Action' description='Checks whether the AI review can be re-run or cancelled now.')
+    @InvocableMethod(label='DNAMS: Check Review Action' description='Checks whether the AI review can be re-run or cancelled, or the package sent or returned to the dealer, now.')
     public static List<Result> check(List<Request> requests) {
         List<Result> results = new List<Result>();
         for (Request request : requests) {
@@ -25,7 +25,7 @@ public with sharing class DNAMS_ReviewActionCheck {
         @InvocableVariable(required=true label='Package Id')
         public Id packageId;
 
-        @InvocableVariable(required=true label='Action' description='Rerun or Cancel')
+        @InvocableVariable(required=true label='Action' description='Rerun, Cancel or SendReturn')
         public String action;
     }
 

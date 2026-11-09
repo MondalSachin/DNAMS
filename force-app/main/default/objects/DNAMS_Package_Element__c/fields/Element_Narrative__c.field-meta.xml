@@ -3,7 +3,7 @@
     <fullName>Element_Narrative__c</fullName>
     <description>Short rule-based explanation of where and why this element is stuck (blank when it passed).</description>
     <externalId>false</externalId>
-    <label>Element Narrative</label>
+    <label>Reason(s)</label>
     <length>255</length>
     <required>false</required>
     <trackHistory>false</trackHistory>

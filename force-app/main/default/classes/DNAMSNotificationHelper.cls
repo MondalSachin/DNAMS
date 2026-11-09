@@ -4,12 +4,13 @@
  *                  Emails carry a generic message, error log names and the package link only; never raw payloads.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-09
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details Emails are sent from the DNAMS org-wide sender (DNAMSEmailSender)
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-09   Abhishek Dutta  Org-wide sender via DNAMSEmailSender
  **/
 public inherited sharing class DNAMSNotificationHelper {
     private static final String QUEUE_TYPE = 'Queue';
@@ -44,6 +45,7 @@ public inherited sharing class DNAMSNotificationHelper {
                     emails.add(buildEmail(admin.Id, run, bodyByRunId.get(run.Id)));
                 }
             }
+            DNAMSEmailSender.applySender(emails);
             sentEmails.addAll(emails);
             Messaging.sendEmail(emails, false);
         } catch (Exception e) {

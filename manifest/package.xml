@@ -8,6 +8,8 @@
         <members>DNAMSEinsteinTransmittalAI</members>
         <members>DNAMSElementDocumentTypeUtil</members>
         <members>DNAMSElementDocumentTypeUtilTest</members>
+        <members>DNAMSEmailSender</members>
+        <members>DNAMSEmailSenderTest</members>
         <members>DNAMSErrorLogHelper</members>
         <members>DNAMSErrorLogHelperTest</members>
         <members>DNAMSExtractionCleanupJob</members>
@@ -37,6 +39,8 @@
         <members>DNAMSIDPWrapperTest</members>
         <members>DNAMSNotificationHelper</members>
         <members>DNAMSNotificationHelperTest</members>
+        <members>DNAMSPackageTypeElementMapTest</members>
+        <members>DNAMSPackageTypeElementMapTriggerHandler</members>
         <members>DNAMSPipelineConstants</members>
         <members>DNAMSPipelineException</members>
         <members>DNAMSPipelineTestHelper</members>
@@ -67,6 +71,8 @@
         <members>DNAMS_GuestUploadController</members>
         <members>DNAMS_NarrativeWriter</members>
         <members>DNAMS_PackageController</members>
+        <members>DNAMS_PackageInsightsController</members>
+        <members>DNAMS_PackageInsightsControllerTest</members>
         <members>DNAMS_PackageNarrativeQueueable</members>
         <members>DNAMS_PackageReviewPipelineService</members>
         <members>DNAMS_PackageReviewPipelineTest</members>
@@ -74,6 +80,7 @@
         <members>DNAMS_PackageServiceTest</members>
         <members>DNAMS_RerunReviewAction</members>
         <members>DNAMS_ReturnToDealerAction</members>
+        <members>DNAMS_ReviewActionCheck</members>
         <members>DNAMS_RmrReviewService</members>
         <members>DNAMS_RmrReviewTest</members>
         <members>IDocumentExtractionClient</members>
@@ -81,6 +88,7 @@
     </types>
     <types>
         <members>DNAMSIDPEventTrigger</members>
+        <members>DNAMSPackageTypeElementMapTrigger</members>
         <members>DNAMS_ContentDocumentLinkTrigger</members>
         <members>DNAMS_ContentVersionTrigger</members>
         <members>DNAMS_PackageReviewRequestedTrigger</members>
@@ -88,8 +96,16 @@
         <name>ApexTrigger</name>
     </types>
     <types>
+        <members>dnamsNewPackageOverride</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+    <types>
         <members>DNAMS_Package__c.DNAMS_Dashboard</members>
         <name>CompactLayout</name>
+    </types>
+    <types>
+        <members>HarborMotorsLogo</members>
+        <name>ContentAsset</name>
     </types>
     <types>
         <members>DNAMS</members>
@@ -118,6 +134,7 @@
         <members>AIReviewStageResult__c.ContentVersionId__c</members>
         <members>AIReviewStageResult__c.DocumentTitle__c</members>
         <members>AIReviewStageResult__c.DocumentType__c</members>
+        <members>AIReviewStageResult__c.Document__c</members>
         <members>AIReviewStageResult__c.ElementType__c</members>
         <members>AIReviewStageResult__c.GeneratedText__c</members>
         <members>AIReviewStageResult__c.IDPActionId__c</members>
@@ -137,6 +154,7 @@
         <members>AIReviewStageResult__c.ReviewRun__c</members>
         <members>AIReviewStageResult__c.RuleId__c</members>
         <members>AIReviewStageResult__c.RuleName__c</members>
+        <members>AIReviewStageResult__c.RuleType__c</members>
         <members>AIReviewStageResult__c.SchemaValidationStatus__c</members>
         <members>AIReviewStageResult__c.SourceValue__c</members>
         <members>AIReviewStageResult__c.Stage__c</members>
@@ -153,6 +171,7 @@
         <members>AI_Package_Review_Run__c.ExtractionSchemaValidation__c</members>
         <members>AI_Package_Review_Run__c.Issue_Summary__c</members>
         <members>AI_Package_Review_Run__c.Job_Id__c</members>
+        <members>AI_Package_Review_Run__c.Narrative_Input__c</members>
         <members>AI_Package_Review_Run__c.Overall_Result__c</members>
         <members>AI_Package_Review_Run__c.Package__c</members>
         <members>AI_Package_Review_Run__c.Prompt_Template__c</members>
@@ -173,6 +192,7 @@
         <members>DNAMSElementDocumentType__mdt.ElementType__c</members>
         <members>DNAMSElementDocumentType__mdt.IdentifyingInstructions__c</members>
         <members>DNAMSElementDocumentType__mdt.IsActive__c</members>
+        <members>DNAMSElementDocumentType__mdt.IsRequired__c</members>
         <members>DNAMSElementDocumentType__mdt.SortOrder__c</members>
         <members>DNAMSIDPAction__mdt.ActionId__c</members>
         <members>DNAMSIDPAction__mdt.ActionVersion__c</members>
@@ -227,9 +247,16 @@
         <members>DNAMS_Package_Review_Requested__e.Package_Id__c</members>
         <members>DNAMS_Package_Review_Requested__e.Requested_By_Id__c</members>
         <members>DNAMS_Package_Review_Requested__e.Trigger_Source__c</members>
+        <members>DNAMS_Package_Type_Element_Map__c.Element_Type__c</members>
+        <members>DNAMS_Package_Type_Element_Map__c.Is_Active__c</members>
+        <members>DNAMS_Package_Type_Element_Map__c.Is_Required__c</members>
+        <members>DNAMS_Package_Type_Element_Map__c.Package_Type__c</members>
+        <members>DNAMS_Package_Type_Element_Map__c.Unique_Key__c</members>
+        <members>DNAMS_Package__c.AI_Narrative_JSON__c</members>
         <members>DNAMS_Package__c.AI_Narrative__c</members>
         <members>DNAMS_Package__c.Buying_Dealer__c</members>
         <members>DNAMS_Package__c.Dealer_Submit_Validation_Override__c</members>
+        <members>DNAMS_Package__c.Demo_Scenario__c</members>
         <members>DNAMS_Package__c.Executive_Summary__c</members>
         <members>DNAMS_Package__c.Health__c</members>
         <members>DNAMS_Package__c.Ownership_Summary__c</members>
@@ -266,6 +293,7 @@
         <members>DNAMS_Pipeline_Setting__mdt.Prompt_Template__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.RuleValidationBatchSize__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.RuleValidationPromptTemplate__c</members>
+        <members>DNAMS_Pipeline_Setting__mdt.SenderEmailAddress__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.TransmittalMaxAttempts__c</members>
         <members>DNAMS_Pipeline_Setting__mdt.TransmittalSummaryMaxWords__c</members>
         <name>CustomField</name>
@@ -344,6 +372,7 @@
         <members>DNAMS_Element_Type__c</members>
         <members>DNAMS_Package_Element__c</members>
         <members>DNAMS_Package_Review_Requested__e</members>
+        <members>DNAMS_Package_Type_Element_Map__c</members>
         <members>DNAMS_Package__c</members>
         <members>DNAMS_Pipeline_Setting__mdt</members>
         <name>CustomObject</name>
@@ -361,6 +390,7 @@
         <members>AI_Package_Review_Run__c</members>
         <members>DNAMS_Element_Type__c</members>
         <members>DNAMS_Package_Element__c</members>
+        <members>DNAMS_Package_Type_Element_Map__c</members>
         <members>DNAMS_Package__c</members>
         <name>CustomTab</name>
     </types>
@@ -406,8 +436,10 @@
         <name>ExternalCredential</name>
     </types>
     <types>
+        <members>DNAMS_Account_Record_Page</members>
         <members>DNAMS_Package_Record_Page</members>
         <members>DNAMS_Review_Run_Record_Page</members>
+        <members>DNAMS_Stage_Result_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -429,15 +461,24 @@
         <name>GlobalValueSet</name>
     </types>
     <types>
+        <members>AIReviewStageResult__c-AI Review Stage Result Layout</members>
         <members>AI_Package_Review_Run__c-AI Package Review Run Layout</members>
         <members>DNAMS_Element_Type__c-Element Type Layout</members>
         <members>DNAMS_Package_Element__c-Package Element Layout</members>
+        <members>DNAMS_Package_Type_Element_Map__c-Package Type Element Map Layout</members>
         <members>DNAMS_Package__c-Package Layout</members>
         <name>Layout</name>
     </types>
     <types>
+        <members>dnamsAiSummaryView</members>
+        <members>dnamsBrandHeader</members>
+        <members>dnamsCreatePackageFromAccount</members>
         <members>dnamsDraftTransmittal</members>
+        <members>dnamsElementProgressSummary</members>
         <members>dnamsGenerateTransmittal</members>
+        <members>dnamsNewPackage</members>
+        <members>dnamsPackageAiSummary</members>
+        <members>dnamsPackageDocuments</members>
         <members>dnamsPackageSender</members>
         <members>dnamsPackageUpload</members>
         <members>dnamsTransmittalSummaries</members>
@@ -445,6 +486,7 @@
     </types>
     <types>
         <members>AI_Package_Review_Run__c.All_Runs</members>
+        <members>DNAMS_Package_Type_Element_Map__c.All</members>
         <members>DNAMS_Package__c.All_Packages</members>
         <members>DNAMS_Package__c.CENTRAL_RMR_DNAMS_Package</members>
         <members>DNAMS_Package__c.DNAMSAdminTeam_DNAMS_Package</members>
@@ -484,6 +526,7 @@
         <name>Queue</name>
     </types>
     <types>
+        <members>Account.Create_Package</members>
         <members>DNAMS_Package__c.Cancel_Review</members>
         <members>DNAMS_Package__c.Draft_AI_Transmittal</members>
         <members>DNAMS_Package__c.Generate_Transmittal</members>
@@ -494,6 +537,7 @@
     <types>
         <members>DNAMSIDPStubAddressVerificationForm</members>
         <members>DNAMSIDPStubDealerApplication</members>
+        <members>DNAMSIDPStubDealerApplicationIncomplete</members>
         <members>DNAMSIDPStubOrgChart</members>
         <members>DNAMSIDPStubPhotographsOfFacility</members>
         <members>DNAMSIDPStubUtilityBill</members>
@@ -501,6 +545,7 @@
         <members>DNAMS_Icon_In_Progress</members>
         <members>DNAMS_Icon_Needs_Review</members>
         <members>DNAMS_Icon_Passed</members>
+        <members>HarborMotorsLogo</members>
         <name>StaticResource</name>
     </types>
     <types>

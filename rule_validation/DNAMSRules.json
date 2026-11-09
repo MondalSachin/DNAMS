@@ -162,7 +162,7 @@
       "comparator": "EQUALS",
       "referenceFieldType": "Record",
       "referenceFieldKey": "Package.Buying_Dealer__r.BillingAddress",
-      "isActive": true
+      "isActive": false
     },
     {
       "ruleId": "DA-V04",

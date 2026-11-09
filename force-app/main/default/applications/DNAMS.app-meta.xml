@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>View</actionName>
+        <comment>DNAMS dealer account page (Harbor Motors app only).</comment>
+        <content>DNAMS_Account_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>Account</pageOrSobjectType>
+    </actionOverrides>
     <brand>
         <headerColor>#0B3A5B</headerColor>
         <logo>HarborMotorsLogo</logo>
@@ -17,6 +26,7 @@
     <tabs>DNAMS_Package__c</tabs>
     <tabs>DNAMS_Package_Element__c</tabs>
     <tabs>DNAMS_Element_Type__c</tabs>
+    <tabs>DNAMS_Package_Type_Element_Map__c</tabs>
     <tabs>AI_Package_Review_Run__c</tabs>
     <uiType>Lightning</uiType>
 </CustomApplication>

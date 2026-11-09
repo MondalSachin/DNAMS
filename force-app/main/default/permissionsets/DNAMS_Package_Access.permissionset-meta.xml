@@ -383,6 +383,21 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>DNAMS_Package_Type_Element_Map__c.Is_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>DNAMS_Package_Type_Element_Map__c.Is_Required__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>DNAMS_Package_Type_Element_Map__c.Unique_Key__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>DNAMS_Package_Element__c.AcceptedDocumentTypes__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -653,6 +668,16 @@
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>DNAMS_Package_Type_Element_Map__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
         <object>DNAMS_Package__c</object>
         <viewAllFields>false</viewAllFields>
@@ -668,6 +693,10 @@
     </tabSettings>
     <tabSettings>
         <tab>DNAMS_Package_Element__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>DNAMS_Package_Type_Element_Map__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>

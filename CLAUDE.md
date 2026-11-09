@@ -21,8 +21,8 @@ site + email flow exists to demonstrate that. Keep this file updated after every
 | `DNAMS_Package_Element__c` (Package Element) | Created new for each package; never reused | Name = Element Name, `Element_Number__c` (AutoNumber `DNAE-{0000000}`), `Package__c` (**Lookup**, restrict delete), `Element_Type__c` (Lookup), `Is_Required__c`, `Sort_Order__c` (both copied from the type at creation) |
 | `DNAMS_Element_Type__c` (Element Type) | **The only thing carried over** between packages; admin-maintained from its tab | Name, `Instructions__c`, `Is_Active__c`, `Sort_Order__c`, `Is_Required__c` |
 
-- Every active Element Type is added to every new package (any package type). Changes to types affect only
-  packages created afterwards.
+- (Superseded 2026-11-09, see "Package setup" below: elements now come from `DNAMS_Package_Type_Element_Map__c` and are
+  created on insert.) Every active Element Type is added to every new package (any package type).
 - `DNAMS_Package_Type_Element__c` (per-package-type mapping) existed in slice 1 and was **deleted** in slice 2
   at the user's request.
 - `Type__c` uses Global Value Set `DNAMS_Package_Type`: Buy/Sell change of Ownership, Term Renewal, Dealer
@@ -326,10 +326,19 @@ and then **fully reverted at the user's request**. Current state is the slice 5 
   `demo-docs/correct/Utility_Bill.pdf`.
 - Gotcha (still true): to change a prompt template's wording, delete and recreate the template, then set
   `activeVersionIdentifier` again.
+- **Superseded since (extraction branch):** accepted document types per element now live in custom metadata
+  `DNAMSElementDocumentType__mdt` (23 records: `ElementType__c` = Element Type **Name** as text, `DocumentType__c`,
+  `IdentifyingInstructions__c`, `IsRequired__c`, `SortOrder__c`, `IsActive__c`), read by `DNAMSElementDocumentTypeUtil`
+  for the classifier prompt and the match check. Address Verification accepts two types (form + utility bill). Renaming
+  an Element Type record breaks its mapping. Which elements a package gets is still "every active Element Type" (no
+  per-package-type mapping).
 
 ## Next (not started)
 - PIR status in the RMR email (definition needed from the user).
-- Step 23: the extraction design (spec needed).
+- Element `Transmittal_Status__c` / `Current_Stage__c` are not set by transmittal drafting yet, so the Element Progress
+  Transmittal icon stays blank.
+- Element Progress does not refresh itself when async Apex updates elements (page reload needed).
+- `DNAMS_GuestDiagnostic` (org debug class, no tests) — delete if not needed.
 - The golden test set (G8.05) and review of the 22 identifying definitions.
 - Review timeout / escalation (G1.15) if wanted.
 
@@ -340,8 +349,8 @@ and then **fully reverted at the user's request**. Current state is the slice 5 
 - Flow: extraction completion → `DNAMSRuleValidationStarterQueueable` (rules + PIR, ExactMatch in `DNAMSRuleEvaluator`)
   → `DNAMSAIRuleValidationQueueable` (AIMatch, prompt `DNAMS_RuleValidation_Prompt`, ≤50 per call, retries → CANNOT_DECIDE)
   → `DNAMSRuleValidationCompletionHelper` (pass rate excl. NOT_APPLICABLE; 100% Green / ≥85% Amber / else Red; failed
-  PIR → Red). Green: package Under Review, owner email, run stays Running → `DNAMSTransmittalStarterQueueable`
-  (placeholder, completes Passed). Amber/Red: package RMR Pending, run Completed/Needs Review, narrative + email.
+  PIR → Red). Green: package Under Review, run stays Running → narrative + owner email → `DNAMSTransmittalStarterQueueable`
+  (transmittal drafting, see below). Amber/Red: package RMR Pending, run Completed/Needs Review, narrative + email.
 - Results: one `AIReviewStageResult__c` per rule (`Stage__c` Rule Validation; RuleId/RuleName/ComparisonMethod/
   SourceValue/ReferenceValue/Verdict). Run: `RuleValidationProcessingStatus__c` + 3 pass-rate fields. Package
   `Health__c` gained Amber; PIR checkboxes `PIR_Linked__c`, `PIR_Cleared__c`, `PIR_Bypass_Acknowledged__c`,
@@ -390,3 +399,131 @@ and then **fully reverted at the user's request**. Current state is the slice 5 
   action → Result; otherwise `Not_Available` shows why at once (no review running / review RUN-x still in progress /
   package not yet submitted / not an RMR). Class access in permission set `DNAMS_RMR`. Test:
   `DNAMS_RmrReviewTest.checkActionExplainsBeforeConfirming`.
+
+## Package UI insights and structured AI summary (2026-11-05/06, Sachin, commit 99645e8)
+- Narrative is now **structured**: `DNAMS_PackageNarrativeQueueable.buildFacts` builds facts JSON (elements with stage
+  statuses, failing rules with compared values) → prompt `DNAMS_PackageIssueNarrator_Prompt` input `Input:facts` (was
+  `Input:run`; `DNAMS_NarrativeWriter.write(template, factsJson)`). Output JSON stored in Package `AI_Narrative_JSON__c`,
+  plain text in `AI_Narrative__c`, facts in Run `Narrative_Input__c`. Model failure → rule-based fallback summary.
+  `AI_LABEL` = "AI-generated summary.". Optional chained `next` Queueable (used for GREEN → transmittal).
+- Rule validation element status is pass/fail only (no Needs Review): Passed when every applicable rule passed.
+- `DNAMS_PackageInsightsController` (`getAiSummary`, `getElementProgress`, `getDocuments`) feeds LWCs
+  `dnamsPackageAiSummary` (+ `dnamsAiSummaryView`, also on the dealer page), `dnamsElementProgressSummary`,
+  `dnamsPackageDocuments` (files by element with classification results and preview) on `DNAMS_Package_Record_Page`.
+- `DNAMS_Stage_Result_Record_Page` (+ `AIReviewStageResult__c` layout): shows only the tabs/fields of the row's stage.
+  `AIReviewStageResult__c.Document__c` added.
+- Demo scenarios: Package `Demo_Scenario__c`; scripts `dnams-seed-scenario-packages.apex`,
+  `dnams-add-scenario1-packages.apex`, `dnams-reset-scenario-packages.apex` (touch only tagged data); stub resource
+  `DNAMSIDPStubDealerApplicationIncomplete` for the incomplete Dealer Application scenario.
+
+## Sync (2026-11-09)
+- Fast-forwarded to remote `feature/transmittal-drafting` (99645e8, 377d103). Org vs repo compared on all 434 manifest
+  components: Apex identical; other differences were retrieve formatting only, **except** `DNAMSRule.DA_V03`
+  `IsActive__c` = false in the org (true in repo), changed in the org by Abhishek on 2026-11-05. Reconciled: the
+  **org is the first source of truth, the repo second** (user rule) — DA_V03 is inactive in both the record and
+  `rule_validation/DNAMSRules.json`.
+- `manifest/package.xml` regenerated from force-app (434 members).
+
+## Extraction (2026-11-03/04, Abhishek) — extraction diagram (Lucid p4/p5)
+- Org alias on Abhishek's machine: `DNAMS_SDO` (same org as `dnams`). Branch `feature/document-extraction`.
+- Flow: classification Passed → `DNAMSExtractionStarterQueueable` (one `AIReviewStageResult__c` per file, `Stage__c`
+  Extraction, IDP action from `DNAMSIDPAction__mdt` by document type) → `DNAMSExtractionSubmitBatch` (multipart POST to
+  MuleSoft IDP via Named Credential `DNAMSMuleSoftIDP`, or `DNAMSIDPStubCallout` in Stub mode) → IDP calls back →
+  `DNAMSIDPCallbackAPI` → `DNAMSIDPEvent__e` → `DNAMSIDPCallbackQueueable` (GET result, schema check against
+  `ExpectedStructure__c`) → `DNAMSExtractionCompletionHelper` (all rows terminal → run `ConsolidatedExtractionJSON__c`,
+  elements' `Extraction_Status__c`, then rule validation or narrative).
+- `DNAMS_Pipeline_Setting__mdt.IDPMode__c` = **Stub** (default) / Live. **Never run Live without the user's explicit
+  permission** — IDP calls are expensive. Tests mock every callout.
+- Callback: public Site `DNAMSIDPCallback` (guest), Apex REST `/v1/receiveIdpCallback/{token}/{actionId}/{version}/{sig}`
+  (HMAC-SHA256, key in custom setting `DNAMSIDPSecret__c.SigningKey__c`; query-string form still accepted). **IDP calls
+  back with HTTP PATCH** (no retry), so the resource has `@HttpPatch`/`@HttpPut`; every callback is stored in
+  `CallbackPayload__c`, rejected ones logged as `Callback Rejected`.
+- Stub mode: `DNAMSExtractionSubmitBatch.simulateStubCallbacks` publishes the same Callback event per submitted row,
+  so stub runs settle in seconds (a failed publish is logged and left to the cleanup job).
+- IDP GET body is flat: `{id, documentName, status, fields{X:{value}}, tables{T:[{C:{value}}]}}`.
+- `DNAMSExtractionCleanupJob`: one scheduled job per run, `IDPTimeoutMinutes__c` (10) after submit; final GET for sent
+  rows (SUCCEEDED → processed, still running → Failed (Timeout)); never-sent rows time out.
+- Pre-flight gate `DNAMSFilePreflightHelper` (before classification): PDF only, ≤ 3 MB (`AllowedFileExtensions__c`,
+  `MaxFileSizeMB__c`).
+- Pipeline runs as integration user `dnams.idp.integration@cloudkaptan.com.dnams.sdo` (permission set
+  `DNAMSIDPIntegration`, needs Read on `UserExternalCredential`). API 68 is user mode by default: pipeline SOQL/DML uses
+  `WITH SYSTEM_MODE` / `AccessLevel.SYSTEM_MODE` / `as system`.
+- **Per-document rows for every stage:** `AIReviewStageResult__c` holds Classification (one per file per run, written by
+  `DNAMSStageResultHelper`), Extraction, Rule Validation and Transmittal Drafting rows. Errors go to `AIReviewErrorLog__c`.
+- Code style: CK Apex guidelines, PMD ruleset `~/Documents/PMD/pmdRules.xml` (run without the PMD6-only custom jar).
+
+## Sync (2026-11-05)
+- Rule validation branch fast-forwarded into `feature/document-extraction`. Sachin's org-only hotfixes (stub callback
+  simulation, no double completion of extraction / double start of rule validation, `WITH SYSTEM_MODE` rule query,
+  page/layouts/permissions) were retrieved into the repo. **Before deploying all of force-app, diff the org against the
+  repo** — hotfixes made directly in the org get overwritten otherwise.
+- Rule validation queueables use `DNAMSRuleUtil.StageFailureFinalizer`, so a crash fails rule validation (not extraction).
+
+## Transmittal drafting (2026-11-05) — transmittal diagram (Lucid p8/p9), branch `feature/transmittal-drafting`
+- Only two AI summaries (user decision: no fields pre-filled from extraction): `DNAMS_Package__c.Ownership_Summary__c`
+  and `Executive_Summary__c` (rich text), plus read-only `Transmittal_Drafted_At__c` and `Transmittal_Draft_Source__c`
+  (Auto / RMR Draft / RMR Redraft / RMR Override).
+- `DNAMSTransmittalSummaryService.draft`: builds two contexts (extraction owners/org chart/facts, package health and
+  narrative, failed rules, PIR; never SSN/DOB/EIN), calls `DNAMS_OwnershipSummary_Prompt` then
+  `DNAMS_ExecutiveSummary_Prompt` serially (no queue), all calls before DML. Output JSON `{"lines": [...]}` → HTML-escaped
+  lines joined with `<br>`. Retry up to `TransmittalMaxAttempts__c` (3) only on rate limit / too many requests /
+  unreadable output. Prompts ask for `TransmittalSummaryMaxWords__c` words (**250** since Sachin's 2026-11-06 change;
+  was 50) as descriptive paragraphs, one `lines` element per paragraph; **answers are never trimmed** (user decision) —
+  a longer answer is kept and noted in the log.
+- Log: one `AIReviewStageResult__c` per summary (`Stage__c` Transmittal Drafting, `SummaryType__c`, `Outcome__c` = draft
+  source, `Reasoning__c` note incl. who and failing-rule count, `GeneratedText__c`, `RawStageResponseJSON__c`,
+  `RequestedBy__c`); every redraft adds rows, earlier ones are kept. Failures: run `TransmittalProcessingStatus__c`
+  Failed + `AIReviewErrorLog__c` (Stage Transmittal Drafting); the package is left unchanged.
+- Auto path: GREEN → completion helper sets `TransmittalProcessingStatus__c` Pending → `DNAMS_PackageNarrativeQueueable`
+  (structured AI summary + owner email; since 2026-11-06 GREEN gets it too) → chained `DNAMSTransmittalStarterQueueable`
+  drafts (source Auto) and completes the run Passed (also when drafting fails; the RMR can draft from the button). If
+  the chained job can't be queued, the run's transmittal status is set Failed.
+- **Draft AI Transmittal** (quick action → LWC `dnamsDraftTransmittal` → `DNAMSTransmittalController`), latest
+  non-Discarded run, checked in order: no run; classification/extraction/rule validation not Completed → "still in
+  progress"; transmittal Pending/In Progress → "already being drafted"; Completed → confirm redraft (RMR Redraft);
+  failing rules (FAIL/CANNOT_DECIDE) → confirm "draft anyway" with count (RMR Override); else confirm (RMR Draft).
+  Drafting runs synchronously (~10–20 s spinner).
+- **Generate Transmittal** (LWC `dnamsGenerateTransmittal`): stub, only shows "PDF downloaded… emailed shortly".
+- Record page: tab **Transmittal** with LWC `dnamsTransmittalSummaries` (scrollable boxes, max-height 12rem, inline
+  edit) + Drafted At / Draft Source. Highlights panel shows 5 actions.
+- Verified in Stub mode (2026-11-05): Amber run → override + redraft via controller; GREEN run → auto draft, run
+  Completed/Passed, package Under Review/Green. 147/147 tests pass.
+- Prompt template versions are immutable once Published: to change wording add a new version (`_2`) and set
+  `activeVersionIdentifier`.
+
+## Package setup, dealer link and guest upload (2026-11-09)
+- **Element mapping:** `DNAMS_Package_Type_Element_Map__c` (tab "Package Type Element Maps"): Package_Type__c (GVS
+  DNAMS_Package_Type), Element_Type__c (lookup, Restrict), Is_Active__c, Is_Required__c, Unique_Key__c (set by
+  `DNAMSPackageTypeElementMapTrigger`, blocks duplicate type+element). Seed `scripts/apex/dnams-seed-package-type-element-map.apex`
+  (66 rows; only Dealer Application, Address Verification, Photographs of Facility, Org Chart active+required for all
+  3 types; re-running resets flags). Element Type `Is_Required__c` is no longer used.
+- **Elements are created on package INSERT** (Draft) from the type's active mappings whose Element Type is active;
+  Is_Required from the mapping. Initiated only creates them for old packages without elements. Insert fails with
+  "No active elements are mapped for package type …" when a type has no active mapping. Type changes don't resync.
+- **New Package:** standard New overridden (Aura `dnamsNewPackageOverride` → LWC `dnamsNewPackage`): Type, Primary
+  Contact, Buying Dealer, Selling Dealer; toast `Package "<Package_Name__c>" was created.`. Primary Contact uses
+  `lightning-record-picker` filtered to the buying dealer (lightning-input-field doesn't support the dependent
+  `$Source` lookup filter; the picker rejects a filter with an empty value). Primary Contact's email is copied to
+  `Upload_Link_Sent_To__c` (label "Document Uploading Email") on insert if blank.
+- **Account:** quick action `Account.Create_Package` (LWC `dnamsCreatePackageFromAccount`, buying dealer = the account,
+  toast with a link) on `DNAMS_Account_Record_Page`, assigned only in the DNAMS app.
+- **Initiate Package/Return to Dealer** (quick action `Return_To_Dealer`, flow `DNAMS_Return_To_Dealer`,
+  `DNAMS_RmrReviewService.sendOrReturn`, pre-check `checkAction(...,'SendReturn')`): Draft → email link + Initiated;
+  Initiated → offer resend; later statuses → Return only if History shows Initiated + a link send (Sent To/Sent At
+  history; `Upload_Link_Sent_At__c` is now history-tracked); missing email → "Dealer email seems to be missing…".
+  RMR permission required. History rows aren't written in Apex tests (`sentHistoryStub`).
+- **Sender:** Org-Wide Email Address "Harbor Motors Support" (abhishek.dutta@cloudkaptan.com, verified), set in
+  `DNAMS_Pipeline_Setting__mdt.SenderEmailAddress__c`, applied by `DNAMSEmailSender` to all DNAMS emails (skips it if
+  unverified).
+- **Dealer site:** every element of the package gets an upload button. Package page: Elements list without Sort Order
+  (sorted by Element Number); `Element_Narrative__c` label "Reason(s)"; Demo Scenario hidden; extra fields hidden in
+  create mode via visibility rule `Record.Name CONTAINS DNAP-`.
+- **Guest upload gotchas (cost a day):** lightning-file-upload on LWR as guest needs (1) site preference "Allow guest
+  users to access public APIs" (Network `enableGuestChatter`), else 401 on `connect/file/upload/config`; (2) "Let guest
+  users view asset files, library files, and CMS content" (`enableGuestFileAccess`), else 403
+  INSUFFICIENT_ACCESS_OR_READONLY on `connect/files/users/me` before any Apex runs; (3) guest profile Edit on
+  `ContentVersion.DNAMS_Upload_Token_fileupload__c`. A Metadata API retrieve of the guest profile MISREPORTS (3) as
+  no access — never retrieve-and-redeploy that profile without fixing that line (the 2026-11-05 full deploy broke it).
+  `DNAMS_GuestAccessTest` inserts the file as admin, so it can't catch these. Reproduce with real Chrome (Playwright,
+  incognito) instead.
+- Apex test gotcha: an unset checkbox on a new sObject reads false in Apex even when its default is true — re-query.

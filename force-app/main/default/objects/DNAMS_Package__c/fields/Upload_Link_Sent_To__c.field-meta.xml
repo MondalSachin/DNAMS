@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Upload_Link_Sent_To__c</fullName>
-    <description>Email address the upload link was last sent to.</description>
+    <description>Dealer email the upload link is sent to (Initiate Package/Return to Dealer and the dealer portal sender).</description>
     <externalId>false</externalId>
-    <label>Upload Link Sent To</label>
+    <label>Document Uploading Email</label>
     <required>false</required>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

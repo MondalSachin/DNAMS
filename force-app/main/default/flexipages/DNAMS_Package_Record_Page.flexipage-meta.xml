@@ -58,6 +58,13 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.Name</fieldItem>
                 <identifier>RecordNameField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Name}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>DNAP-</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -68,6 +75,13 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.Package_Name__c</fieldItem>
                 <identifier>RecordPackage_Name_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Name}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>DNAP-</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -84,10 +98,10 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>none</value>
+                    <value>required</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Status__c</fieldItem>
-                <identifier>RecordStatus_cField</identifier>
+                <fieldItem>Record.Primary_Contact__c</fieldItem>
+                <identifier>RecordPrimary_Contact_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -96,8 +110,15 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Demo_Scenario__c</fieldItem>
-                <identifier>RecordDemo_Scenario_cField</identifier>
+                <fieldItem>Record.Status__c</fieldItem>
+                <identifier>RecordStatus_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Name}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>DNAP-</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -108,6 +129,13 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.Dealer_Submit_Validation_Override__c</fieldItem>
                 <identifier>RecordDealer_Submit_Validation_Override_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Name}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>DNAP-</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <name>Facet-e23ee015-fbd5-4292-a061-ad1cd42cc875</name>
@@ -122,6 +150,13 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.OwnerId</fieldItem>
                 <identifier>RecordOwnerIdField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Name}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>DNAP-</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -148,20 +183,17 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.Primary_Contact__c</fieldItem>
-                <identifier>RecordPrimary_Contact_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
                     <value>readonly</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.Upload_Link_Sent_To__c</fieldItem>
                 <identifier>RecordUpload_Link_Sent_To_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Name}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>DNAP-</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -172,6 +204,13 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.Upload_Link_Sent_At__c</fieldItem>
                 <identifier>RecordUpload_Link_Sent_At_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Name}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>DNAP-</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <name>Facet-bec3d767-d092-48be-801d-d805356723cd</name>
@@ -298,6 +337,13 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:fieldSection</componentName>
                 <identifier>flexipage_fieldSection2</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Name}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>DNAP-</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <name>Facet-details</name>
@@ -505,6 +551,13 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:fieldSection</componentName>
                 <identifier>flexipage_fieldSection_transmittal</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Name}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>DNAP-</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <name>Facet-transmittal</name>
@@ -727,7 +780,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>richTextValue</name>
-                    <value>&lt;p style=&quot;background-color: rgb(46, 132, 74); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;All checks passed&lt;/b&gt;&lt;br&gt;Every required document matched its expected type and passed extraction and the validation rules.&lt;/p&gt;</value>
+                    <value>&lt;p style=&quot;background-color: rgb(46, 132, 74); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;All checks passed&lt;/b&gt;&lt;br&gt;All documents passed validations.&lt;/p&gt;</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:richText</componentName>
                 <identifier>banner_verified</identifier>
@@ -801,7 +854,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>richTextValue</name>
-                    <value>&lt;p style=&quot;background-color: rgb(116, 116, 116); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;Waiting for dealer documents&lt;/b&gt;&lt;br&gt;The package is open for uploads. Send the upload link from the dealer portal if not sent yet.&lt;/p&gt;</value>
+                    <value>&lt;p style=&quot;background-color: rgb(116, 116, 116); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;Waiting for dealer documents&lt;/b&gt;&lt;br&gt;The package is open for uploads. Click the above 'Initiate Package/Return to Dealer' to resend.&lt;/p&gt;</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:richText</componentName>
                 <identifier>banner_waiting</identifier>
@@ -836,6 +889,13 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:fieldSection</componentName>
                 <identifier>flexipage_fieldSection_ai</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Name}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>DNAP-</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>

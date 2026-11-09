@@ -451,6 +451,7 @@ public without sharing class DNAMS_PackageReviewPipelineService {
                 notes.add(appendReason(run, note + 'emailed the package owner.'));
             }
             if (!emails.isEmpty()) {
+                DNAMSEmailSender.applySender(emails);
                 Messaging.sendEmail(emails, false);
             }
             update as system notes;
