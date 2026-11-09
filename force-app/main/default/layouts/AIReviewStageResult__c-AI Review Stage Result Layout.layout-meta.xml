@@ -88,6 +88,10 @@
                 <behavior>Readonly</behavior>
                 <field>ComparisonMethod__c</field>
             </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>RuleType__c</field>
+            </layoutItems>
         </layoutColumns>
         <layoutColumns>
             <layoutItems>

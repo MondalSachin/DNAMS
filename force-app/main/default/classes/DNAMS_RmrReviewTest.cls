@@ -203,7 +203,51 @@ public class DNAMS_RmrReviewTest {
         return DNAMS_ReturnToDealerAction.run(new List<DNAMS_ReturnToDealerAction.Request>{ request })[0].message;
     }
 
+    /**
+     * @description Calls the availability check as the Re-run / Cancel flows do before their confirmation screen.
+     * @param packageId Package id
+     * @param action    Rerun or Cancel
+     * @return The check result
+     **/
+    private static DNAMS_ReviewActionCheck.Result checkViaFlow(Id packageId, String action) {
+        DNAMS_ReviewActionCheck.Request request = new DNAMS_ReviewActionCheck.Request();
+        request.packageId = packageId;
+        request.action = action;
+        return DNAMS_ReviewActionCheck.check(new List<DNAMS_ReviewActionCheck.Request>{ request })[0];
+    }
+
     // ------------------------------------------------------------------ 1b cancel / re-run
+
+    /**
+     * @description The modals' first step: confirm only when the action is possible, otherwise explain why at once.
+     **/
+    @IsTest
+    static void checkActionExplainsBeforeConfirming() {
+        System.runAs(createRmrUser()) {
+            DNAMS_ReviewActionCheck.Result cancelNothing = checkViaFlow(pkg().Id, 'Cancel');
+            Assert.isFalse(cancelNothing.canProceed, 'Nothing to cancel');
+            Assert.isTrue(cancelNothing.message.contains('No AI review is running'), cancelNothing.message);
+            DNAMS_ReviewActionCheck.Result rerunBeforeSubmit = checkViaFlow(pkg().Id, 'Rerun');
+            Assert.isFalse(rerunBeforeSubmit.canProceed, 'Not submitted yet');
+            Assert.isTrue(rerunBeforeSubmit.message.contains('Initiated'), rerunBeforeSubmit.message);
+
+            update new DNAMS_Package__c(Id = pkg().Id, Dealer_Submit_Validation_Override__c = true, Status__c = 'Dealer Submitted');
+            delete [SELECT Id FROM AI_Package_Review_Run__c];
+            DNAMS_ReviewActionCheck.Result rerunIdle = checkViaFlow(pkg().Id, 'Rerun');
+            Assert.isTrue(rerunIdle.canProceed, rerunIdle.message);
+            Assert.isTrue(rerunIdle.message.contains('No AI review is running'), rerunIdle.message);
+
+            AI_Package_Review_Run__c run = new AI_Package_Review_Run__c(Package__c = pkg().Id, Status__c = 'Running');
+            insert run;
+            String runName = [SELECT Name FROM AI_Package_Review_Run__c WHERE Id = :run.Id].Name;
+            DNAMS_ReviewActionCheck.Result cancelRunning = checkViaFlow(pkg().Id, 'Cancel');
+            Assert.isTrue(cancelRunning.canProceed, cancelRunning.message);
+            Assert.isTrue(cancelRunning.message.contains(runName), cancelRunning.message);
+            DNAMS_ReviewActionCheck.Result rerunWhileRunning = checkViaFlow(pkg().Id, 'Rerun');
+            Assert.isFalse(rerunWhileRunning.canProceed, 'A review is running');
+            Assert.isTrue(rerunWhileRunning.message.contains('still in progress'), rerunWhileRunning.message);
+        }
+    }
 
     /**
      * @description Cancel marks the running run Cancelling; a second cancel finds nothing in progress.

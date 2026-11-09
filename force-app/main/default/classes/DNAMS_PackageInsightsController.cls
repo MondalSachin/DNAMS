@@ -23,6 +23,13 @@ public with sharing class DNAMS_PackageInsightsController {
         'Extraction' => DNAMS_Package_Element__c.Extraction_Status__c,
         'Rule Validation' => DNAMS_Package_Element__c.Rule_Validation_Status__c
     };
+    // Business names shown to users (the stage keys and fields stay technical).
+    @TestVisible
+    private static final Map<String, String> STAGE_LABELS = new Map<String, String>{
+        'Classification' => 'All Documents Present',
+        'Extraction' => 'Document Reading',
+        'Rule Validation' => 'Is Document Valid and Complete'
+    };
 
     /**
      * @description The AI summary card.
@@ -56,6 +63,8 @@ public with sharing class DNAMS_PackageInsightsController {
     public class StageCount {
         @AuraEnabled
         public String stage;
+        @AuraEnabled
+        public String label;
         @AuraEnabled
         public Integer passed = 0;
         @AuraEnabled
@@ -169,6 +178,7 @@ public with sharing class DNAMS_PackageInsightsController {
         for (String stage : STAGES) {
             StageCount count = new StageCount();
             count.stage = stage;
+            count.label = STAGE_LABELS.get(stage);
             byStage.put(stage, count);
             view.stages.add(count);
         }

@@ -7,15 +7,18 @@
  *                  A confident answer matches only when its document_type is one of the element's accepted types
  *                  (DNAMSElementDocumentType__mdt, else the element type name); otherwise the file is wrong.
  *                  Element result: Failed if any file is wrong, unclassified or errored; else Needs Review if any file
- *                  is unsure; else Passed. Each execute re-checks the run Status and stops if the run was cancelled.
+ *                  is unsure; else Passed. A required document type (DNAMSElementDocumentType__mdt.IsRequired__c) with
+ *                  no file classified as it (confident match or unsure) also fails the element, which stops the run at
+ *                  classification. Each execute re-checks the run Status and stops if the run was cancelled.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
- * @last modified by Abhishek Dutta
- * @last modification details PMD clean-up: ApexDoc, fewer parameters, complexity split into helpers
+ * @last modified on 2026-11-05
+ * @last modified by Sachin Mondal
+ * @last modification details Required document types fail the element when missing
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  PMD clean-up: ApexDoc, fewer parameters, complexity split into helpers
+ * 1.1   2026-11-05   Sachin Mondal   Required document types fail the element when missing
  **/
 // Exception to guideline: without sharing because the system pipeline must read all package elements and files regardless of ownership
 // Class name kept: renaming would break the callers, tests and metadata that reference it
@@ -101,7 +104,7 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
         List<AIReviewStageResult__c> stageRows = new List<AIReviewStageResult__c>();
         for (DNAMS_Package_Element__c element : elements) {
             List<FileResult> results = resultsByElement.get(element.Id);
-            updates.add(elementResult(element, results));
+            updates.add(elementResult(element, results, requiredTypes(element, rowsByType)));
             // One Classification row per file per run (per-document history for every stage)
             stageRows.addAll(DNAMSStageResultHelper.classificationRows(runId, element, results));
             for (FileResult result : results) {
@@ -201,15 +204,34 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
      * @param rowsByType Mapping rows keyed by lower-case element type name
      **/
     private static void setAccepted(FileResult result, DNAMS_Package_Element__c element, Map<String, List<DNAMSElementDocumentType__mdt>> rowsByType) {
-        String typeName = (element.Element_Type__r?.Name ?? element.Name).trim();
-        List<DNAMSElementDocumentType__mdt> rows = rowsByType.get(typeName.toLowerCase()) ??
-            new List<DNAMSElementDocumentType__mdt>{ new DNAMSElementDocumentType__mdt(DocumentType__c = typeName) };
+        String elementTypeName = typeName(element);
+        List<DNAMSElementDocumentType__mdt> rows = rowsByType.get(elementTypeName.toLowerCase()) ??
+            new List<DNAMSElementDocumentType__mdt>{ new DNAMSElementDocumentType__mdt(DocumentType__c = elementTypeName) };
         List<String> labels = new List<String>();
         for (DNAMSElementDocumentType__mdt row : rows) {
             labels.add(row.DocumentType__c.trim());
         }
         result.acceptedNames = DNAMSElementDocumentTypeUtil.getAcceptedNames(rows);
         result.acceptedLabel = String.join(labels, ' or ');
+    }
+
+    /**
+     * @description Element type name used to look up the mapping rows (element Name when it has no type).
+     * @param element Package element queried with Element_Type__r.Name
+     * @return        Trimmed type name
+     **/
+    private static String typeName(DNAMS_Package_Element__c element) {
+        return (element.Element_Type__r?.Name ?? element.Name).trim();
+    }
+
+    /**
+     * @description Document types the element must contain (IsRequired__c mapping rows).
+     * @param element    Package element queried with Element_Type__r.Name
+     * @param rowsByType Mapping rows keyed by lower-case element type name
+     * @return           Required document type names (empty when none)
+     **/
+    private static List<String> requiredTypes(DNAMS_Package_Element__c element, Map<String, List<DNAMSElementDocumentType__mdt>> rowsByType) {
+        return DNAMSElementDocumentTypeUtil.getRequiredNames(rowsByType.get(typeName(element).toLowerCase()));
     }
 
     // ------------------------------------------------------------------ per element
@@ -222,6 +244,19 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
      **/
     @TestVisible
     private static DNAMS_Package_Element__c elementResult(DNAMS_Package_Element__c element, List<FileResult> results) {
+        return elementResult(element, results, new List<String>());
+    }
+
+    /**
+     * @description Element Classification result, also failing the element for each required document type that no
+     *              file was classified as (a confident match, or an unsure answer naming that type).
+     * @param element       Package element
+     * @param results       File results of the element
+     * @param requiredTypes Document types the element must contain
+     * @return              Element update with status, classified types, lowest confidence, reasoning and narrative
+     **/
+    @TestVisible
+    private static DNAMS_Package_Element__c elementResult(DNAMS_Package_Element__c element, List<FileResult> results, List<String> requiredTypes) {
         String status = DNAMS_PackageReviewPipelineService.STAGE_PASSED;
         List<String> problems = new List<String>();
         Set<String> types = new Set<String>();
@@ -239,6 +274,12 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
                 status = worseStatus(status, result.outcome);
             }
         }
+        for (String requiredType : requiredTypes) {
+            if (!isPresent(requiredType, results)) {
+                problems.add(requiredType + ' missing. Upload a ' + requiredType + ' to ' + element.Name + '.');
+                status = DNAMS_PackageReviewPipelineService.STAGE_FAILED;
+            }
+        }
         String narrative = null;
         if (!problems.isEmpty()) {
             narrative = problems[0] + (problems.size() > 1 ? ' (+' + (problems.size() - 1) + ' more)' : '');
@@ -252,6 +293,22 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
             Classification_Reasoning__c = String.join(reasoning, '\n').left(32768),
             Element_Narrative__c = narrative?.left(255)
         );
+    }
+
+    /**
+     * @description Whether any file was classified as the document type (confident match, or unsure naming it).
+     * @param documentType Required document type
+     * @param results      File results of the element
+     * @return             True when present
+     **/
+    private static Boolean isPresent(String documentType, List<FileResult> results) {
+        for (FileResult result : results) {
+            Boolean counted = result.outcome == OUTCOME_MATCH || result.outcome == OUTCOME_UNSURE;
+            if (counted && documentType.equalsIgnoreCase(result.documentType?.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

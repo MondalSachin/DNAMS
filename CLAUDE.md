@@ -351,3 +351,42 @@ and then **fully reverted at the user's request**. Current state is the slice 5 
   overwrite the two profiles that differ in the org, and this org runs **no tests on deploy/validate** — run
   `sf apex run test` afterwards.
 - Not yet verified live: AIMatch prompt call as the IDP integration user (needs Einstein access).
+
+## Required document types (2026-11-05)
+- `DNAMSElementDocumentType__mdt.IsRequired__c` (checkbox). Required: Dealer Application, Address Verification Form,
+  Utility Bill, Photographs of Facility, Org Chart (so Address Verification needs both the form and a utility bill).
+- `DNAMS_DocumentClassificationBatch.elementResult`: each required type with no file classified as it (FULLY match or
+  MODERATE naming it) fails the element ("Utility Bill missing. Upload a Utility Bill to Address Verification."), so the
+  run stops at classification. Only applies to elements that have files; an empty required element still fails as
+  "Required document missing" in `completeClassification`.
+- Address Verification `Instructions__c` now asks for both documents (org record + seed script).
+- Test: `DNAMS_PackageReviewPipelineTest.missingRequiredDocumentTypeFailsElement`, `DNAMSElementDocumentTypeUtilTest`.
+
+## Rule Type and Verdict on stage results (2026-11-05)
+- `AIReviewStageResult__c.RuleType__c` (restricted picklist Completeness / Validation), set by
+  `DNAMSRuleValidationStarterQueueable` from `DNAMSRule__mdt.RuleType__c`; the PIR row is Validation. Shown in the
+  Rule Validation section of `DNAMS_Stage_Result_Record_Page` and the full layout. Old rows backfilled with
+  `scripts/apex/dnams-backfill-rule-type.apex`.
+- `Verdict__c` added (after Processing Status) to the Stage Results related lists on the Review Run and Package
+  Element layouts.
+
+## Harbor Motors branding and business stage names (2026-11-06)
+- Demo brand **Harbor Motors** (user's choice; DNAP/DNAE numbers kept). Logo: static resource `HarborMotorsLogo` (SVG,
+  Public cache; guests load it via `/sfsites/c/resource/`). LWC `dnamsBrandHeader` is the first component on the
+  site Home page; site title "Harbor Motors Dealer Portal". The site/network name stays "DNAMS Dealer Portal"
+  (`DNAMS_PackageController.SITE_NAME` looks it up). Internal Lightning app label still "DNAMS".
+- Email subjects: "Harbor Motors: upload documents…", "Harbor Motors: package … was returned…", "Harbor Motors <pkg>: …";
+  dealer emails sign off "Harbor Motors Dealer Network".
+- Stage display names (labels only; keys, fields and Stage__c values unchanged): Classification → All Documents
+  Present, Extraction → Document Reading, Rule Validation → Is Document Valid and Complete. Used in
+  `DNAMS_PackageInsightsController.STAGE_LABELS`, the three `*_Icon__c` field labels (Element Progress columns) and
+  the Stage Result page tab titles.
+- Lightning app `DNAMS` (API name unchanged) relabelled **Harbor Motors** with brand header colour #0B3A5B and logo
+  ContentAsset `HarborMotorsLogo` (PNG); the site's emailSenderName is "Harbor Motors Dealer Portal".
+
+## Re-run / Cancel Review pre-check (2026-11-06)
+- Flows `DNAMS_Rerun_Review` and `DNAMS_Cancel_Review` (v2) start with `DNAMS_ReviewActionCheck` (invocable, action
+  Rerun|Cancel → `DNAMS_RmrReviewService.checkAction`): decision `Can_Proceed` → Confirm (shows the check message) →
+  action → Result; otherwise `Not_Available` shows why at once (no review running / review RUN-x still in progress /
+  package not yet submitted / not an RMR). Class access in permission set `DNAMS_RMR`. Test:
+  `DNAMS_RmrReviewTest.checkActionExplainsBeforeConfirming`.

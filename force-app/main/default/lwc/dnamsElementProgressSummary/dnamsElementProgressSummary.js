@@ -44,7 +44,7 @@ export default class DnamsElementProgressSummary extends LightningElement {
             const reviewed = stage.passed + stage.failed;
             return {
                 key: stage.stage,
-                name: stage.stage,
+                name: stage.label || stage.stage,
                 passed: stage.passed,
                 failed: stage.failed,
                 notRun: stage.notRun,

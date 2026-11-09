@@ -1,3 +1,14 @@
 .dnams-sender {
   position: relative;
 }
+.demo-scenario {
+    display: inline-block;
+    margin-top: 0.25rem;
+    padding: 0.0625rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #5a1ba9;
+    background: #f2ecfb;
+    border: 1px solid #d9c8f2;
+}

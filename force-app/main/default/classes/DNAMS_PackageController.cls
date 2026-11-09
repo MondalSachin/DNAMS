@@ -13,6 +13,7 @@ public with sharing class DNAMS_PackageController {
                 Id,
                 Name,
                 Package_Name__c,
+                Demo_Scenario__c,
                 Type__c,
                 Status__c,
                 Upload_Token__c,
@@ -46,7 +47,7 @@ public with sharing class DNAMS_PackageController {
 
         Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
         message.setToAddresses(new List<String>{ recipientEmail });
-        message.setSubject('Action required: upload documents for package ' + pkg.Name);
+        message.setSubject('Harbor Motors: upload documents for package ' + pkg.Name);
         message.setPlainTextBody(
             'Hello,\n\n' +
                 'Please upload the documents for package ' + pkg.Name + ' (' + pkg.Package_Name__c + ')' +
@@ -54,7 +55,7 @@ public with sharing class DNAMS_PackageController {
                 'Open this link, upload a document for each required element and click Submit Package:\n' +
                 uploadLink(pkg.Upload_Token__c) + '\n\n' +
                 'The link is personal to this package. Please do not forward it.\n\n' +
-                'Thank you.'
+                'Thank you,\nHarbor Motors Dealer Network'
         );
         message.setSaveAsActivity(false);
         try {
@@ -104,10 +105,13 @@ public with sharing class DNAMS_PackageController {
         public Datetime lastSentAt;
         @AuraEnabled
         public String uploadLink;
+        @AuraEnabled
+        public String demoScenario;
 
         PackageRow(DNAMS_Package__c pkg, String uploadLink) {
             this.id = pkg.Id;
             this.packageNumber = pkg.Name;
+            this.demoScenario = pkg.Demo_Scenario__c;
             this.packageName = pkg.Package_Name__c;
             this.status = pkg.Status__c;
             this.dealerName = pkg.Buying_Dealer__r?.Name;

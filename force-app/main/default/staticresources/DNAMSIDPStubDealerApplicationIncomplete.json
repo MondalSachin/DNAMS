@@ -1,0 +1,71 @@
+{
+  "TradeName": "Ridgeline Northstar",
+  "DateOfBirth": "08-23-1972",
+  "DealershipZip": "43230-1561",
+  "DealershipCity": "Columbus",
+  "DealershipEmail": "admin@ridgelinenorthstar.com",
+  "DealershipState": "OH",
+  "RegionOrDistrict": "Great Lakes / D-04",
+  "DealershipWebsite": "www.ridgelinenorthstar.com",
+  "IsBankruptcySigned": "True",
+  "SocialSecurityNumber": "000-48-2917",
+  "DealershipMainTelephone": "(614) 555-0142",
+  "HasApplicantBeenBankrupt": "No",
+  "StateDealerLicenseNumber": "OH-MVD-D1187264",
+  "DealerOperatorPrintedName": "Marcus James Whitfield",
+  "DealerOperatorSigningDate": "10-14-2026",
+  "HasApplicantBeenConvicted": "No",
+  "DealerOperatorPrintedTitle": "President",
+  "IsConvictedClarificationSigned": "True",
+  "isSignatureOfDealerOperatorPresent": "True",
+  "AuthorizedOfficerOfDealerEntityPrintedName": "Marcus James Whitfield",
+  "AuthorizedOfficerOfDealerEntitySigningDate": "10-14-2026",
+  "AuthorizedOfficerOfDealerEntityPrintedTitle": "Managing Member",
+  "isSignatureOfAuthorizedOfficerOfDealerEntityPresent": "True",
+  "OwnershipInfoIndirectOwners": [
+    {
+      "SSN": "000-52-6604",
+      "Name": "Elaine Marie Whitfield, Trustee",
+      "DateOfBirth": "11-02-1974",
+      "HeldThrough": "Whitfield Family Trust \u2192 RAG (70%)",
+      "EffectivePercentageOfDealer": "28.00"
+    },
+    {
+      "SSN": "000-39-1458",
+      "Name": "Gregory Thomas Hollis",
+      "DateOfBirth": "05-17-1966",
+      "HeldThrough": "Ridgeline Auto Group, Inc. (30%)",
+      "EffectivePercentageOfDealer": "12.00"
+    }
+  ],
+  "DealerOperatorAndKeyManagement": [
+    {
+      "Name": "Marcus James Whitfield",
+      "Email": "mwhitfield@ridgelinenorthstar.com",
+      "Title": "Dealer Operator / President",
+      "Telephone": "(614) 555-0187",
+      "DateOfHire": "04/12/2011"
+    },
+    {
+      "Name": "Danielle Renee Okafor",
+      "Email": "dokafor@ridgelinenorthstar.com",
+      "Title": "General Manager",
+      "Telephone": "(614) 555-0163",
+      "DateOfHire": "08/03/2017"
+    },
+    {
+      "Name": "Priya Venkataraman",
+      "Email": "pvenkat@ridgelinenorthstar.com",
+      "Title": "Controller",
+      "Telephone": "(614) 555-0171",
+      "DateOfHire": "01/14/2019"
+    },
+    {
+      "Name": "Thomas Allen Brennan",
+      "Email": "tbrennan@ridgelinenorthstar.com",
+      "Title": "Fixed Operations Director",
+      "Telephone": "(614) 555-0195",
+      "DateOfHire": "06/22/2015"
+    }
+  ]
+}

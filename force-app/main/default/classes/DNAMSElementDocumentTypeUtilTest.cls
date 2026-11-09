@@ -121,4 +121,27 @@ private class DNAMSElementDocumentTypeUtilTest {
             }
         }
     }
+
+    /**
+     * @description Required names are the IsRequired__c rows, trimmed, in the given order; null rows give an empty list.
+     **/
+    @IsTest
+    static void testGetRequiredNamesKeepsRequiredRows() {
+        DNAMSElementDocumentType__mdt form = row(ADDRESS_VERIFICATION, 'Address Verification Form ', true);
+        form.IsRequired__c = true;
+        DNAMSElementDocumentType__mdt bill = row(ADDRESS_VERIFICATION, 'Utility Bill', true);
+        bill.IsRequired__c = true;
+        List<DNAMSElementDocumentType__mdt> rows = new List<DNAMSElementDocumentType__mdt>{
+            form, row(ADDRESS_VERIFICATION, 'Lease Extract', true), bill
+        };
+        System.runAs(DNAMSPipelineTestHelper.getAdminUser()) {
+            Test.startTest();
+            List<String> names = DNAMSElementDocumentTypeUtil.getRequiredNames(rows);
+            List<String> none = DNAMSElementDocumentTypeUtil.getRequiredNames(null);
+            Test.stopTest();
+
+            Assert.areEqual(new List<String>{ 'Address Verification Form', 'Utility Bill' }, names, 'Only required rows, trimmed, in order');
+            Assert.isTrue(none.isEmpty(), 'Null rows give an empty list');
+        }
+    }
 }

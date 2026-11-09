@@ -9,7 +9,7 @@
  * overall_health always comes from the package's Health__c, never from the model.
  */
 public without sharing class DNAMS_PackageNarrativeQueueable implements Queueable, Database.AllowsCallouts {
-    public static final String AI_LABEL = 'AI-generated summary - verify before acting.';
+    public static final String AI_LABEL = 'AI-generated summary.';
     private static final Integer TEXT_LENGTH = 32768;
     private static final Integer MAX_ITEMS = 5;
     private static final Set<String> ELEMENT_STATUSES = new Set<String>{ 'PASSED', 'NEEDS_REVIEW', 'FAILED', 'MISSING' };

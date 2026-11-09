@@ -121,6 +121,7 @@
         <fields>Stage__c</fields>
         <fields>ReviewRun__c</fields>
         <fields>ProcessingStatus__c</fields>
+        <fields>Verdict__c</fields>
         <fields>Document__c</fields>
         <fields>CREATED_DATE</fields>
         <fields>CREATEDBY_USER</fields>

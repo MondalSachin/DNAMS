@@ -442,7 +442,7 @@ public without sharing class DNAMS_PackageReviewPipelineService {
                 Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
                 email.setTargetObjectId(pkg.OwnerId);
                 email.setSaveAsActivity(false);
-                email.setSubject('DNAMS ' + pkg.Name + ': ' + subjectSuffix);
+                email.setSubject('Harbor Motors ' + pkg.Name + ': ' + subjectSuffix);
                 email.setPlainTextBody(
                     (pkg.Buying_Dealer__r == null ? '' : pkg.Buying_Dealer__r.Name + ' - ') + pkg.Name + ' (' + pkg.Package_Name__c + ')\n\n' +
                     body + '\n\nOpen the package: ' + URL.getOrgDomainUrl().toExternalForm() + '/' + pkg.Id

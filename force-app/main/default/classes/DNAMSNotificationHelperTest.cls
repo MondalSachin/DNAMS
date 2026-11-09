@@ -55,7 +55,7 @@ private class DNAMSNotificationHelperTest {
             Assert.areEqual(2, emails.size(), 'One email per queue member');
             Set<Id> recipients = new Set<Id>{ emails[0].getTargetObjectId(), emails[1].getTargetObjectId() };
             Assert.areEqual(new Set<Id>{ admin.Id, secondAdmin.Id }, recipients, 'Each member is emailed');
-            Assert.areEqual('DNAMS ' + packageName + ': AI review needs attention', emails[0].getSubject(), 'Subject names the package');
+            Assert.areEqual('Harbor Motors ' + packageName + ': AI review needs attention', emails[0].getSubject(), 'Subject names the package');
             Assert.isTrue(emails[0].getPlainTextBody().contains('EL-000001'), 'Body carries the error log names');
             Assert.isTrue(emails[0].getPlainTextBody().contains('/' + fixture.packageId), 'Body links the package');
         }

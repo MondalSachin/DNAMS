@@ -84,6 +84,7 @@ public inherited sharing class DNAMSPipelineConstants {
     public static final String METHOD_AI = 'AIMatch';
     public static final String METHOD_PIR = 'PIR';
     public static final String RULE_TYPE_COMPLETENESS = 'Completeness';
+    public static final String RULE_TYPE_VALIDATION = 'Validation';
     public static final String APPLIED_TO_PACKAGE = 'Package';
     public static final String FIELD_TYPE_EXTRACTION = 'Extraction';
     public static final String FIELD_TYPE_RECORD = 'Record';

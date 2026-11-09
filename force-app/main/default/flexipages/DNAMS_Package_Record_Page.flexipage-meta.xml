@@ -96,6 +96,16 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
+                <fieldItem>Record.Demo_Scenario__c</fieldItem>
+                <identifier>RecordDemo_Scenario_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
                 <fieldItem>Record.Dealer_Submit_Validation_Override__c</fieldItem>
                 <identifier>RecordDealer_Submit_Validation_Override_cField</identifier>
             </fieldInstance>

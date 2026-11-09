@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>IsRequired__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>When checked, classification fails the element (and the run stops at classification) unless one of its files is classified as this document type.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <inlineHelpText>Checked: the element must contain a file of this document type, or classification fails.</inlineHelpText>
+    <label>Is Required</label>
+    <type>Checkbox</type>
+</CustomField>

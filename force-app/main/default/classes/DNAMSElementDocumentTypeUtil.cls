@@ -4,12 +4,13 @@
  *                  checks the classifier's answer against.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
- * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modified on 2026-11-05
+ * @last modified by Sachin Mondal
+ * @last modification details Required document types (IsRequired__c)
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-05   Sachin Mondal   getRequiredNames for required document types
  **/
 public inherited sharing class DNAMSElementDocumentTypeUtil {
     // Tests inject rows here so they never depend on the deployed CMDT records.
@@ -25,7 +26,7 @@ public inherited sharing class DNAMSElementDocumentTypeUtil {
     public static Map<String, List<DNAMSElementDocumentType__mdt>> getByElementType() {
         // PMD.ApexCRUDViolation suppressed: CMDT is pipeline configuration, not user data, so it is read in system mode.
         List<DNAMSElementDocumentType__mdt> rows = rowsOverride ?? [
-            SELECT ElementType__c, DocumentType__c, IdentifyingInstructions__c, SortOrder__c, IsActive__c
+            SELECT ElementType__c, DocumentType__c, IdentifyingInstructions__c, SortOrder__c, IsActive__c, IsRequired__c
             FROM DNAMSElementDocumentType__mdt
             WHERE IsActive__c = TRUE
             ORDER BY ElementType__c, SortOrder__c
@@ -71,6 +72,21 @@ public inherited sharing class DNAMSElementDocumentTypeUtil {
         Set<String> names = new Set<String>();
         for (DNAMSElementDocumentType__mdt row : rows ?? new List<DNAMSElementDocumentType__mdt>()) {
             names.add(row.DocumentType__c.trim().toLowerCase());
+        }
+        return names;
+    }
+
+    /**
+     * @description Returns the document types an element must contain (IsRequired__c), in prompt order.
+     * @param rows  Mapping rows of one element type
+     * @return      DocumentType__c values as configured (empty when none is required)
+     **/
+    public static List<String> getRequiredNames(List<DNAMSElementDocumentType__mdt> rows) {
+        List<String> names = new List<String>();
+        for (DNAMSElementDocumentType__mdt row : rows ?? new List<DNAMSElementDocumentType__mdt>()) {
+            if (row.IsRequired__c == true) {
+                names.add(row.DocumentType__c.trim());
+            }
         }
         return names;
     }

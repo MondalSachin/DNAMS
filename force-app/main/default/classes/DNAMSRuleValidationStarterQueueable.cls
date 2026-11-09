@@ -110,6 +110,7 @@ public without sharing class DNAMSRuleValidationStarterQueueable implements Queu
             Boolean isPackageRule = rule.RuleAppliedTo__c == DNAMSPipelineConstants.APPLIED_TO_PACKAGE;
             DNAMS_Package_Element__c element = isPackageRule ? null : elementByType.get((rule.RelativeElementType__c ?? '').trim().toLowerCase());
             AIReviewStageResult__c row = newRow(rule.DeveloperName, rule.MasterLabel, rule.ValidationMethod__c, element);
+            row.RuleType__c = rule.RuleType__c;
             row.ElementType__c = rule.RelativeElementType__c;
             if (!isPackageRule && element == null) {
                 setVerdict(row, DNAMSPipelineConstants.VERDICT_NOT_APPLICABLE, 'The package has no ' + rule.RelativeElementType__c + ' element.');
@@ -153,6 +154,7 @@ public without sharing class DNAMSRuleValidationStarterQueueable implements Queu
     @TestVisible
     private AIReviewStageResult__c pirRow(DNAMS_Package__c pkg) {
         AIReviewStageResult__c row = newRow(DNAMSPipelineConstants.PIR_RULE_ID, DNAMSPipelineConstants.PIR_RULE_NAME, DNAMSPipelineConstants.METHOD_PIR, null);
+        row.RuleType__c = DNAMSPipelineConstants.RULE_TYPE_VALIDATION;
         row.SourceValue__c = 'Linked: ' + pkg.PIR_Linked__c + ', Cleared: ' + pkg.PIR_Cleared__c + ', Bypass acknowledged: ' + pkg.PIR_Bypass_Acknowledged__c;
         row.ReferenceValue__c = 'PIR required for: ' + (DNAMS_PackageReviewPipelineService.settings().PIRRequiredPackageTypes__c ?? '(none)');
         if (pkg.Type__c == null || !DNAMSRuleUtil.pirRequiredTypes().contains(pkg.Type__c.toLowerCase())) {

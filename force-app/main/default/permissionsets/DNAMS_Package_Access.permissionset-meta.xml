@@ -22,6 +22,11 @@
     </classAccesses>
     <description>Create and work DNAMS packages, elements and element type config.</description>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>DNAMS_Package__c.Demo_Scenario__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>AIReviewStageResult__c.Document__c</field>
         <readable>true</readable>
@@ -119,6 +124,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>AIReviewStageResult__c.ComparisonMethod__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>AIReviewStageResult__c.RuleType__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

@@ -21,7 +21,17 @@ public with sharing class DNAMS_RmrReviewService {
         public Boolean canRerun;
         public Boolean canReturn;
         public String unavailableReason;
+        public String packageStatus;
     }
+
+    /** Pre-check shown as the first screen of the Re-run / Cancel Review modals. */
+    public class ActionCheck {
+        public Boolean canProceed = false;
+        public String message;
+    }
+
+    public static final String ACTION_RERUN = 'Rerun';
+    public static final String ACTION_CANCEL = 'Cancel';
 
     public static Availability availability(Id packageId) {
         Availability result = new Availability();
@@ -39,6 +49,7 @@ public with sharing class DNAMS_RmrReviewService {
         Boolean active = result.latestRun != null &&
             DNAMS_PackageReviewPipelineService.ACTIVE_RUN_STATUSES.contains(result.latestRun.Status__c);
         Boolean postSubmit = POST_SUBMIT_STATUSES.contains(pkg.Status__c);
+        result.packageStatus = pkg.Status__c;
         result.canCancel = result.isRmr && active && result.latestRun.Status__c != DNAMS_PackageReviewPipelineService.RUN_CANCELLING;
         result.canRerun = result.isRmr && !active && postSubmit;
         result.canReturn = result.canRerun;
@@ -46,6 +57,43 @@ public with sharing class DNAMS_RmrReviewService {
             ? 'review ' + result.latestRun.Name + ' is ' + result.latestRun.Status__c + ' (wait for it to finish or cancel it first).'
             : 'the package status is ' + pkg.Status__c + '; it must be Dealer Submitted, RMR Pending or Under Review.';
         return result;
+    }
+
+    /**
+     * Checks before the confirmation screen whether a re-run or cancel is possible now, so the modal either asks to
+     * confirm or explains straight away why it cannot be done.
+     */
+    public static ActionCheck checkAction(Id packageId, String action) {
+        ActionCheck check = new ActionCheck();
+        Availability state = availability(packageId);
+        if (!state.isRmr) {
+            check.message = 'Only RMR users can do this (DNAMS RMR permission set).';
+            return check;
+        }
+        Boolean active = state.latestRun != null &&
+            DNAMS_PackageReviewPipelineService.ACTIVE_RUN_STATUSES.contains(state.latestRun.Status__c);
+        String runText = active ? 'Review ' + state.latestRun.Name + ' (' + state.latestRun.Status__c + ')' : null;
+        if (action == ACTION_CANCEL) {
+            check.canProceed = state.canCancel;
+            if (state.canCancel) {
+                check.message = runText + ' is in progress for this package. Do you want to cancel it? It stops at its next step.';
+            } else if (active) {
+                check.message = 'Review ' + state.latestRun.Name + ' is already being cancelled. It stops at its next step.';
+            } else {
+                check.message = 'No AI review is running for this package, so there is nothing to cancel.';
+            }
+        } else {
+            check.canProceed = state.canRerun;
+            if (state.canRerun) {
+                check.message = 'No AI review is running for this package. Do you want to run the AI document review again?';
+            } else if (active) {
+                check.message = runText + ' is still in progress. Wait for it to finish, or cancel it, before running a new review.';
+            } else {
+                check.message = 'A review can be re-run only after the dealer has submitted the package. The package status is ' +
+                    state.packageStatus + '.';
+            }
+        }
+        return check;
     }
 
     public static String cancelReview(Id packageId) {
@@ -94,7 +142,7 @@ public with sharing class DNAMS_RmrReviewService {
 
         Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
         message.setToAddresses(new List<String>{ recipientEmail });
-        message.setSubject('Action required: package ' + pkg.Name + ' was returned for corrections');
+        message.setSubject('Harbor Motors: package ' + pkg.Name + ' was returned for corrections');
         message.setPlainTextBody(
             'Hello,\n\nPackage ' + pkg.Name + ' (' + pkg.Package_Name__c + ')' +
                 (pkg.Buying_Dealer__r == null ? '' : ' for ' + pkg.Buying_Dealer__r.Name) +
@@ -102,7 +150,7 @@ public with sharing class DNAMS_RmrReviewService {
                 (String.isBlank(pkg.AI_Narrative__c) ? '' : DNAMS_PackageNarrativeQueueable.AI_LABEL + '\n' + pkg.AI_Narrative__c + '\n\n') +
                 (issues.isEmpty() ? '' : 'What to fix:\n' + String.join(issues, '\n') + '\n\n') +
                 'Open this link, replace or add the documents, and click Submit Package again:\n' +
-                DNAMS_PackageController.uploadLink(pkg.Upload_Token__c) + '\n\nThank you.'
+                DNAMS_PackageController.uploadLink(pkg.Upload_Token__c) + '\n\nThank you,\nHarbor Motors Dealer Network'
         );
         message.setSaveAsActivity(false);
         Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ message });

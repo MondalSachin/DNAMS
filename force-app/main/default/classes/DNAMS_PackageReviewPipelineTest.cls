@@ -391,6 +391,38 @@ private class DNAMS_PackageReviewPipelineTest {
     }
 
     /**
+     * @description A required document type with no file classified as it fails the element and stops the run at
+     *              classification; an element holding every required type passes (an unsure answer counts as present).
+     **/
+    @IsTest
+    static void missingRequiredDocumentTypeFailsElement() {
+        useStub();
+        DNAMSElementDocumentTypeUtil.rowsOverride = new List<DNAMSElementDocumentType__mdt>{
+            new DNAMSElementDocumentType__mdt(ElementType__c = 'Dealer Application', DocumentType__c = 'Dealer Application', SortOrder__c = 1, IsActive__c = true, IsRequired__c = true),
+            new DNAMSElementDocumentType__mdt(ElementType__c = 'Dealer Application', DocumentType__c = 'Utility Bill', SortOrder__c = 2, IsActive__c = true, IsRequired__c = true),
+            new DNAMSElementDocumentType__mdt(ElementType__c = 'Org Chart', DocumentType__c = 'Org Chart', SortOrder__c = 1, IsActive__c = true, IsRequired__c = true),
+            new DNAMSElementDocumentType__mdt(ElementType__c = 'Org Chart', DocumentType__c = 'Utility Bill', SortOrder__c = 2, IsActive__c = true, IsRequired__c = true)
+        };
+        System.runAs(DNAMSPipelineTestHelper.getAdminUser()) {
+            attach('Dealer Application', 'good-application');
+            attach('Org Chart', 'moderate-chart');
+            attach('Org Chart', 'mismatch-bill');
+            AI_Package_Review_Run__c run = runningRun();
+
+            runClassification(run.Id);
+
+            Map<String, DNAMS_Package_Element__c> byName = elements();
+            DNAMS_Package_Element__c application = byName.get('Dealer Application');
+            Assert.areEqual('Failed', application.Classification_Status__c, 'Missing Utility Bill fails the element');
+            Assert.areEqual('Utility Bill missing. Upload a Utility Bill to Dealer Application.', application.Element_Narrative__c, 'Names the missing type');
+            Assert.areEqual('Needs Review', byName.get('Org Chart').Classification_Status__c, 'Both required types present; only the unsure file remains');
+            AI_Package_Review_Run__c reloaded = reload(run.Id);
+            Assert.areEqual('Completed', reloaded.Status__c, 'Run stops at classification');
+            Assert.areEqual('Needs Review', reloaded.Overall_Result__c, 'Run needs review');
+        }
+    }
+
+    /**
      * @description Low confidence and unreadable answers fail the element; malformed answers are retried.
      **/
     @IsTest

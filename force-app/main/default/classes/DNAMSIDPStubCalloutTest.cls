@@ -65,4 +65,24 @@ private class DNAMSIDPStubCalloutTest {
         Assert.isFalse(result.isSuccess, 'Missing resource fails');
         Assert.areEqual(404, result.statusCode, '404 reported');
     }
+
+    @IsTest
+    static void testIncompleteFileNameGetsIncompleteResult() {
+        DNAMSIDPWrapper.ActionConfig action = new DNAMSIDPWrapper.ActionConfig();
+        action.stubResource = 'DNAMSIDPStubDealerApplication';
+        DNAMSIDPWrapper.SubmitRequest request = new DNAMSIDPWrapper.SubmitRequest();
+        request.action = action;
+        request.fileName = 'Dealer_Application_Ridgeline_Northstar_INCOMPLETE';
+        DNAMSIDPStubCallout stub = new DNAMSIDPStubCallout();
+
+        DNAMSIDPWrapper.SubmitResult submitted = stub.submitDocument(request);
+        DNAMSIDPWrapper.ExecutionResult incomplete = stub.fetchExecution(action, submitted.executionId);
+        request.fileName = 'Dealer_Application_Ridgeline_Northstar';
+        DNAMSIDPWrapper.ExecutionResult normal = stub.fetchExecution(action, stub.submitDocument(request).executionId);
+
+        Assert.isTrue(submitted.executionId.startsWith('stub-incomplete-'), submitted.executionId);
+        Assert.isTrue(incomplete.isSuccess, 'Incomplete stub resource is deployed');
+        Assert.isFalse(incomplete.responseBody.contains('"DealerCode"'), 'Key fields are missing');
+        Assert.isTrue(normal.responseBody.contains('"DealerCode"'), 'Other file names get the full result');
+    }
 }

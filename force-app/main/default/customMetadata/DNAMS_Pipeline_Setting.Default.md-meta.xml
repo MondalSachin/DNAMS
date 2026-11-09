@@ -84,6 +84,6 @@
     </values>
     <values>
         <field>TransmittalSummaryMaxWords__c</field>
-        <value xsi:type="xsd:double">50.0</value>
+        <value xsi:type="xsd:double">250.0</value>
     </values>
 </CustomMetadata>

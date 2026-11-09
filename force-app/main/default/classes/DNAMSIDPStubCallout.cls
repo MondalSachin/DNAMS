@@ -10,9 +10,16 @@
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-05   Sachin Mondal   Demo trigger: file names containing INCOMPLETE get the incomplete stub result
  **/
 public inherited sharing class DNAMSIDPStubCallout implements IDocumentExtractionClient {
     private static final String STUB_PREFIX = 'stub-';
+    // Demo trigger: a file whose name contains INCOMPLETE gets the action's "<StubResource>Incomplete" result (fields
+    // missing), so extraction fails its structure check. The marker travels in the execution id.
+    @TestVisible
+    private static final String INCOMPLETE_MARKER = 'INCOMPLETE';
+    private static final String INCOMPLETE_PREFIX = 'stub-incomplete-';
+    private static final String INCOMPLETE_SUFFIX = 'Incomplete';
     private static final String STATUS_ACKNOWLEDGED = 'ACKNOWLEDGED';
 
     // Tests set this instead of depending on the DNAMSIDPStub* static resources being deployed
@@ -28,7 +35,8 @@ public inherited sharing class DNAMSIDPStubCallout implements IDocumentExtractio
         DNAMSIDPWrapper.SubmitResult result = new DNAMSIDPWrapper.SubmitResult();
         result.isSuccess = true;
         result.statusCode = 201;
-        result.executionId = STUB_PREFIX + DNAMSCallbackSignatureUtil.generateToken().left(16);
+        Boolean incomplete = (request?.fileName ?? '').toUpperCase().contains(INCOMPLETE_MARKER);
+        result.executionId = (incomplete ? INCOMPLETE_PREFIX : STUB_PREFIX) + DNAMSCallbackSignatureUtil.generateToken().left(16);
         result.executionStatus = STATUS_ACKNOWLEDGED;
         result.responseBody = JSON.serialize(new Map<String, String>{ 'id' => result.executionId, 'status' => STATUS_ACKNOWLEDGED });
         return result;
@@ -42,11 +50,13 @@ public inherited sharing class DNAMSIDPStubCallout implements IDocumentExtractio
      **/
     public DNAMSIDPWrapper.ExecutionResult fetchExecution(DNAMSIDPWrapper.ActionConfig action, String executionId) {
         DNAMSIDPWrapper.ExecutionResult result = new DNAMSIDPWrapper.ExecutionResult();
-        String stubBody = stubBodyOverride ?? loadStaticResource(action?.stubResource);
+        Boolean incomplete = (executionId ?? '').startsWith(INCOMPLETE_PREFIX);
+        String resourceName = incomplete && String.isNotBlank(action?.stubResource) ? action.stubResource + INCOMPLETE_SUFFIX : action?.stubResource;
+        String stubBody = stubBodyOverride ?? loadStaticResource(resourceName);
         if (stubBody == null) {
             result.isSuccess = false;
             result.statusCode = 404;
-            result.errorMessage = 'Stub static resource not found: ' + action?.stubResource;
+            result.errorMessage = 'Stub static resource not found: ' + resourceName;
             return result;
         }
         DNAMSIDPWrapper.NormalizedOutput output = DNAMSIDPWrapper.normalizeOutput(stubBody);

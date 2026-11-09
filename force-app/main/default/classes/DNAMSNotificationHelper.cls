@@ -82,7 +82,7 @@ public inherited sharing class DNAMSNotificationHelper {
         Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
         email.setTargetObjectId(userId);
         email.setSaveAsActivity(false);
-        email.setSubject('DNAMS ' + run.Package__r.Name + ': AI review needs attention');
+        email.setSubject('Harbor Motors ' + run.Package__r.Name + ': AI review needs attention');
         email.setPlainTextBody(
             (body ?? '') + '\n\nOpen the package: ' + URL.getOrgDomainUrl().toExternalForm() + '/' + run.Package__c
         );

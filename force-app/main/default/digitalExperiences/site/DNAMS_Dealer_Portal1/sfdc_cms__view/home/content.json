@@ -24,6 +24,13 @@
               "attributes" : {
                 "dxpStyle" : { }
               },
+              "definition" : "c:dnamsBrandHeader",
+              "id" : "f6b8920d-0481-4403-8f01-8dbc259d93ea",
+              "type" : "component"
+            }, {
+              "attributes" : {
+                "dxpStyle" : { }
+              },
               "definition" : "c:dnamsPackageSender",
               "id" : "8a1c2e4f-6b7d-4c9e-a1f3-5d7b9c2e4a61",
               "type" : "component"

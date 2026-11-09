@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>DNAMS package administration.</description>
+    <brand>
+        <headerColor>#0B3A5B</headerColor>
+        <logo>HarborMotorsLogo</logo>
+        <logoVersion>1</logoVersion>
+        <shouldOverrideOrgTheme>true</shouldOverrideOrgTheme>
+    </brand>
+    <description>Harbor Motors dealer package administration (DNAMS).</description>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
     <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
-    <label>DNAMS</label>
+    <label>Harbor Motors</label>
     <navType>Standard</navType>
     <tabs>DNAMS_Package__c</tabs>
     <tabs>DNAMS_Package_Element__c</tabs>

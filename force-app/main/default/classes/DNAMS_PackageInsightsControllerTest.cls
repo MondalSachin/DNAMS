@@ -49,6 +49,8 @@ private class DNAMS_PackageInsightsControllerTest {
             Assert.areEqual(0, progress.notReviewed, 'Every element has a result');
             Assert.areEqual(3, progress.stages.size(), 'Classification, Extraction and Rule Validation (no Transmittal)');
             DNAMS_PackageInsightsController.StageCount classification = progress.stages[0];
+            Assert.areEqual('All Documents Present', classification.label, 'Business name shown');
+            Assert.areEqual('Is Document Valid and Complete', progress.stages[2].label, 'Business name shown');
             Assert.areEqual(4, classification.passed, 'The fixture marks every element classified');
             DNAMS_PackageInsightsController.StageCount ruleValidation = progress.stages[2];
             Assert.areEqual(2, ruleValidation.failed, 'Failed and needs review are both failed');

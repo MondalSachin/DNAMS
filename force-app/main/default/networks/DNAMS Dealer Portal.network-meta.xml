@@ -8,7 +8,7 @@
     <disableReputationRecordConversations>true</disableReputationRecordConversations>
     <emailDomainSubstitutionEnabled>false</emailDomainSubstitutionEnabled>
     <emailSenderAddress>sachin.mondal@cloudkaptan.com</emailSenderAddress>
-    <emailSenderName>DNAMS Dealer Portal</emailSenderName>
+    <emailSenderName>Harbor Motors Dealer Portal</emailSenderName>
     <embeddedLoginEnabled>false</embeddedLoginEnabled>
     <enableApexCDNCaching>true</enableApexCDNCaching>
     <enableCustomVFErrorPageOverrides>false</enableCustomVFErrorPageOverrides>

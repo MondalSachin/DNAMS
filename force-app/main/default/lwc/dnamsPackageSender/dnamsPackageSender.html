@@ -39,6 +39,9 @@
                 <td class="slds-cell-wrap">
                   <a href={row.uploadLink} target="_blank">{row.packageNumber}</a>
                   <div class="slds-text-body_small slds-text-color_weak">{row.packageName}</div>
+                  <template lwc:if={row.demoScenario}>
+                    <span class="demo-scenario">Demo {row.demoScenario}</span>
+                  </template>
                 </td>
                 <td class="slds-cell-wrap">
                   {row.dealerName}
