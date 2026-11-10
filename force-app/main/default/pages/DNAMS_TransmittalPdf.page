@@ -1,0 +1,194 @@
+<apex:page controller="DNAMSTransmittalPdfController" renderAs="{!IF(ready, 'pdf', '')}" showHeader="false" sidebar="false"
+    standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" title="Dealer Transmittal">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Dealer Transmittal</title>
+<style type="text/css">
+  @page { size: A4; margin: 16mm 17mm 22mm 17mm;
+    @bottom-left { content: "Harbor Motors Dealer Network  \00b7  Confidential  \00b7  {!reference}"; font-family: Helvetica, Arial, sans-serif; font-size: 7.5pt; color: #7b8794; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: Helvetica, Arial, sans-serif; font-size: 7.5pt; color: #7b8794; } }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 9.5pt; color: #1f2933; margin: 0; line-height: 1.4; }
+  table { border-collapse: collapse; }
+
+  /* Masthead */
+  .mast { width: 100%; background: #0B3A5B; }
+  .mast td { padding: 12px 16px; vertical-align: middle; color: #fff; }
+  .mast .brand { font-size: 14pt; font-weight: bold; letter-spacing: .3px; }
+  .mast .brand span { display: block; font-size: 7pt; font-weight: normal; letter-spacing: 2.2px; color: #b9cbd9; }
+  .mast .right { text-align: right; font-size: 7.5pt; color: #b9cbd9; line-height: 1.6; }
+  .accent { height: 4px; background: #2bb3c0; }
+
+  /* Title block */
+  .title { width: 100%; margin: 16px 0 12px; }
+  .title td { vertical-align: bottom; }
+  .title .eyebrow { font-size: 7.5pt; letter-spacing: 2px; color: #2b7a8f; font-weight: bold; }
+  .title h1 { font-size: 20pt; margin: 2px 0 2px; color: #0B3A5B; font-weight: bold; }
+  .title .subtitle { font-size: 10.5pt; color: #3e4c59; }
+  .control { font-size: 7.5pt; color: #52606d; }
+  .control td { padding: 1px 0 1px 10px; text-align: right; }
+  .control .k { color: #7b8794; white-space: nowrap; }
+
+  /* At a glance */
+  .glance { width: 100%; margin: 4px 0 18px; border: 1px solid #d9e2ec; }
+  .glance td { width: 25%; padding: 9px 12px; border-right: 1px solid #d9e2ec; vertical-align: top; }
+  .glance td.last { border-right: none; }
+  .glance .k { font-size: 7pt; letter-spacing: 1.4px; color: #7b8794; font-weight: bold; }
+  .glance .v { font-size: 13pt; font-weight: bold; color: #0B3A5B; margin-top: 3px; }
+  .glance .v.pass { color: #1f7a3f; }
+  .glance .dot { display: inline-block; width: 8px; height: 8px; background: #2f9e57; margin-right: 6px; }
+
+  /* Sections */
+  .section { margin-top: 16px; page-break-inside: avoid; }
+  h2 { font-size: 10.5pt; color: #0B3A5B; margin: 0 0 8px; padding: 0 0 4px; border-bottom: 1.5px solid #0B3A5B; }
+  h2 .no { color: #2bb3c0; margin-right: 6px; }
+  h2 .flag { float: right; font-size: 7pt; font-weight: normal; color: #334e68; background: #eef3f8;
+              border: 1px solid #d4dfea; padding: 1px 7px; }
+  p { margin: 0 0 7px; text-align: justify; }
+  .muted { color: #7b8794; font-size: 8.5pt; }
+
+  /* Fact sheets */
+  .facts { width: 100%; }
+  .facts td { padding: 5px 6px 5px 0; vertical-align: top; border-bottom: 1px solid #edf1f5; }
+  .facts td.lbl { width: 17%; font-size: 7.5pt; letter-spacing: .4px; color: #7b8794; font-weight: bold; text-transform: uppercase; }
+  .facts td.val { width: 33%; padding-right: 14px; }
+
+  /* Ownership table */
+  .own { width: 100%; margin-top: 10px; font-size: 8.5pt; }
+  .own th { background: #f0f4f8; color: #334e68; text-align: left; font-size: 7.5pt; letter-spacing: .5px;
+             text-transform: uppercase; padding: 5px 8px; border-bottom: 1px solid #d9e2ec; }
+  .own td { padding: 5px 8px; border-bottom: 1px solid #edf1f5; vertical-align: top; }
+  .own td.uni { font-family: "Arial Unicode MS", Helvetica, Arial, sans-serif; }
+  .num { text-align: right; white-space: nowrap; }
+  .caption { font-size: 7.5pt; color: #7b8794; margin-top: 4px; }
+
+  /* Sign-off */
+  .sign { width: 100%; margin-top: 6px; }
+  .sign td { width: 33%; padding: 26px 14px 0 0; vertical-align: top; font-size: 8pt; color: #52606d; }
+  .sign .line { border-top: 1px solid #9aa5b1; padding-top: 4px; }
+  .sign b { color: #1f2933; }
+
+  .disclaimer { margin-top: 18px; padding: 8px 10px; background: #f7f9fb; border-left: 3px solid #2bb3c0;
+                 font-size: 7.5pt; color: #52606d; }
+
+  /* Not ready (plain HTML) */
+  .notready { font-family: Helvetica, Arial, sans-serif; font-size: 11pt; color: #1f2933; margin: 24px; }
+  .notready h1 { font-size: 14pt; color: #0B3A5B; }
+</style>
+</head>
+<body>
+
+<apex:outputPanel layout="none" rendered="{!NOT(ready)}">
+<div class="notready">
+  <h1>The transmittal cannot be generated yet</h1>
+  <ul>
+    <apex:repeat value="{!issues}" var="issue"><li>{!issue}</li></apex:repeat>
+  </ul>
+</div>
+</apex:outputPanel>
+
+<apex:outputPanel layout="none" rendered="{!ready}">
+<table class="mast"><tr>
+  <td style="width:46px"><img src="{!URLFOR($Resource.HarborMotorsLogoPng)}" width="38" height="38" alt="Harbor Motors" /></td>
+  <td><div class="brand">Harbor Motors<span>DEALER NETWORK DEVELOPMENT</span></div></td>
+  <td class="right">Confidential<br />For internal decision use only</td>
+</tr></table>
+<div class="accent"></div>
+
+<table class="title"><tr>
+  <td>
+    <div class="eyebrow">DEALER TRANSMITTAL</div>
+    <h1>{!view.dealerName}</h1>
+    <div class="subtitle">{!view.packageType} &nbsp;&middot;&nbsp; Dealer code {!view.dealerCode}</div>
+  </td>
+</tr></table>
+
+<table class="glance" style="width:25%"><tr>
+  <td class="last"><div class="k">PACKAGE HEALTH</div><div class="v"><span class="dot"></span>{!view.health}</div></td>
+</tr></table>
+
+<div class="section">
+  <h2><span class="no">1</span>Executive summary</h2>
+  <apex:repeat value="{!view.executiveParagraphs}" var="para"><p>{!para}</p></apex:repeat>
+</div>
+
+<div class="section">
+  <h2><span class="no">2</span>Package details</h2>
+  <table class="facts">
+    <tr>
+      <td class="lbl">Package</td><td class="val">{!view.packageNumber}<br /><span class="muted">{!view.packageName}</span></td>
+      <td class="lbl">Package type</td><td class="val">{!view.packageType}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Buying dealer</td><td class="val">{!view.dealerName}<br /><span class="muted">Dealer code {!view.dealerCode}</span></td>
+      <td class="lbl">Selling dealer</td>
+      <td class="val">
+        <apex:outputText rendered="{!NOT(ISBLANK(view.sellingDealerName))}" value="{!view.sellingDealerName}" />
+        <apex:outputPanel layout="none" rendered="{!ISBLANK(view.sellingDealerName)}"><span class="muted">Not applicable</span></apex:outputPanel>
+      </td>
+    </tr>
+    <tr>
+      <td class="lbl">Primary contact</td>
+      <td class="val">{!view.contactName}<apex:outputPanel layout="none" rendered="{!NOT(ISBLANK(view.contactEmail))}"><br /><span class="muted">{!view.contactEmail}</span></apex:outputPanel></td>
+      <td class="lbl">Review</td><td class="val">{!view.runName}<br /><span class="muted">Completed {!view.runCompletedOn}</span></td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2><span class="no">3</span>Dealer profile <span class="flag">Source: Dealer Application</span></h2>
+  <table class="facts">
+    <tr>
+      <td class="lbl">Legal name</td><td class="val">{!view.legalName}</td>
+      <td class="lbl">Trade name</td><td class="val">{!view.tradeName}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Dealer code</td><td class="val">{!view.applicationDealerCode}</td>
+      <td class="lbl">Region / district</td><td class="val">{!view.region}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Dealership address</td><td class="val">{!view.street}<br />{!view.cityStateZip}</td>
+      <td class="lbl">State dealer licence</td><td class="val">{!view.licence}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Dealer operator</td>
+      <td class="val">{!view.operatorName}<apex:outputPanel layout="none" rendered="{!NOT(ISBLANK(view.operatorTitle))}"><br /><span class="muted">{!view.operatorTitle}</span></apex:outputPanel></td>
+      <td class="lbl">Authorised officer</td>
+      <td class="val">{!view.officerName}<apex:outputPanel layout="none" rendered="{!NOT(ISBLANK(view.officerTitle))}"><br /><span class="muted">{!view.officerTitle}</span></apex:outputPanel></td>
+    </tr>
+    <tr>
+      <td class="lbl">Application signed</td><td class="val">{!view.signedOn}</td>
+      <td class="lbl">Disclosures</td><td class="val">Bankruptcy: {!view.bankruptcy}<br />Conviction: {!view.conviction}</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2><span class="no">4</span>Ownership</h2>
+  <apex:repeat value="{!view.ownershipParagraphs}" var="para"><p>{!para}</p></apex:repeat>
+  <table class="own">
+    <tr><th>Owner</th><th>Type</th><th>Held through</th><th class="num">Ownership</th><th class="num">Voting</th></tr>
+    <apex:repeat value="{!view.owners}" var="owner">
+    <tr><td>{!owner.name}</td><td>{!owner.ownerType}</td><td class="uni">{!owner.heldThrough}</td>
+      <td class="num">{!owner.ownership}</td><td class="num">{!owner.voting}</td></tr>
+    </apex:repeat>
+  </table>
+  <div class="caption">Ownership as declared on the Dealer Application. Indirect percentages are effective interests in the dealership.</div>
+</div>
+
+<div class="section">
+  <h2><span class="no">5</span>Review and approval</h2>
+  <table class="sign"><tr>
+    <td><div class="line"><b>Prepared by</b><br />{!view.preparedBy}<br />{!view.preparerTitle}<br />Date: ____________</div></td>
+    <td><div class="line"><b>Reviewed by</b><br />&nbsp;<br />Regional Manager<br />Date: ____________</div></td>
+    <td><div class="line"><b>Approved by</b><br />&nbsp;<br />Director, Dealer Network<br />Date: ____________</div></td>
+  </tr></table>
+</div>
+
+<div class="disclaimer">Prepared from the documents submitted with this package and the results of the package review.
+Personal identifiers (SSN, EIN, date of birth) are intentionally excluded from this document.</div>
+</apex:outputPanel>
+
+</body>
+</html>
+</apex:page>

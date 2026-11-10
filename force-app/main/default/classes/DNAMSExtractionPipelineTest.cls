@@ -53,7 +53,7 @@ public class DNAMSExtractionPipelineTest {
     public static AI_Package_Review_Run__c reloadRun(Id runId) {
         return [
             SELECT Status__c, Overall_Result__c, Reason__c, Ended_At__c, ExtractionProcessingStatus__c, ExtractionSchemaValidation__c,
-                ConsolidatedExtractionJSON__c, Package__r.Health__c, RuleValidationProcessingStatus__c
+                ConsolidatedExtractionJSON__c, Package__r.Health__c, Package__r.Status__c, RuleValidationProcessingStatus__c
             FROM AI_Package_Review_Run__c
             WHERE Id = :runId
         ];
@@ -132,6 +132,7 @@ public class DNAMSExtractionPipelineTest {
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_COMPLETED, completed.Status__c, 'Status__c has the expected value');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_PASSED, completed.Overall_Result__c, 'Overall_Result__c has the expected value');
             Assert.isNotNull(completed.Ended_At__c, 'Ended_At__c is set');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_PASSED, completed.Package__r.Status__c, 'A fully passed run passes the review');
             // No prompt is stubbed here, so drafting may succeed or fail; either way the GREEN run passes
             Assert.isTrue(completed.Reason__c.contains('Rule validation passed (GREEN).'), completed.Reason__c);
         }
@@ -159,6 +160,7 @@ public class DNAMSExtractionPipelineTest {
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_NEEDS_REVIEW, run.Overall_Result__c, 'Overall_Result__c has the expected value');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_COMPLETED, run.Status__c, 'Status__c has the expected value');
             Assert.areEqual('Red', run.Package__r.Health__c, 'Health__c has the expected value');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, run.Package__r.Status__c, 'A failed extraction fails the review');
         }
     }
 

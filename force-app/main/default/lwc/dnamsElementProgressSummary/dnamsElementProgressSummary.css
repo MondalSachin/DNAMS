@@ -42,48 +42,6 @@
     color: var(--muted);
 }
 
-.stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.875rem;
-}
-
-.stat {
-    display: block;
-    flex: 1 1 7rem;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.375rem;
-    background: var(--soft);
-}
-
-.stat_pass {
-    background: var(--pass-soft);
-    border-color: #b6dcb1;
-}
-
-.stat_fail {
-    background: var(--fail-soft);
-    border-color: #f5b5ab;
-}
-
-.stat-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-.stat_pass .stat-value { color: var(--pass); }
-.stat_fail .stat-value { color: var(--fail); }
-
-.stat-label {
-    margin-top: 0.125rem;
-    font-size: 0.75rem;
-    color: var(--muted);
-    white-space: nowrap;
-}
-
 .stages {
     width: 100%;
     border-collapse: collapse;

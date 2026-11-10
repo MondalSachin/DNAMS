@@ -3,7 +3,7 @@
     <apiVersion>68.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>DNAMS Generate Transmittal</masterLabel>
-    <description>Generate Transmittal quick action (placeholder): confirms the transmittal PDF request.</description>
+    <description>Generate Transmittal quick action: checks readiness and downloads the Dealer Transmittal PDF.</description>
     <targets>
         <target>lightning__RecordAction</target>
     </targets>

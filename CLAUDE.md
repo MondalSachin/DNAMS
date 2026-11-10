@@ -27,7 +27,7 @@ site + email flow exists to demonstrate that. Keep this file updated after every
   at the user's request.
 - `Type__c` uses Global Value Set `DNAMS_Package_Type`: Buy/Sell change of Ownership, Term Renewal, Dealer
   Principal Change. `Status__c`: Draft (default), Initiated, Dealer Submitted, RMR Pending, Under Review,
-  Returned, Dealer Executed, Closed.
+  Review Failed, Review Passed, Returned, Dealer Executed, Closed (see "Package status lifecycle" below).
 - Documents are standard Files linked to the **element** (`ContentDocumentLink`).
 - `ContentVersion.DNAMS_Upload_Token_fileupload__c`: set by the guest upload component to `elementId:token`.
 - Validation rules: `Type_And_Buying_Dealer_Required`, `Selling_Dealer_Required_For_Buy_Sell`.
@@ -527,3 +527,79 @@ and then **fully reverted at the user's request**. Current state is the slice 5 
   `DNAMS_GuestAccessTest` inserts the file as admin, so it can't catch these. Reproduce with real Chrome (Playwright,
   incognito) instead.
 - Apex test gotcha: an unset checkbox on a new sObject reads false in Apex even when its default is true — re-query.
+- **Guest submit must publish in system mode (2026-11-10, DNAP-0003904):** on API 67+ `EventBus.publish` runs in user
+  mode; the guest profile has no Create on `DNAMS_Package_Review_Requested__e`, so a dealer's submit published nothing
+  (SaveResult ignored, no run, no error). `EventBus.publish` has **no AccessLevel overload** (`publish(list, AccessLevel)`
+  compiles as the callback overload and throws at runtime). Fix: `DNAMSReviewRequestPublisher` (API **66.0**, system
+  mode) publishes; `DNAMS_PackageService.publishReviewRequests` rejects the submit (`addError`) if a publish fails.
+  Regression test `DNAMS_GuestSubmitReviewTest` (runs as the real site guest, no files).
+
+## Package status lifecycle (2026-11-09)
+Supersedes the earlier "RMR Pending / Under Review after a run" notes. Picklist order (drives the Path): Draft, Initiated,
+Dealer Submitted, RMR Pending, Under Review, Review Failed, Review Passed, Returned, Dealer Executed, Closed.
+Constants in `DNAMS_PackageReviewPipelineService`: `PACKAGE_UNDER_REVIEW`, `PACKAGE_RMR_PENDING`, `PACKAGE_REVIEW_FAILED`,
+`PACKAGE_REVIEW_PASSED`.
+- **Run starts** (any source; `handleReviewRequests` creates a Running run) → **Under Review**. A Discarded run changes nothing.
+- **Cancel** (`cancelActiveRun`, when a Running run is found) → **RMR Pending** at once. Later steps stop at `lockRun`,
+  and `failRun` only touches the package when the run was still Running, so nothing overwrites it.
+- **Run fails** → **Review Failed**: pre-flight gate (`DNAMSFilePreflightHelper.stopRun`), classification issues
+  (`completeClassification`), extraction failure/timeout (`DNAMSExtractionCompletionHelper.applyOutcome`), any crash via
+  `failRun` (classification batch/starter, `DNAMSErrorLogHelper.logException`, `DNAMSRuleUtil.failStage`/finalizer), rule
+  validation Amber or Red (`DNAMSRuleValidationCompletionHelper`). Health is unchanged by this work.
+- **Run passes**: classification pass and rule validation GREEN keep **Under Review** while narrative + transmittal drafting
+  run; `DNAMSTransmittalStarterQueueable.completeRun` (run Completed/Passed, also when drafting failed) → **Review Passed**.
+- RMR Pending is no longer a run outcome. Re-run / Return are allowed from Dealer Submitted, Under Review, Review Failed,
+  Review Passed and RMR Pending (no active run).
+- Record page banners: AI review in progress = Dealer Submitted or Under Review; Issues found = Review Failed + Red;
+  Review needed = Review Failed + Amber; Review stopped = Review Failed + Health neither Red nor Amber (crash);
+  All checks passed = Review Passed + Green; Review cancelled = RMR Pending; Returned; Waiting for dealer = Initiated.
+- The path assistant has no per-step config, so it follows the picklist order automatically.
+- Known gap (unchanged): if the GREEN narrative or transmittal job cannot be queued, the run stays Running and the
+  package stays Under Review until the RMR cancels.
+
+## Re-run changes only (2026-11-10)
+Contract/details: `DNAMSRunChangeDetector` ApexDoc. RMR **Re-run** offers two modes; a Changes Only run compares with a
+**baseline** = the package's last non-Discarded run (any status; unfinished stages of a Cancelled/Failed baseline re-run).
+- **Modes:** `DNAMS_Package_Review_Requested__e.Mode__c` → run `RerunMode__c` (All / Changes Only; blank = All, so dealer
+  submit/resubmit are always All). `requestRerun(Id, String mode)`; Changes Only with no earlier run falls back to All.
+- **New fields:** Run `RerunMode__c`, `BaselineRun__c` (Changes Only only), `ChangeSummary__c` (long text); Stage result
+  `ReusedFromResult__c` (blank = produced in this run; always points at the ORIGIN row, also across chained runs);
+  event `Mode__c`.
+- **Per-stage reuse** (a reused unit = `cloneForReuse` copy of the baseline row into the new run):
+  - Pre-flight: always re-checked (no AI).
+  - Classification: key element + ContentDocument + latest version; finished rows (any answer, not Error) reused without a
+    model call — the stored raw answer is re-applied with the CURRENT confidence bands / accepted types, and the element
+    result (required types, narrative) is rebuilt from all its files.
+  - Extraction: key file + same document type + same IDP action name/id/version and a Passed schema; otherwise
+    resubmitted (stub/live). All reused → straight to `completeExtraction` (re-validates against current ExpectedStructure).
+  - Rules: values always resolved fresh; ExactMatch and PIR always evaluated; AIMatch reused only when Source/Reference
+    values are identical (case-sensitive) and the model answered before.
+  - AI Summary (narrative) and Transmittal: kept when `summaryNeeded` is false (no Classification/Extraction/AIMatch unit
+    re-ran, same file/rule sets, same verdicts, same `Issue_Summary__c` — the last also covers two pre-flight stops);
+    otherwise redrafted. Owner email skipped when kept and the result is unchanged. **Draft AI Transmittal** is unaffected.
+- **Re-run modal** (flow `DNAMS_Rerun_Review` → `DNAMS_ReviewActionCheck` → `DNAMS_RmrReviewService.checkAction`): shows
+  `DNAMSRunChangeDetector.preview` text; with changes the mode radio offers Re-run all / Re-run changes only, without
+  changes only Re-run all ("Nothing has changed since RUN-x. Use Re-run all to run everything again."). `rerunReview(pkg,
+  mode)` re-checks the preview server-side and refuses Changes Only when nothing changed. Preview detects file changes,
+  IDP action/version changes and record/PIR value changes (re-resolves rules on the baseline extraction); ~8–16 SOQL.
+- **ChangeSummary format:** line 1 `Compared with RUN-x (Status).`, then one line per stage, e.g.
+  `Classification: 4 reused, 1 re-run (Org Chart / file.pdf: new version)`,
+  `Rule Validation: 5 reused, 1 re-checked (AV_V04: values changed), 23 exact/PIR evaluated`,
+  `AI Summary: kept from RUN-x (nothing changed)` / `written again (results changed)`, same for `Transmittal Drafting`.
+- **Live E2E (Stub IDP), package DNAP-0003761 (`Demo_Scenario__c` "CDC E2E…", Ridgeline Northstar):** baseline RUN-004162
+  Passed/Green 100% (5 files, 29 rules). Nothing changed → blocked, no run. New version of Org Chart (same bytes) →
+  RUN-004163: 4/5 classification + 4/5 extraction + 6/6 AIMatch reused, same verdicts; All run RUN-004164 identical rule
+  values/verdicts and consolidated extraction. Account BillingStreet edit → RUN-004165: only AV_V04 re-checked (restored
+  afterwards; RUN-004166 re-checked it back).
+- **Gotchas:**
+  - Files are locked after submit, so a new version normally arrives via Return → dealer upload → resubmit (an All run).
+    The E2E briefly set the package to Returned to add a version.
+  - `CallbackToken__c` / `MuleSoftExecutionId__c` are unique: `cloneForReuse` clears them (and the callback payload/time),
+    so reused extraction rows are terminal and never touched by the submit batch, callback API or cleanup job.
+  - Tests: "No more than one executeBatch can be called from within a test method" when a Changes Only flow chains the
+    classification batch into another batch — stop the chain or call stages directly. Parallel `sf apex run test`
+    calls fail with ALREADY_IN_PROCESS; run test classes in one call or wait.
+  - `ReviewRun__c` is master-detail (not reparentable): never move a reused row; insert a copy.
+  - Org limit `ContentPublicationLimit` = **2,500 ContentVersion inserts per rolling 24 h, and Apex tests count**. Several
+    full DNAMS* runs in one day exhaust it → ~90 file-based tests fail with "ContentPublication Limit exceeded" (not a
+    code failure). Check `sf org list limits -o DNAMS_SDO` first; run the affected classes only, later.

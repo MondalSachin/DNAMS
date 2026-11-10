@@ -12,6 +12,9 @@ public with sharing class DNAMS_ReviewActionCheck {
                 DNAMS_RmrReviewService.ActionCheck check = DNAMS_RmrReviewService.checkAction(request.packageId, request.action);
                 result.canProceed = check.canProceed;
                 result.message = check.message;
+                result.hasChanges = check.hasChanges;
+                result.changePreview = toHtml(check.changePreview);
+                result.baselineRunName = check.baselineRunName;
             } catch (Exception e) {
                 result.canProceed = false;
                 result.message = DNAMS_RmrReviewService.failure(e);
@@ -19,6 +22,15 @@ public with sharing class DNAMS_ReviewActionCheck {
             results.add(result);
         }
         return results;
+    }
+
+    /**
+     * @description Escapes the preview text and keeps its line breaks, for a flow Display Text.
+     * @param text Plain multi-line text
+     * @return     HTML text, or null when blank
+     **/
+    private static String toHtml(String text) {
+        return String.isBlank(text) ? null : text.escapeHtml4().replace('\n', '<br>');
     }
 
     public class Request {
@@ -35,5 +47,15 @@ public with sharing class DNAMS_ReviewActionCheck {
 
         @InvocableVariable(label='Message')
         public String message;
+
+        @InvocableVariable(label='Has Changes' description='Rerun only: something changed since the last run, so Re-run changes only is possible.')
+        public Boolean hasChanges;
+
+        @InvocableVariable(label='Change Preview' description='Rerun only: what changed since the last run (HTML), or why Re-run changes only is not possible.')
+        public String changePreview;
+
+        @InvocableVariable(label='Baseline Run Name' description='Rerun only: the run the changes are compared with.')
+        public String baselineRunName;
     }
 }
+

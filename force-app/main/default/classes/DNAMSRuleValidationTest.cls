@@ -182,7 +182,7 @@ private class DNAMSRuleValidationTest {
             Assert.areEqual(100, run.ExactMatchPassRate__c.intValue(), 'ExactMatch pass rate');
             Assert.isNull(run.AIMatchPassRate__c, 'No AIMatch rule');
             Assert.areEqual(DNAMSPipelineConstants.HEALTH_GREEN, run.Package__r.Health__c, 'Package Green');
-            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW, run.Package__r.Status__c, 'Package Under Review');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW, run.Package__r.Status__c, 'Package stays Under Review while drafting');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_RUNNING, run.Status__c, 'Run waits for transmittal drafting');
             Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_PENDING, run.TransmittalProcessingStatus__c, 'Transmittal drafting pending');
             DNAMS_Package_Element__c dealerApplication = element(fixture, DA);
@@ -193,6 +193,7 @@ private class DNAMSRuleValidationTest {
             run = reloadRun(fixture.runId);
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_COMPLETED, run.Status__c, 'Run completed');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_PASSED, run.Overall_Result__c, 'Run passed');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_PASSED, run.Package__r.Status__c, 'A passed run passes the review');
             // No prompt is stubbed here, so drafting may succeed or fail; either way the GREEN run passes
             Assert.isTrue(run.Reason__c.contains('Rule validation passed (GREEN).'), run.Reason__c);
             Assert.areNotEqual(DNAMSPipelineConstants.RUN_STAGE_PENDING, run.TransmittalProcessingStatus__c, 'Transmittal drafting settled');
@@ -219,7 +220,7 @@ private class DNAMSRuleValidationTest {
             AI_Package_Review_Run__c run = reloadRun(fixture.runId);
             Assert.areEqual(33.33, run.RuleValidationPassRate__c.setScale(2), 'One of three applicable rules passed');
             Assert.areEqual(DNAMSPipelineConstants.HEALTH_RED, run.Package__r.Health__c, 'Package Red');
-            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING, run.Package__r.Status__c, 'Package RMR Pending');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, run.Package__r.Status__c, 'Red fails the review');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_COMPLETED, run.Status__c, 'Run completed');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_NEEDS_REVIEW, run.Overall_Result__c, 'Needs review');
             Assert.isTrue(run.Issue_Summary__c.contains('Rule V1'), run.Issue_Summary__c);
@@ -244,6 +245,7 @@ private class DNAMSRuleValidationTest {
             AI_Package_Review_Run__c run = reloadRun(fixture.runId);
             Assert.areEqual(85.71, run.RuleValidationPassRate__c.setScale(2), 'Six of seven');
             Assert.areEqual(DNAMSPipelineConstants.HEALTH_AMBER, run.Package__r.Health__c, 'Package Amber');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, run.Package__r.Status__c, 'Amber fails the review');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.STAGE_FAILED, element(fixture, DA).Rule_Validation_Status__c, 'Elements are pass/fail only; the package is Amber');
         }
     }
@@ -371,6 +373,7 @@ private class DNAMSRuleValidationTest {
             AI_Package_Review_Run__c run = reloadRun(fixture.runId);
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_CANCELLED, run.Status__c, 'Cancelled');
             Assert.isNull(run.RuleValidationProcessingStatus__c, 'Stage never started');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING, run.Package__r.Status__c, 'Cancel leaves the package RMR Pending');
         }
     }
 

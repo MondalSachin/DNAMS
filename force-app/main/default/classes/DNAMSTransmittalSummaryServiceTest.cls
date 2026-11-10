@@ -398,6 +398,11 @@ private class DNAMSTransmittalSummaryServiceTest {
             Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_COMPLETED, run.TransmittalProcessingStatus__c, 'Drafted');
             Assert.isTrue(run.Reason__c.contains(DNAMSTransmittalStarterQueueable.DRAFTED_REASON), run.Reason__c);
             Assert.areEqual(DNAMSPipelineConstants.DRAFT_SOURCE_AUTO, reloadPackage(fixture.packageId).Transmittal_Draft_Source__c, 'Source Auto');
+            Assert.areEqual(
+                DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_PASSED,
+                [SELECT Status__c FROM DNAMS_Package__c WHERE Id = :fixture.packageId].Status__c,
+                'A passed run passes the review'
+            );
         }
     }
 
@@ -413,6 +418,11 @@ private class DNAMSTransmittalSummaryServiceTest {
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_PASSED, run.Overall_Result__c, 'Rules passed, so the run passes');
             Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_FAILED, run.TransmittalProcessingStatus__c, 'Transmittal failed');
             Assert.isTrue(run.Reason__c.contains(DNAMSTransmittalStarterQueueable.DRAFT_FAILED_REASON), run.Reason__c);
+            Assert.areEqual(
+                DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_PASSED,
+                [SELECT Status__c FROM DNAMS_Package__c WHERE Id = :fixture.packageId].Status__c,
+                'A failed draft still passes the review'
+            );
         }
     }
 

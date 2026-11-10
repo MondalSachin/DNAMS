@@ -62,6 +62,16 @@
                     <name>uiBehavior</name>
                     <value>readonly</value>
                 </fieldInstanceProperties>
+                <fieldItem>Record.ReusedFromResult__c</fieldItem>
+                <identifier>cls_overview_ReusedFromResult</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>readonly</value>
+                </fieldInstanceProperties>
                 <fieldItem>Record.PackageElement__c</fieldItem>
                 <identifier>cls_overview_PackageElement</identifier>
             </fieldInstance>
@@ -574,6 +584,16 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.ReviewRun__c</fieldItem>
                 <identifier>ext_overview_ReviewRun</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>readonly</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.ReusedFromResult__c</fieldItem>
+                <identifier>ext_overview_ReusedFromResult</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -1306,6 +1326,16 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.ReviewRun__c</fieldItem>
                 <identifier>rv_overview_ReviewRun</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>readonly</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.ReusedFromResult__c</fieldItem>
+                <identifier>rv_overview_ReusedFromResult</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>

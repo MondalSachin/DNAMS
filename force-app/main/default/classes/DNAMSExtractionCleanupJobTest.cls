@@ -42,6 +42,7 @@ private class DNAMSExtractionCleanupJobTest {
             Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_FAILED, run.ExtractionProcessingStatus__c, 'ExtractionProcessingStatus__c has the expected value');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RESULT_NEEDS_REVIEW, run.Overall_Result__c, 'Overall_Result__c has the expected value');
             Assert.areEqual(DNAMS_PackageReviewPipelineService.RUN_COMPLETED, run.Status__c, 'Status__c has the expected value');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, run.Package__r.Status__c, 'A timed-out extraction fails the review');
         }
     }
 

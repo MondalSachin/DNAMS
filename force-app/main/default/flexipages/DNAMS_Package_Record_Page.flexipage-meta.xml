@@ -721,16 +721,11 @@
                 <componentName>flexipage:richText</componentName>
                 <identifier>banner_issues</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 OR 2) AND 3</booleanFilter>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.Status__c}</leftValue>
                         <operator>EQUAL</operator>
-                        <rightValue>RMR Pending</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.Status__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Under Review</rightValue>
+                        <rightValue>Review Failed</rightValue>
                     </criteria>
                     <criteria>
                         <leftValue>{!Record.Health__c}</leftValue>
@@ -753,16 +748,11 @@
                 <componentName>flexipage:richText</componentName>
                 <identifier>banner_amber</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 OR 2) AND 3</booleanFilter>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.Status__c}</leftValue>
                         <operator>EQUAL</operator>
-                        <rightValue>RMR Pending</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.Status__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Under Review</rightValue>
+                        <rightValue>Review Failed</rightValue>
                     </criteria>
                     <criteria>
                         <leftValue>{!Record.Health__c}</leftValue>
@@ -785,16 +775,11 @@
                 <componentName>flexipage:richText</componentName>
                 <identifier>banner_verified</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 OR 2) AND 3</booleanFilter>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.Status__c}</leftValue>
                         <operator>EQUAL</operator>
-                        <rightValue>RMR Pending</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.Status__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Under Review</rightValue>
+                        <rightValue>Review Passed</rightValue>
                     </criteria>
                     <criteria>
                         <leftValue>{!Record.Health__c}</leftValue>
@@ -833,15 +818,21 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>richTextValue</name>
-                    <value>&lt;p style=&quot;background-color: rgb(1, 118, 211); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;AI review in progress&lt;/b&gt;&lt;br&gt;The dealer submitted the package; the AI document review is running. Refresh in a minute.&lt;/p&gt;</value>
+                    <value>&lt;p style=&quot;background-color: rgb(1, 118, 211); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;AI review in progress&lt;/b&gt;&lt;br&gt;The AI document review is running (the transmittal summaries are drafted last). Refresh in a minute.&lt;/p&gt;</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:richText</componentName>
                 <identifier>banner_in_progress</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 OR 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.Status__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Dealer Submitted</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Status__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Under Review</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -863,6 +854,59 @@
                         <leftValue>{!Record.Status__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Initiated</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>decorate</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>richTextValue</name>
+                    <value>&lt;p style=&quot;background-color: rgb(68, 68, 68); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;Review cancelled&lt;/b&gt;&lt;br&gt;The AI review was cancelled. Use Re-run Review to start a new review, or return the package to the dealer.&lt;/p&gt;</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:richText</componentName>
+                <identifier>banner_cancelled</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Status__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>RMR Pending</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>decorate</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>richTextValue</name>
+                    <value>&lt;p style=&quot;background-color: rgb(186, 5, 23); color: rgb(255, 255, 255); padding: 10px; border-radius: 4px;&quot;&gt;&lt;b&gt;Review stopped&lt;/b&gt;&lt;br&gt;The AI review stopped with an error before it finished. See the latest AI review run, then use Re-run Review.&lt;/p&gt;</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:richText</componentName>
+                <identifier>banner_review_error</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2 AND 3</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.Status__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Review Failed</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Health__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Red</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Health__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Amber</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>

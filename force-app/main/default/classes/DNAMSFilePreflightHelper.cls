@@ -3,15 +3,16 @@
  *                  elements must be an allowed type (DNAMS_Pipeline_Setting__mdt.AllowedFileExtensions__c, default pdf)
  *                  and no larger than MaxFileSizeMB__c (default 3 MB, the most the Apex IDP submit holds in the async
  *                  heap). Any failing file stops the run here: one error log per problem, Failed elements with a
- *                  narrative, package Health Red, run Needs Review, then the AI narrative, RMR email and Admin email.
+ *                  narrative, package Health Red and Review Failed, run Needs Review, then the AI narrative, RMR email and Admin email.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-09
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details Failing files set the package status to Review Failed
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-09   Abhishek Dutta  Failing files set the package status to Review Failed
  **/
 public inherited sharing class DNAMSFilePreflightHelper {
     private static final String CLASS_NAME = DNAMSFilePreflightHelper.class.getName();
@@ -171,13 +172,17 @@ public inherited sharing class DNAMSFilePreflightHelper {
             summary.add('- ' + issue.elementName + ' / ' + issue.documentTitle + ' [' + issue.errorType + ']: ' + issue.reason);
         }
         update as system elementResults(run.Package__c, issues);
-        update as system new DNAMS_Package__c(
+        DNAMS_Package__c pkg = new DNAMS_Package__c(
             Id = run.Package__c,
             Health__c = HEALTH_RED,
-            Status__c = DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING,
-            AI_Narrative__c = null,
-            AI_Narrative_JSON__c = null
+            Status__c = DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED
         );
+        if (DNAMSRunChangeDetector.baselineRunIdFor(run.Id) == null) {
+            // All run: clear the old narrative. A Changes Only run may keep it (DNAMS_PackageNarrativeQueueable decides).
+            pkg.AI_Narrative__c = null;
+            pkg.AI_Narrative_JSON__c = null;
+        }
+        update as system pkg;
         run.Status__c = DNAMS_PackageReviewPipelineService.RUN_COMPLETED;
         run.Classification_Processing_Status__c = DNAMSPipelineConstants.RUN_STAGE_FAILED;
         run.Overall_Result__c = DNAMS_PackageReviewPipelineService.RESULT_NEEDS_REVIEW;

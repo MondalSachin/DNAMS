@@ -5,14 +5,18 @@
  *                  mapping set their element's Extraction_Status__c to Not Applicable.
  *                  One run is processed per transaction; further run ids are re-published as Start Extraction events
  *                  so each run gets its own limits and its completion can enqueue its own follow-up job.
+ *                  Changes Only runs: a file whose baseline extraction is still valid (same file version, document
+ *                  type and IDP action/version, finished OK) gets a Completed copy of the baseline row instead of a
+ *                  Pending one, so it is never sent to IDP; when every row is reused, completion runs at once.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-10
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details Changes Only runs reuse still-valid baseline extractions
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
+ * 1.1   2026-11-10   Abhishek Dutta  Changes Only runs reuse still-valid baseline extractions
  **/
 // Exception to guideline: without sharing because the system pipeline runs as the IDP integration user and must read all package files/records regardless of ownership
 public without sharing class DNAMSExtractionStarterQueueable implements Queueable {
@@ -64,20 +68,29 @@ public without sharing class DNAMSExtractionStarterQueueable implements Queueabl
         }
         Map<Id, DNAMS_Package_Element__c> elementById = new Map<Id, DNAMS_Package_Element__c>(
             [
-                SELECT Id, Element_Type__r.Name
+                SELECT Id, Name, Element_Type__r.Name
                 FROM DNAMS_Package_Element__c
                 WHERE Package__c = :run.Package__c AND Classification_Status__c = :DNAMS_PackageReviewPipelineService.STAGE_PASSED
                 WITH SYSTEM_MODE
             ]
         );
-        StagePlan plan = buildPlan(run.Id, elementById);
+        // null = All run: every mapped file is sent to IDP (no baseline comparison)
+        Id baselineRunId = DNAMSRunChangeDetector.baselineRunIdFor(run.Id);
+        StagePlan plan = buildPlan(run.Id, elementById, baselineRunId == null ? null : new ExtractionBaseline(baselineRunId));
         Database.insert(plan.rows, true, AccessLevel.SYSTEM_MODE);
         Database.update(plan.elementUpdates(), true, AccessLevel.SYSTEM_MODE);
         run.ExtractionProcessingStatus__c = DNAMSPipelineConstants.RUN_STAGE_IN_PROGRESS;
         Database.update(run, true, AccessLevel.SYSTEM_MODE);
+        if (baselineRunId != null) {
+            DNAMSRunChangeDetector.appendChangeSummary(
+                run.Id,
+                DNAMSRunChangeDetector.SUMMARY_EXTRACTION,
+                DNAMSRunChangeDetector.stageLine(plan.reusedCount, plan.pendingCount, plan.rerunReasons)
+            );
+        }
 
-        if (plan.rows.isEmpty()) {
-            // Nothing to send to IDP: completion moves the run straight on
+        if (plan.pendingCount == 0) {
+            // Nothing to send to IDP (no mapped file, or every extraction reused): completion moves the run straight on
             DNAMSExtractionCompletionHelper.completeExtraction(new Set<Id>{ run.Id });
             return;
         }
@@ -87,13 +100,15 @@ public without sharing class DNAMSExtractionStarterQueueable implements Queueabl
     }
 
     /**
-     * @description Steps [2], [3], [5]: one Pending stage row per mapped file; unmapped files mark their element Not Applicable.
+     * @description Steps [2], [3], [5]: one Pending stage row per mapped file (or, on a Changes Only run, a reused
+     *              copy of a still-valid baseline row); unmapped files mark their element Not Applicable.
      * @param runId       Run id
      * @param elementById Passed elements of the run's package
+     * @param baseline    Baseline extractions of a Changes Only run, or null for an All run
      * @return            Rows to insert plus the element ids per outcome
      **/
-    private static StagePlan buildPlan(Id runId, Map<Id, DNAMS_Package_Element__c> elementById) {
-        StagePlan plan = new StagePlan(runId);
+    private static StagePlan buildPlan(Id runId, Map<Id, DNAMS_Package_Element__c> elementById, ExtractionBaseline baseline) {
+        StagePlan plan = new StagePlan(runId, baseline);
         if (elementById.isEmpty()) {
             return plan;
         }
@@ -177,24 +192,89 @@ public without sharing class DNAMSExtractionStarterQueueable implements Queueabl
     }
 
     /**
+     * @description Baseline Extraction rows of a Changes Only run and the reuse decision per file.
+     **/
+    private class ExtractionBaseline {
+        private Map<String, AIReviewStageResult__c> rowByFileKey = new Map<String, AIReviewStageResult__c>();
+        private Set<String> documentKeys = new Set<String>();
+
+        /**
+         * @description Loads every Extraction row of the baseline run (finished or not, so the reason can say why).
+         * @param baselineRunId Baseline run id
+         **/
+        private ExtractionBaseline(Id baselineRunId) {
+            for (AIReviewStageResult__c row : DNAMSRunChangeDetector.stageRows(baselineRunId, DNAMSPipelineConstants.STAGE_EXTRACTION)) {
+                // Rows come oldest first; a finished row is never replaced by an unfinished one of the same file
+                String fileKey = DNAMSRunChangeDetector.fileKey(row);
+                if (!DNAMSRunChangeDetector.isFinishedExtraction(rowByFileKey.get(fileKey))) {
+                    rowByFileKey.put(fileKey, row);
+                }
+                documentKeys.add(documentKey(row.PackageElement__c, row.ContentDocumentId__c));
+            }
+        }
+
+        /**
+         * @description Why the file must be extracted again; null when the baseline row can be reused.
+         * @param element Package element the file belongs to
+         * @param version Latest published version of the file
+         * @param action  Current IDP action for the file's document type
+         * @return        Short reason (e.g. "new version", "IDP action version 1.0.0 -> 1.1.0"), or null
+         **/
+        private String changeReason(DNAMS_Package_Element__c element, ContentVersion version, DNAMSIDPWrapper.ActionConfig action) {
+            AIReviewStageResult__c baselineRow = baselineRow(element, version);
+            if (baselineRow == null && documentKeys.contains(documentKey(element.Id, version.ContentDocumentId))) {
+                return 'new version';
+            }
+            return DNAMSRunChangeDetector.extractionChangeReason(baselineRow, version.DocumentClassifiedAs__c, action);
+        }
+
+        /**
+         * @description The baseline row of exactly this file version on this element.
+         * @param element Package element the file belongs to
+         * @param version Latest published version of the file
+         * @return        Baseline row, or null
+         **/
+        private AIReviewStageResult__c baselineRow(DNAMS_Package_Element__c element, ContentVersion version) {
+            return rowByFileKey.get(DNAMSRunChangeDetector.fileKey(element.Id, version.ContentDocumentId, version.Id));
+        }
+
+        /**
+         * @description Element + document key (any version), used to tell a new version from a new file.
+         * @param elementId         Package element id
+         * @param contentDocumentId ContentDocument id (Id or text)
+         * @return                  "elementId|contentDocumentId" with 15-character ids
+         **/
+        private String documentKey(Id elementId, String contentDocumentId) {
+            return String.valueOf(elementId).left(15) + DNAMSRunChangeDetector.KEY_SEPARATOR + (contentDocumentId ?? '').left(15);
+        }
+    }
+
+    /**
      * @description Stage rows to create and the element outcomes of one run.
      **/
     private class StagePlan {
         private Id runId;
+        private ExtractionBaseline baseline;
         private List<AIReviewStageResult__c> rows = new List<AIReviewStageResult__c>();
         private Set<Id> mappedIds = new Set<Id>();
         private Set<Id> notApplicableIds = new Set<Id>();
+        private Integer pendingCount = 0;
+        private Integer reusedCount = 0;
+        private List<String> rerunReasons = new List<String>();
 
         /**
          * @description Creates an empty plan for one run.
-         * @param runId Run id
+         * @param runId    Run id
+         * @param baseline Baseline extractions of a Changes Only run, or null for an All run
          **/
-        private StagePlan(Id runId) {
+        private StagePlan(Id runId, ExtractionBaseline baseline) {
             this.runId = runId;
+            this.baseline = baseline;
         }
 
         /**
-         * @description Adds a Pending Extraction stage row for one mapped file.
+         * @description Adds the Extraction stage row for one mapped file: a reused copy of the baseline row when it
+         *              is still valid, otherwise a Pending row for IDP (with its re-run reason on a Changes Only run).
          * @param element Package element the file belongs to
          * @param version Latest published version of the file
          * @param action  IDP action for the file's document type
@@ -202,6 +282,16 @@ public without sharing class DNAMSExtractionStarterQueueable implements Queueabl
         private void addRow(DNAMS_Package_Element__c element, ContentVersion version, DNAMSIDPWrapper.ActionConfig action) {
             String extension = String.isBlank(version.FileExtension) ? '' : '.' + version.FileExtension;
             mappedIds.add(element.Id);
+            if (baseline != null) {
+                String reason = baseline.changeReason(element, version, action);
+                if (reason == null) {
+                    rows.add(DNAMSRunChangeDetector.cloneForReuse(baseline.baselineRow(element, version), runId));
+                    reusedCount++;
+                    return;
+                }
+                rerunReasons.add(element.Name + ' / ' + version.Title + extension + ': ' + reason);
+            }
+            pendingCount++;
             rows.add(
                 new AIReviewStageResult__c(
                     ReviewRun__c = runId,

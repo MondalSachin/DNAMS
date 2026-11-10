@@ -88,6 +88,7 @@ public without sharing class DNAMS_PackageService {
         // that rule that still have no elements; createElements skips packages that already have elements.
         List<DNAMS_Package__c> needElements = new List<DNAMS_Package__c>();
         List<DNAMS_Package_Review_Requested__e> reviewRequests = new List<DNAMS_Package_Review_Requested__e>();
+        List<DNAMS_Package__c> requestedPackages = new List<DNAMS_Package__c>();
         for (DNAMS_Package__c pkg : packages) {
             if (oldById == null || statusChangedTo(pkg, oldById, STATUS_INITIATED)) {
                 needElements.add(pkg);
@@ -104,14 +105,37 @@ public without sharing class DNAMS_PackageService {
                         Requested_By_Id__c = UserInfo.getUserId()
                     )
                 );
+                requestedPackages.add(pkg);
             }
         }
         if (!needElements.isEmpty()) {
             createElements(needElements);
         }
         if (!reviewRequests.isEmpty()) {
-            // Published after commit; the subscriber runs as the configured pipeline user, not the site guest.
-            EventBus.publish(reviewRequests);
+            publishReviewRequests(reviewRequests, requestedPackages);
+        }
+    }
+
+    /**
+     * @description Publishes the review requests in system mode (DNAMSReviewRequestPublisher): dealers submit as the
+     *              site guest, whose profile has no Create on the event, and a user-mode publish fails without an
+     *              exception. A failed publish
+     *              rejects the submit, so a package never sits at Dealer Submitted without a review.
+     *              Published after commit; the subscriber runs as the configured pipeline user, not the site guest.
+     * @param requests          Review request events, one per package
+     * @param requestedPackages Trigger records in the same order as requests
+     **/
+    private static void publishReviewRequests(
+        List<DNAMS_Package_Review_Requested__e> requests,
+        List<DNAMS_Package__c> requestedPackages
+    ) {
+        List<Database.SaveResult> results = DNAMSReviewRequestPublisher.publish(requests);
+        for (Integer i = 0; i < results.size(); i++) {
+            if (!results[i].isSuccess()) {
+                requestedPackages[i].addError(
+                    'The package could not be sent for review (' + results[i].getErrors()[0].getMessage() + '). Try submitting again.'
+                );
+            }
         }
     }
 

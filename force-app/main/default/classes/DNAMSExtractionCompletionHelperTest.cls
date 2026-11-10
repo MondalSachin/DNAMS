@@ -67,7 +67,7 @@ private class DNAMSExtractionCompletionHelperTest {
         return [
             SELECT
                 Status__c, Overall_Result__c, Ended_At__c, Issue_Summary__c, ExtractionProcessingStatus__c,
-                ExtractionSchemaValidation__c, ConsolidatedExtractionJSON__c, Package__r.Health__c
+                ExtractionSchemaValidation__c, ConsolidatedExtractionJSON__c, Package__r.Health__c, Package__r.Status__c
             FROM AI_Package_Review_Run__c
             WHERE Id = :runId
         ];
@@ -203,6 +203,7 @@ private class DNAMSExtractionCompletionHelperTest {
             Assert.areEqual(DNAMSPipelineConstants.RUN_STAGE_FAILED, run.ExtractionProcessingStatus__c, 'Extraction failed');
             Assert.areEqual(DNAMSPipelineConstants.SCHEMA_FAILED, run.ExtractionSchemaValidation__c, 'Schema failed');
             Assert.areEqual('Red', run.Package__r.Health__c, 'Package health is Red');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, run.Package__r.Status__c, 'Package status is Review Failed');
             Assert.isNotNull(run.Ended_At__c, 'Run end time set');
             Assert.isTrue(
                 run.Issue_Summary__c.startsWith('- Dealer Application / Dealer Application test [Schema Mismatch]: Missing fields: SignerName'),

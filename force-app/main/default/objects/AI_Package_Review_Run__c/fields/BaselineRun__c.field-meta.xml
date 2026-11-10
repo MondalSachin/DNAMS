@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BaselineRun__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Changes Only runs: the package's last non-Discarded run this run compares against and reuses results from.</description>
+    <label>Baseline Run</label>
+    <referenceTo>AI_Package_Review_Run__c</referenceTo>
+    <relationshipLabel>Changes Only Runs</relationshipLabel>
+    <relationshipName>ChangesOnlyRuns</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

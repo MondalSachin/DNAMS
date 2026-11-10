@@ -7,6 +7,10 @@
  * structure is built from the facts without AI. Package.AI_Narrative_JSON__c holds the structure (rendered by
  * dnamsAiSummaryView on the record page and the dealer page) and AI_Narrative__c the plain-text version (emails).
  * overall_health always comes from the package's Health__c, never from the model.
+ * Changes Only runs: when DNAMSRunChangeDetector.summaryNeeded is false (nothing re-ran, no verdict or issue summary
+ * changed) and the package still has a narrative, the existing narrative is kept
+ * (no model call). The owner is then emailed only when the result changed (the baseline did not complete, or its
+ * Overall_Result__c differs); otherwise the run's ChangeSummary__c records that no email was sent.
  */
 public without sharing class DNAMS_PackageNarrativeQueueable implements Queueable, Database.AllowsCallouts {
     public static final String AI_LABEL = 'AI-generated summary.';
@@ -38,7 +42,18 @@ public without sharing class DNAMS_PackageNarrativeQueueable implements Queueabl
     }
 
     public void execute(QueueableContext context) {
-        AI_Package_Review_Run__c run = [SELECT Id, Package__c, Issue_Summary__c, Reason__c FROM AI_Package_Review_Run__c WHERE Id = :runId];
+        AI_Package_Review_Run__c run = [
+            SELECT Id, Package__c, Issue_Summary__c, Reason__c, Status__c, Overall_Result__c
+            FROM AI_Package_Review_Run__c
+            WHERE Id = :runId
+            WITH SYSTEM_MODE
+        ];
+        Id baselineRunId = DNAMSRunChangeDetector.baselineRunIdFor(runId);
+        AI_Package_Review_Run__c keepBaseline = baselineRunId == null ? null : keptFrom(run, baselineRunId);
+        if (keepBaseline != null) {
+            keepNarrative(run, keepBaseline);
+            return;
+        }
         Map<String, Object> facts = buildFacts(runId);
         String factsJson = JSON.serialize(facts);
 
@@ -64,12 +79,66 @@ public without sharing class DNAMS_PackageNarrativeQueueable implements Queueabl
             runUpdate.Error__c = note.left(TEXT_LENGTH);
         }
         update runUpdate;
+        if (baselineRunId != null) {
+            DNAMSRunChangeDetector.appendChangeSummary(runId, DNAMSRunChangeDetector.SUMMARY_AI_SUMMARY, 'written again (results changed)');
+        }
 
         DNAMS_PackageReviewPipelineService.notifyOwners(
             new Map<Id, AI_Package_Review_Run__c>{ run.Package__c => run },
             subjectSuffix,
             AI_LABEL + '\n\n' + plain
         );
+        enqueueNext();
+    }
+
+    /**
+     * Changes Only: the baseline run whose narrative can be kept, or null when it must be written again (summaryNeeded:
+     * something re-ran, a verdict or the issue summary changed; or the package has no narrative).
+     */
+    private static AI_Package_Review_Run__c keptFrom(AI_Package_Review_Run__c run, Id baselineRunId) {
+        if (DNAMSRunChangeDetector.summaryNeeded(run.Id)) {
+            return null;
+        }
+        DNAMS_Package__c pkg = [SELECT AI_Narrative_JSON__c FROM DNAMS_Package__c WHERE Id = :run.Package__c WITH SYSTEM_MODE];
+        if (String.isBlank(pkg.AI_Narrative_JSON__c)) {
+            return null;
+        }
+        return [
+            SELECT Id, Name, Status__c, Overall_Result__c
+            FROM AI_Package_Review_Run__c
+            WHERE Id = :baselineRunId
+            WITH SYSTEM_MODE
+        ];
+    }
+
+    /**
+     * Changes Only, nothing changed: keeps the package narrative, records it on the run, emails the owner only when
+     * the result differs from the baseline's, then queues the next job as usual.
+     */
+    private void keepNarrative(AI_Package_Review_Run__c run, AI_Package_Review_Run__c baseline) {
+        // A run that is still Running here is the GREEN path, which completes as Passed after transmittal drafting.
+        String result = run.Status__c == DNAMS_PackageReviewPipelineService.RUN_COMPLETED
+            ? run.Overall_Result__c
+            : DNAMS_PackageReviewPipelineService.RESULT_PASSED;
+        Boolean resultChanged = baseline.Status__c != DNAMS_PackageReviewPipelineService.RUN_COMPLETED || baseline.Overall_Result__c != result;
+        DNAMSRunChangeDetector.appendChangeSummary(
+            runId,
+            DNAMSRunChangeDetector.SUMMARY_AI_SUMMARY,
+            'kept from ' + baseline.Name + ' (nothing changed)' + (resultChanged ? '' : '; owner not emailed (result unchanged)')
+        );
+        if (resultChanged) {
+            String plain = [SELECT AI_Narrative__c FROM DNAMS_Package__c WHERE Id = :run.Package__c WITH SYSTEM_MODE].AI_Narrative__c;
+            DNAMS_PackageReviewPipelineService.notifyOwners(
+                new Map<Id, AI_Package_Review_Run__c>{ run.Package__c => run },
+                subjectSuffix,
+                AI_LABEL + '\n\n' + (plain ?? '')
+            );
+        }
+        enqueueNext();
+    }
+
+    // Queues the follow-up job (GREEN: transmittal drafting); records on the run when it cannot be queued.
+    private void enqueueNext() {
         if (next != null) {
             String notQueued = DNAMSRuleUtil.tryEnqueue(next);
             if (notQueued != null) {

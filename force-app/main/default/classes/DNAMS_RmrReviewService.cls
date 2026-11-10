@@ -6,8 +6,10 @@
 public with sharing class DNAMS_RmrReviewService {
     private static final Set<String> POST_SUBMIT_STATUSES = new Set<String>{
         DNAMS_PackageService.STATUS_DEALER_SUBMITTED,
-        DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING,
-        DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW
+        DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW,
+        DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED,
+        DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_PASSED,
+        DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING
     };
 
     public class RmrException extends Exception {
@@ -28,6 +30,10 @@ public with sharing class DNAMS_RmrReviewService {
     public class ActionCheck {
         public Boolean canProceed = false;
         public String message;
+        // Re-run only: what changed since the last run (DNAMSRunChangeDetector.preview); hasChanges false blocks Changes Only.
+        public Boolean hasChanges = false;
+        public String changePreview;
+        public String baselineRunName;
     }
 
     public static final String ACTION_RERUN = 'Rerun';
@@ -73,7 +79,7 @@ public with sharing class DNAMS_RmrReviewService {
         result.canReturn = result.canRerun;
         result.unavailableReason = active
             ? 'review ' + result.latestRun.Name + ' is ' + result.latestRun.Status__c + ' (wait for it to finish or cancel it first).'
-            : 'the package status is ' + pkg.Status__c + '; it must be Dealer Submitted, RMR Pending or Under Review.';
+            : 'the package status is ' + pkg.Status__c + '; it must be Dealer Submitted, Under Review, Review Failed, Review Passed or RMR Pending.';
         return result;
     }
 
@@ -106,7 +112,8 @@ public with sharing class DNAMS_RmrReviewService {
         } else {
             check.canProceed = state.canRerun;
             if (state.canRerun) {
-                check.message = 'No AI review is running for this package. Do you want to run the AI document review again?';
+                check.message = 'Do you want to run the AI document review again?';
+                addChangePreview(check, packageId);
             } else if (active) {
                 check.message = runText + ' is still in progress. Wait for it to finish, or cancel it, before running a new review.';
             } else {
@@ -127,14 +134,57 @@ public with sharing class DNAMS_RmrReviewService {
         return 'Review ' + state.latestRun.Name + ' is being cancelled; it stops at its next step.';
     }
 
+    /**
+     * @description Adds the Changes Only preview to a Re-run check. A preview failure only blocks Changes Only.
+     * @param check     Re-run check that can proceed
+     * @param packageId Package to compare with its last run
+     **/
+    private static void addChangePreview(ActionCheck check, Id packageId) {
+        try {
+            DNAMSRunChangeDetector.Preview preview = DNAMSRunChangeDetector.preview(packageId);
+            check.hasChanges = preview.hasChanges;
+            check.changePreview = preview.text;
+            check.baselineRunName = preview.baselineRunName;
+        } catch (Exception e) {
+            check.hasChanges = false;
+            check.changePreview = 'Could not compare with the last run (' + e.getMessage() + '). Use Re-run all.';
+        }
+    }
+
+    /**
+     * @description Re-run with every stage run again (Re-run all).
+     * @param packageId Package to re-run
+     * @return          Message for the flow screen
+     **/
     public static String rerunReview(Id packageId) {
+        return rerunReview(packageId, DNAMSPipelineConstants.RERUN_MODE_ALL);
+    }
+
+    /**
+     * @description Re-run in the chosen mode. Changes Only is refused when nothing changed since the last run
+     *              (checked here as well, never trusting the screen).
+     * @param packageId Package to re-run
+     * @param mode      'Changes Only' or 'All' (blank = All)
+     * @return          Message for the flow screen
+     **/
+    public static String rerunReview(Id packageId, String mode) {
         requireRmr();
         Availability state = availability(packageId);
         if (!state.canRerun) {
             throw new RmrException('Re-run is not available: ' + state.unavailableReason);
         }
-        DNAMS_PackageReviewPipelineService.requestRerun(packageId);
-        return 'A new AI review was requested. It appears in AI Review Runs within a minute.';
+        String rerunMode = DNAMSRunChangeDetector.normaliseMode(mode);
+        Boolean changesOnly = rerunMode == DNAMSPipelineConstants.RERUN_MODE_CHANGES_ONLY;
+        if (changesOnly) {
+            DNAMSRunChangeDetector.Preview preview = DNAMSRunChangeDetector.preview(packageId);
+            if (!preview.hasChanges) {
+                throw new RmrException(preview.text);
+            }
+        }
+        DNAMS_PackageReviewPipelineService.requestRerun(packageId, rerunMode);
+        return changesOnly
+            ? 'A new AI review (changes only) was requested. It appears in AI Review Runs within a minute.'
+            : 'A new AI review was requested. It appears in AI Review Runs within a minute.';
     }
 
     /**

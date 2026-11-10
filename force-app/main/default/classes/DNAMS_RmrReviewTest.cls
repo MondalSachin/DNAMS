@@ -4,13 +4,14 @@
  *                  + DNAMS_RMR), so the result does not depend on the permission sets of whoever runs the tests.
  * @author          Sachin Mondal
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-10
  * @last modified by Abhishek Dutta
- * @last modification details PMD clean-up; createRmrUser replaces granting DNAMS_RMR to the running user
+ * @last modification details Re-run changes only: preview in the check, mode passed to the run, server-side refusal
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-10-20   Sachin Mondal   Initial version
  * 1.1   2026-11-03   Abhishek Dutta  PMD clean-up; System.runAs with an inserted RMR user
+ * 1.2   2026-11-10   Abhishek Dutta  Re-run changes only tests
  **/
 // Exception to guideline: the DNAMS_ prefix is the project's class naming standard for this module
 @SuppressWarnings('PMD.ClassNamingConventions')
@@ -187,9 +188,44 @@ public class DNAMS_RmrReviewTest {
      * @return Message for the flow screen
      **/
     private static String rerunViaFlow(Id packageId) {
+        return rerunViaFlow(packageId, null);
+    }
+
+    /**
+     * @description Calls the Re-run Review invocable with the mode chosen on the flow's Confirm screen.
+     * @param packageId Package id
+     * @param mode      Changes Only, All or blank (= All)
+     * @return Message for the flow screen
+     **/
+    private static String rerunViaFlow(Id packageId, String mode) {
         DNAMS_RerunReviewAction.Request request = new DNAMS_RerunReviewAction.Request();
         request.packageId = packageId;
+        request.mode = mode;
         return DNAMS_RerunReviewAction.run(new List<DNAMS_RerunReviewAction.Request>{ request })[0].message;
+    }
+
+    /**
+     * @description Submits the package (override) and completes the run the submit started, which becomes the
+     *              baseline of a Changes Only re-run.
+     * @return The completed baseline run with its name
+     **/
+    private static AI_Package_Review_Run__c submitAndCompleteBaseline() {
+        update new DNAMS_Package__c(Id = pkg().Id, Dealer_Submit_Validation_Override__c = true, Status__c = 'Dealer Submitted');
+        Test.getEventBus().deliver();
+        completeRuns();
+        return [SELECT Id, Name FROM AI_Package_Review_Run__c WHERE Package__c = :pkg().Id ORDER BY CreatedDate DESC LIMIT 1];
+    }
+
+    /**
+     * @description The RMR Rerun runs started by delivered re-run requests.
+     * @return Runs with their re-run mode and baseline
+     **/
+    private static List<AI_Package_Review_Run__c> rerunRuns() {
+        return [
+            SELECT Id, RerunMode__c, BaselineRun__c, ChangeSummary__c
+            FROM AI_Package_Review_Run__c
+            WHERE Trigger_Source__c = :DNAMS_PackageReviewPipelineService.SOURCE_RMR_RERUN
+        ];
     }
 
     /**
@@ -235,7 +271,7 @@ public class DNAMS_RmrReviewTest {
             delete [SELECT Id FROM AI_Package_Review_Run__c];
             DNAMS_ReviewActionCheck.Result rerunIdle = checkViaFlow(pkg().Id, 'Rerun');
             Assert.isTrue(rerunIdle.canProceed, rerunIdle.message);
-            Assert.isTrue(rerunIdle.message.contains('No AI review is running'), rerunIdle.message);
+            Assert.isTrue(rerunIdle.message.contains('run the AI document review again'), rerunIdle.message);
 
             AI_Package_Review_Run__c run = new AI_Package_Review_Run__c(Package__c = pkg().Id, Status__c = 'Running');
             insert run;
@@ -263,6 +299,7 @@ public class DNAMS_RmrReviewTest {
 
             Assert.isTrue(message.contains('being cancelled'), message);
             Assert.areEqual('Cancelling', reload(run.Id).Status__c, 'Run is marked Cancelling');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING, pkg().Status__c, 'Cancel moves the package to RMR Pending');
             String again = cancelViaFlow(pkg().Id);
             Assert.isTrue(again.contains('no review in progress'), again);
         }
@@ -291,6 +328,95 @@ public class DNAMS_RmrReviewTest {
                 [SELECT COUNT() FROM AI_Package_Review_Run__c WHERE Trigger_Source__c = 'RMR Rerun' AND Status__c = 'Running'],
                 'The re-run request starts one RMR Rerun run'
             );
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW, pkg().Status__c, 'The started re-run moves the package to Under Review');
+            AI_Package_Review_Run__c rerun = rerunRuns()[0];
+            Assert.areEqual(DNAMSPipelineConstants.RERUN_MODE_ALL, rerun.RerunMode__c, 'A re-run without a mode is Re-run all');
+            Assert.isNull(rerun.BaselineRun__c, 'Re-run all has no baseline');
+        }
+    }
+
+    /**
+     * @description Nothing changed since the last run: the check offers only Re-run all with the block message, and a
+     *              Changes Only request is refused on the server; Re-run all still works.
+     **/
+    @IsTest
+    static void rerunChangesOnlyRefusedWhenNothingChanged() {
+        useStubs();
+        System.runAs(createRmrUser()) {
+            AI_Package_Review_Run__c baseline = submitAndCompleteBaseline();
+
+            DNAMS_ReviewActionCheck.Result check = checkViaFlow(pkg().Id, 'Rerun');
+            Assert.isTrue(check.canProceed, check.message);
+            Assert.areEqual('Do you want to run the AI document review again?', check.message, 'Confirm wording unchanged');
+            Assert.isFalse(check.hasChanges, check.changePreview);
+            Assert.areEqual(baseline.Name, check.baselineRunName, 'Compared with the last run');
+            Assert.areEqual(
+                'Nothing has changed since ' + baseline.Name + '. Use Re-run all to run everything again.',
+                check.changePreview,
+                'Block message from the preview'
+            );
+
+            String refused = rerunViaFlow(pkg().Id, DNAMSPipelineConstants.RERUN_MODE_CHANGES_ONLY);
+            Test.getEventBus().deliver();
+            Assert.isTrue(refused.startsWith('Not done: Nothing has changed since ' + baseline.Name), refused);
+            Assert.isTrue(rerunRuns().isEmpty(), 'A refused Changes Only re-run publishes nothing');
+
+            String all = rerunViaFlow(pkg().Id, DNAMSPipelineConstants.RERUN_MODE_ALL);
+            Test.getEventBus().deliver();
+            Assert.areEqual('A new AI review was requested. It appears in AI Review Runs within a minute.', all, 'Re-run all message unchanged');
+            Assert.areEqual(DNAMSPipelineConstants.RERUN_MODE_ALL, rerunRuns()[0].RerunMode__c, 'Re-run all run');
+        }
+    }
+
+    /**
+     * @description A file added since the last run: the check returns the preview, and Changes Only starts a run that
+     *              records its mode and baseline.
+     **/
+    @IsTest
+    static void rerunChangesOnlyPassesModeAndBaseline() {
+        useStubs();
+        System.runAs(createRmrUser()) {
+            attach('Dealer Application', 'good application');
+            AI_Package_Review_Run__c baseline = submitAndCompleteBaseline();
+
+            DNAMS_ReviewActionCheck.Result check = checkViaFlow(pkg().Id, 'Rerun');
+            Assert.isTrue(check.canProceed, check.message);
+            Assert.isTrue(check.hasChanges, check.changePreview);
+            Assert.areEqual(baseline.Name, check.baselineRunName, 'Compared with the last run');
+            Assert.isTrue(check.changePreview.startsWith('Compared with ' + baseline.Name + ':<br>- '), check.changePreview);
+            Assert.isTrue(check.changePreview.contains('good application'), check.changePreview);
+
+            String requested = rerunViaFlow(pkg().Id, DNAMSPipelineConstants.RERUN_MODE_CHANGES_ONLY);
+            Assert.areEqual('A new AI review (changes only) was requested. It appears in AI Review Runs within a minute.', requested, 'Mode in the result');
+            Test.getEventBus().deliver();
+
+            List<AI_Package_Review_Run__c> runs = rerunRuns();
+            Assert.areEqual(1, runs.size(), 'One re-run started');
+            Assert.areEqual(DNAMSPipelineConstants.RERUN_MODE_CHANGES_ONLY, runs[0].RerunMode__c, 'Mode passed to the run');
+            Assert.areEqual(baseline.Id, runs[0].BaselineRun__c, 'Baseline is the last run');
+        }
+    }
+
+    /**
+     * @description Re-run is available from every post-submit status (Review Failed, Review Passed, RMR Pending, ...)
+     *              when no review is active.
+     **/
+    @IsTest
+    static void rerunAllowedFromReviewOutcomes() {
+        System.runAs(createRmrUser()) {
+            for (String status : new List<String>{
+                DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED,
+                DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_PASSED,
+                DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING,
+                DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW
+            }) {
+                update new DNAMS_Package__c(Id = pkg().Id, Status__c = status);
+                DNAMS_ReviewActionCheck.Result check = checkViaFlow(pkg().Id, 'Rerun');
+                Assert.isTrue(check.canProceed, status + ': ' + check.message);
+            }
+            update new DNAMS_Package__c(Id = pkg().Id, Status__c = 'Closed');
+            DNAMS_ReviewActionCheck.Result closed = checkViaFlow(pkg().Id, 'Rerun');
+            Assert.isFalse(closed.canProceed, 'Closed packages cannot be re-run');
         }
     }
 
@@ -305,7 +431,7 @@ public class DNAMS_RmrReviewTest {
         System.runAs(createRmrUser()) {
             attach('Org Chart', 'wrong-chart');
             submitAndClassify(); // Dealer Application missing, Org Chart wrong type -> Needs Review
-            Assert.areEqual('RMR Pending', pkg().Status__c, 'Issues send the package to the RMR');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, pkg().Status__c, 'Issues fail the review');
 
             DNAMS_RmrReviewService.sentHistoryStub = false;
             String neverSent = sendReturnViaFlow(pkg().Id);

@@ -2,14 +2,17 @@
  * @description     Per-document stage rows (AIReviewStageResult__c) for the pipeline stages that do not own their rows
  *                  end to end. Classification: one row per file per run with the AI answer (type, confidence, reasoning,
  *                  raw response) and the deterministic outcome, so every run keeps its own classification history.
+ *                  A file reused on a Changes Only run gets a copy of its baseline row (DNAMSRunChangeDetector.cloneForReuse:
+ *                  ReusedFromResult__c, original raw answer and completion time) carrying the result applied in this run.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-04
+ * @last modified on 2026-11-10
  * @last modified by Abhishek Dutta
- * @last modification details Initial version
+ * @last modification details Reused classification rows on Changes Only runs
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-04   Abhishek Dutta  Initial version
+ * 1.1   2026-11-10   Abhishek Dutta  Reused classification rows on Changes Only runs
  **/
 public inherited sharing class DNAMSStageResultHelper {
     private static final Integer TEXT_LENGTH = 255;
@@ -31,23 +34,24 @@ public inherited sharing class DNAMSStageResultHelper {
         List<AIReviewStageResult__c> rows = new List<AIReviewStageResult__c>();
         for (DNAMS_DocumentClassificationBatch.FileResult result : results ?? new List<DNAMS_DocumentClassificationBatch.FileResult>()) {
             Boolean isError = result.outcome == DNAMS_DocumentClassificationBatch.OUTCOME_ERROR;
-            rows.add(new AIReviewStageResult__c(
-                ReviewRun__c = runId,
-                PackageElement__c = element.Id,
-                Stage__c = DNAMS_PackageReviewPipelineService.STAGE_CLASSIFICATION,
-                ElementType__c = (element.Element_Type__r?.Name ?? element.Name)?.left(TEXT_LENGTH),
-                DocumentTitle__c = result.title?.left(TEXT_LENGTH),
-                ContentDocumentId__c = result.contentDocumentId,
-                ContentVersionId__c = result.versionId,
-                DocumentType__c = result.documentType?.left(TEXT_LENGTH),
-                Confidence__c = result.confidence,
-                Outcome__c = result.outcome,
-                Reasoning__c = isError ? null : result.reasoning?.left(LONG_LENGTH),
-                RawStageResponseJSON__c = result.rawResponse?.left(RAW_LENGTH),
-                ProcessingStatus__c = isError ? DNAMSPipelineConstants.ROW_ERROR : DNAMSPipelineConstants.ROW_COMPLETED,
-                ProcessingErrorDetails__c = isError ? result.reasoning?.left(LONG_LENGTH) : null,
-                ProcessingCompletedAt__c = System.now()
-            ));
+            // Reused file: start from the baseline copy (keeps ReusedFromResult__c and the original completion time)
+            AIReviewStageResult__c row = result.reusedFrom == null
+                ? new AIReviewStageResult__c(ReviewRun__c = runId, ProcessingCompletedAt__c = System.now())
+                : DNAMSRunChangeDetector.cloneForReuse(result.reusedFrom, runId);
+            row.PackageElement__c = element.Id;
+            row.Stage__c = DNAMS_PackageReviewPipelineService.STAGE_CLASSIFICATION;
+            row.ElementType__c = (element.Element_Type__r?.Name ?? element.Name)?.left(TEXT_LENGTH);
+            row.DocumentTitle__c = result.title?.left(TEXT_LENGTH);
+            row.ContentDocumentId__c = result.contentDocumentId;
+            row.ContentVersionId__c = result.versionId;
+            row.DocumentType__c = result.documentType?.left(TEXT_LENGTH);
+            row.Confidence__c = result.confidence;
+            row.Outcome__c = result.outcome;
+            row.Reasoning__c = isError ? null : result.reasoning?.left(LONG_LENGTH);
+            row.RawStageResponseJSON__c = result.rawResponse?.left(RAW_LENGTH);
+            row.ProcessingStatus__c = isError ? DNAMSPipelineConstants.ROW_ERROR : DNAMSPipelineConstants.ROW_COMPLETED;
+            row.ProcessingErrorDetails__c = isError ? result.reasoning?.left(LONG_LENGTH) : null;
+            rows.add(row);
         }
         return rows;
     }

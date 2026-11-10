@@ -4,7 +4,7 @@ import { refreshApex } from "@salesforce/apex";
 import getElementProgress from "@salesforce/apex/DNAMS_PackageInsightsController.getElementProgress";
 import LAST_MODIFIED from "@salesforce/schema/DNAMS_Package__c.LastModifiedDate";
 
-/** Element Progress tab header: pass/fail element counts and a pass/fail line per pipeline stage. */
+/** Element Progress tab header: a pass/fail line per pipeline stage. */
 export default class DnamsElementProgressSummary extends LightningElement {
     @api recordId;
     progress;
@@ -26,17 +26,6 @@ export default class DnamsElementProgressSummary extends LightningElement {
             this.handleRefresh();
         }
         this.lastModified = stamp || this.lastModified;
-    }
-
-    get stats() {
-        const p = this.progress;
-        return [
-            { key: "total", label: "Elements", value: p.total, className: "stat" },
-            { key: "required", label: "Required", value: p.required, className: "stat" },
-            { key: "docs", label: "With documents", value: p.withDocuments, className: "stat" },
-            { key: "passed", label: "Passed", value: p.passed, className: "stat stat_pass" },
-            { key: "failed", label: "Failed", value: p.failed, className: "stat stat_fail" }
-        ];
     }
 
     get stages() {

@@ -32,6 +32,14 @@
             <assignToReference>checkMessage</assignToReference>
             <name>message</name>
         </outputParameters>
+        <outputParameters>
+            <assignToReference>hasChanges</assignToReference>
+            <name>hasChanges</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>changePreview</assignToReference>
+            <name>changePreview</name>
+        </outputParameters>
     </actionCalls>
     <actionCalls>
         <name>Rerun_Review</name>
@@ -44,6 +52,12 @@
             <targetReference>Result</targetReference>
         </connector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>mode</name>
+            <value>
+                <elementReference>rerunMode</elementReference>
+            </value>
+        </inputParameters>
         <inputParameters>
             <name>packageId</name>
             <value>
@@ -58,6 +72,38 @@
     </actionCalls>
     <apiVersion>68.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>Set_Mode</name>
+        <label>Set Mode</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>rerunMode</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Mode</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Rerun_Review</targetReference>
+        </connector>
+    </assignments>
+    <choices>
+        <name>Choice_All</name>
+        <choiceText>Re-run all</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>All</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>Choice_Changes_Only</name>
+        <choiceText>Re-run changes only</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Changes Only</stringValue>
+        </value>
+    </choices>
     <decisions>
         <name>Can_Proceed</name>
         <label>Can Proceed</label>
@@ -78,12 +124,37 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Confirm</targetReference>
+                <targetReference>Has_Changes</targetReference>
             </connector>
             <label>Available</label>
         </rules>
     </decisions>
-    <description>Quick Action on Package: requests a new AI review (step 1b).</description>
+    <decisions>
+        <name>Has_Changes</name>
+        <label>Has Changes</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Confirm_All</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Nothing changed</defaultConnectorLabel>
+        <rules>
+            <name>Changes_Found</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>hasChanges</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Confirm</targetReference>
+            </connector>
+            <label>Changes found</label>
+        </rules>
+    </decisions>
+    <description>Quick Action on Package: requests a new AI review (step 1b), Re-run changes only or Re-run all.</description>
     <environments>Default</environments>
     <interviewLabel>DNAMS Re-run Review {!$Flow.CurrentDateTime}</interviewLabel>
     <label>DNAMS Re-run Review</label>
@@ -109,11 +180,99 @@
         <allowFinish>true</allowFinish>
         <allowPause>false</allowPause>
         <connector>
+            <targetReference>Set_Mode</targetReference>
+        </connector>
+        <fields>
+            <name>ModeText</name>
+            <fieldText>&lt;p&gt;{!checkMessage}&lt;/p&gt;&lt;p&gt;{!changePreview}&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <fields>
+            <name>Mode</name>
+            <choiceReferences>Choice_Changes_Only</choiceReferences>
+            <choiceReferences>Choice_All</choiceReferences>
+            <dataType>String</dataType>
+            <defaultSelectedChoiceReference>Choice_Changes_Only</defaultSelectedChoiceReference>
+            <fieldText>Re-run mode</fieldText>
+            <fieldType>RadioButtons</fieldType>
+            <isRequired>true</isRequired>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <fields>
+            <name>ModeNextText</name>
+            <fieldText>&lt;p&gt;Click &lt;b&gt;Next&lt;/b&gt; to start the new review.&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <name>Confirm_All</name>
+        <label>Confirm All</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
             <targetReference>Rerun_Review</targetReference>
         </connector>
         <fields>
-            <name>ConfirmText</name>
-            <fieldText>&lt;p&gt;{!checkMessage}&lt;/p&gt;&lt;p&gt;Click &lt;b&gt;Next&lt;/b&gt; to start the new review.&lt;/p&gt;</fieldText>
+            <name>ModeAllText</name>
+            <fieldText>&lt;p&gt;{!checkMessage}&lt;/p&gt;&lt;p&gt;{!changePreview}&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <fields>
+            <name>ModeAll</name>
+            <choiceReferences>Choice_All</choiceReferences>
+            <dataType>String</dataType>
+            <defaultSelectedChoiceReference>Choice_All</defaultSelectedChoiceReference>
+            <fieldText>Re-run mode</fieldText>
+            <fieldType>RadioButtons</fieldType>
+            <isRequired>true</isRequired>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <fields>
+            <name>ModeAllNextText</name>
+            <fieldText>&lt;p&gt;Click &lt;b&gt;Next&lt;/b&gt; to start the new review.&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
             <styleProperties>
                 <verticalAlignment>
@@ -191,6 +350,13 @@
         <isOutput>false</isOutput>
     </variables>
     <variables>
+        <name>changePreview</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
         <name>checkMessage</name>
         <dataType>String</dataType>
         <isCollection>false</isCollection>
@@ -198,11 +364,31 @@
         <isOutput>false</isOutput>
     </variables>
     <variables>
+        <name>hasChanges</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <booleanValue>false</booleanValue>
+        </value>
+    </variables>
+    <variables>
         <name>recordId</name>
         <dataType>String</dataType>
         <isCollection>false</isCollection>
         <isInput>true</isInput>
         <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>rerunMode</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <stringValue>All</stringValue>
+        </value>
     </variables>
     <variables>
         <name>resultMessage</name>

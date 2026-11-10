@@ -107,7 +107,7 @@ private class DNAMSFilePreflightHelperTest {
             Assert.isTrue(run.Issue_Summary__c.contains('Invalid File Type'), 'Summary lists the problem: ' + run.Issue_Summary__c);
             DNAMS_Package__c pkg = [SELECT Health__c, Status__c, AI_Narrative__c FROM DNAMS_Package__c WHERE Id = :fixture.packageId WITH SYSTEM_MODE];
             Assert.areEqual('Red', pkg.Health__c, 'Package health Red');
-            Assert.areEqual('RMR Pending', pkg.Status__c, 'Package goes to the RMR');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, pkg.Status__c, 'Pre-flight failure fails the review');
             Assert.isNotNull(pkg.AI_Narrative__c, 'Narrative written for the RMR');
         }
     }

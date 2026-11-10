@@ -10,15 +10,22 @@
  *                  is unsure; else Passed. A required document type (DNAMSElementDocumentType__mdt.IsRequired__c) with
  *                  no file classified as it (confident match or unsure) also fails the element, which stops the run at
  *                  classification. Each execute re-checks the run Status and stops if the run was cancelled.
+ *                  Changes Only runs (DNAMSRunChangeDetector.baselineRunIdFor not null): a file whose key
+ *                  (element|document|version) has a finished Classification row in the baseline makes no model call; the
+ *                  baseline row is copied (cloneForReuse, ReusedFromResult__c set) and its stored model answer is applied
+ *                  again with the current confidence settings and accepted types, so the element result is computed
+ *                  from all its files (reused + freshly classified) exactly like a full run. finish() appends the
+ *                  Classification line to the run's ChangeSummary__c.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-05
- * @last modified by Sachin Mondal
- * @last modification details Required document types fail the element when missing
+ * @last modified on 2026-11-10
+ * @last modified by Abhishek Dutta
+ * @last modification details Re-run changes only: reuse unchanged files' classification
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  PMD clean-up: ApexDoc, fewer parameters, complexity split into helpers
  * 1.1   2026-11-05   Sachin Mondal   Required document types fail the element when missing
+ * 1.2   2026-11-10   Abhishek Dutta  Re-run changes only: reuse unchanged files' classification
  **/
 // Exception to guideline: without sharing because the system pipeline must read all package elements and files regardless of ownership
 // Class name kept: renaming would break the callers, tests and metadata that reference it
@@ -32,6 +39,7 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
     public static final String OUTCOME_UNCLASSIFIED = 'Unclassified';
     public static final String OUTCOME_ERROR = 'Error';
     private static final List<String> CONFIDENCE_ORDER = new List<String>{ 'LOW', 'MODERATE', 'FULLY' };
+    private static final String CLASS_NAME = DNAMS_DocumentClassificationBatch.class.getName();
 
     @TestVisible
     private static DNAMS_DocumentClassifier classifier = new DNAMS_EinsteinDocumentClassifier();
@@ -81,6 +89,11 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
         for (DNAMS_Package_Element__c element : elements) {
             resultsByElement.put(element.Id, new List<FileResult>());
         }
+        // Changes Only: finished baseline rows by file key (empty for an All run)
+        Id baselineRunId = DNAMSRunChangeDetector.baselineRunIdFor(runId);
+        Map<String, AIReviewStageResult__c> reusableByKey = baselineRunId == null
+            ? new Map<String, AIReviewStageResult__c>()
+            : DNAMSRunChangeDetector.reusableClassificationRows(baselineRunId);
 
         // All model calls first, then DML: callouts are not allowed after uncommitted work.
         for (ContentDocumentLink link : [
@@ -95,7 +108,14 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
             result.versionId = link.ContentDocument.LatestPublishedVersionId;
             result.contentDocumentId = link.ContentDocumentId;
             setAccepted(result, elementsById.get(link.LinkedEntityId), rowsByType);
-            classifyWithRetry(result, link, maxAttempts);
+            AIReviewStageResult__c baselineRow = reusableByKey.get(
+                DNAMSRunChangeDetector.fileKey(link.LinkedEntityId, link.ContentDocumentId, result.versionId)
+            );
+            if (baselineRow == null) {
+                classifyWithRetry(result, link, maxAttempts);
+            } else {
+                reuseResult(result, baselineRow);
+            }
             resultsByElement.get(link.LinkedEntityId).add(result);
         }
 
@@ -115,7 +135,7 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
                             DocumentClassifiedAs__c = result.documentType,
                             Classification_Status__c = result.fileStatus(),
                             Classification_Confidence__c = result.confidence,
-                            Classified_At__c = System.now()
+                            Classified_At__c = result.reusedFrom?.ProcessingCompletedAt__c ?? System.now()
                         )
                     );
                 }
@@ -131,10 +151,89 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
      * @param context Batch context
      **/
     public void finish(Database.BatchableContext context) {
+        appendChangeSummary(runId, packageId);
         try {
             DNAMS_PackageReviewPipelineService.completeClassification(runId);
         } catch (Exception e) {
             DNAMS_PackageReviewPipelineService.failRun(runId, e);
+        }
+    }
+
+    // ------------------------------------------------------------------ Re-run changes only
+
+    /**
+     * @description On a Changes Only run, appends "Classification: N reused, M re-run (reasons)" to the run's
+     *              ChangeSummary__c. Counts come from this run's Classification rows (ReusedFromResult__c set or not);
+     *              reasons are every file that was not reused (new version, new file, did not finish) and every removed
+     *              file. Does nothing for an All run. A failure is logged and never stops the run.
+     * @param runId     Review run
+     * @param packageId Package of the run
+     **/
+    public static void appendChangeSummary(Id runId, Id packageId) {
+        try {
+            Id baselineRunId = DNAMSRunChangeDetector.baselineRunIdFor(runId);
+            if (baselineRunId == null) {
+                return;
+            }
+            String baselineName = [SELECT Name FROM AI_Package_Review_Run__c WHERE Id = :baselineRunId WITH SYSTEM_MODE].Name;
+            Integer reused = 0;
+            Integer rerun = 0;
+            for (AIReviewStageResult__c row : [
+                SELECT ReusedFromResult__c
+                FROM AIReviewStageResult__c
+                WHERE ReviewRun__c = :runId AND Stage__c = :DNAMS_PackageReviewPipelineService.STAGE_CLASSIFICATION
+                WITH SYSTEM_MODE
+            ]) {
+                if (row.ReusedFromResult__c == null) {
+                    rerun++;
+                } else {
+                    reused++;
+                }
+            }
+            List<String> reasons = new List<String>();
+            for (DNAMSRunChangeDetector.FileChange change : DNAMSRunChangeDetector.fileChanges(packageId, baselineRunId)) {
+                if (change.kind != DNAMSRunChangeDetector.CHANGE_UNCHANGED) {
+                    reasons.add(change.describe(baselineName));
+                }
+            }
+            DNAMSRunChangeDetector.appendChangeSummary(
+                runId,
+                DNAMSRunChangeDetector.SUMMARY_CLASSIFICATION,
+                DNAMSRunChangeDetector.stageLine(reused, rerun, reasons)
+            );
+        } catch (Exception e) {
+            // Handled: the change summary is informational, so it is logged and the classification still completes
+            DNAMSErrorLogHelper.LogDetail detail = new DNAMSErrorLogHelper.LogDetail();
+            detail.runId = runId;
+            detail.stage = DNAMS_PackageReviewPipelineService.STAGE_CLASSIFICATION;
+            detail.errorType = DNAMSPipelineConstants.ERROR_PROCESSING;
+            detail.sourceClass = CLASS_NAME;
+            detail.severity = DNAMSPipelineConstants.SEVERITY_WARNING;
+            detail.message = 'Change summary not written: ' + e.getTypeName() + ': ' + e.getMessage();
+            DNAMSErrorLogHelper.insertLogs(new List<AIReviewErrorLog__c>{ DNAMSErrorLogHelper.buildLog(detail) });
+        }
+    }
+
+    /**
+     * @description Fills a file result from a finished baseline row instead of calling the model. The stored model
+     *              answer is applied again with the current confidence settings and accepted document types (the same
+     *              deterministic step a fresh answer goes through); when it cannot be read, the stored result is kept.
+     * @param result      File result to fill (title, ids and accepted types already set)
+     * @param baselineRow Finished Classification row of the baseline with the same file key
+     **/
+    @TestVisible
+    private static void reuseResult(FileResult result, AIReviewStageResult__c baselineRow) {
+        DNAMS_Pipeline_Setting__mdt setting = DNAMS_PackageReviewPipelineService.settings();
+        result.reusedFrom = baselineRow;
+        result.rawResponse = baselineRow.RawStageResponseJSON__c;
+        try {
+            applyResult(result, baselineRow.RawStageResponseJSON__c, setting.Min_Accepted_Confidence__c, setting.Min_Auto_Accept_Confidence__c);
+        } catch (Exception unreadable) {
+            // Handled: no readable stored answer (blank or truncated); keep the result the baseline recorded
+            result.documentType = baselineRow.DocumentType__c;
+            result.confidence = baselineRow.Confidence__c;
+            result.reasoning = baselineRow.Reasoning__c;
+            result.outcome = baselineRow.Outcome__c;
         }
     }
 
@@ -349,6 +448,8 @@ public without sharing class DNAMS_DocumentClassificationBatch implements Databa
         public String reasoning;
         public Id contentDocumentId;
         public String rawResponse;
+        // Changes Only: the baseline row this result was reused from (null when classified in this run).
+        public AIReviewStageResult__c reusedFrom;
         // Lower-case accepted document types and their "A or B" label for narratives.
         public Set<String> acceptedNames = new Set<String>();
         public String acceptedLabel;

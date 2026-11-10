@@ -9,14 +9,18 @@
  *                   18-20 narrative, owner check, RMR email       -> DNAMS_PackageNarrativeQueueable
  *                  Results are kept per element (stage statuses + a short rule-based narrative); there is no
  *                  document-level record. Every step re-checks the run Status; only Running runs continue.
+ *                  Package status: a started run sets Under Review, a cancel sets RMR Pending, a failed run (any stage)
+ *                  sets Review Failed and a run completed Passed sets Review Passed.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-09
  * @last modified by Abhishek Dutta
- * @last modification details PMD clean-up: ApexDoc, system-mode SOQL/DML, complexity split into helpers
+ * @last modification details Re-run modes: the run records RerunMode__c and, for Changes Only, its BaselineRun__c
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  PMD clean-up: ApexDoc, system-mode SOQL/DML, complexity split into helpers
+ * 1.1   2026-11-09   Abhishek Dutta  Package status lifecycle: run start, cancel and failure set the package status
+ * 1.2   2026-11-09   Abhishek Dutta  Re-run modes: RerunMode__c / BaselineRun__c on the run, requestRerun(packageId, mode)
  **/
 // Exception to guideline: without sharing because the pipeline is invoked from the platform event subscriber, async jobs and RMR actions
 // Class name kept: renaming would break the many callers, tests and metadata that reference it
@@ -36,6 +40,8 @@ public without sharing class DNAMS_PackageReviewPipelineService {
     public static final String RESULT_NEEDS_REVIEW = 'Needs Review';
     public static final String PACKAGE_RMR_PENDING = 'RMR Pending';
     public static final String PACKAGE_UNDER_REVIEW = 'Under Review';
+    public static final String PACKAGE_REVIEW_FAILED = 'Review Failed';
+    public static final String PACKAGE_REVIEW_PASSED = 'Review Passed';
     public static final String DUPLICATE_REASON = 'Duplicate request - a review run is already in progress for this package.';
     public static final String RMR_PERMISSION = 'DNAMS_RMR';
 
@@ -82,17 +88,21 @@ public without sharing class DNAMS_PackageReviewPipelineService {
             packageIds.add(request.Package_Id__c);
         }
         Set<Id> busyPackages = activePackageIds(packageIds);
+        Map<Id, AI_Package_Review_Run__c> baselineByPackage = baselinesForChangesOnly(requests);
 
         List<AI_Package_Review_Run__c> runs = new List<AI_Package_Review_Run__c>();
         for (DNAMS_Package_Review_Requested__e request : requests) {
             Boolean duplicate = busyPackages.contains(request.Package_Id__c);
             busyPackages.add(request.Package_Id__c); // a second request in the same batch is also a duplicate
-            runs.add(newRun(request, duplicate));
+            AI_Package_Review_Run__c run = newRun(request, duplicate);
+            applyMode(run, request.Mode__c, baselineByPackage.get(request.Package_Id__c));
+            runs.add(run);
         }
         insert as system runs;
 
         Map<Id, AI_Package_Review_Run__c> discardedByPackage = startRuns(runs);
         update as system runs;
+        markPackagesUnderReview(runs);
         if (!discardedByPackage.isEmpty()) {
             notifyOwners(
                 discardedByPackage,
@@ -119,6 +129,43 @@ public without sharing class DNAMS_PackageReviewPipelineService {
             busyPackages.add(run.Package__c);
         }
         return busyPackages;
+    }
+
+    /**
+     * @description Baselines (last non-Discarded run per package) for the Changes Only requests; queried before the new
+     *              runs are inserted, so a new run is never its own baseline.
+     * @param requests Review request events
+     * @return         Baseline run per package of a Changes Only request
+     **/
+    private static Map<Id, AI_Package_Review_Run__c> baselinesForChangesOnly(List<DNAMS_Package_Review_Requested__e> requests) {
+        Set<Id> packageIds = new Set<Id>();
+        for (DNAMS_Package_Review_Requested__e request : requests) {
+            if (DNAMSRunChangeDetector.normaliseMode(request.Mode__c) == DNAMSPipelineConstants.RERUN_MODE_CHANGES_ONLY) {
+                packageIds.add(request.Package_Id__c);
+            }
+        }
+        return DNAMSRunChangeDetector.baselinesFor(packageIds);
+    }
+
+    /**
+     * @description Sets the run's RerunMode__c (blank event mode = All). A Changes Only run gets its BaselineRun__c and a
+     *              first ChangeSummary__c line; without an earlier run it falls back to All.
+     * @param run      Unsaved run
+     * @param mode     DNAMS_Package_Review_Requested__e.Mode__c
+     * @param baseline Baseline run of the package, or null
+     **/
+    private static void applyMode(AI_Package_Review_Run__c run, String mode, AI_Package_Review_Run__c baseline) {
+        run.RerunMode__c = DNAMSRunChangeDetector.normaliseMode(mode);
+        if (run.RerunMode__c != DNAMSPipelineConstants.RERUN_MODE_CHANGES_ONLY) {
+            return;
+        }
+        if (baseline == null) {
+            run.RerunMode__c = DNAMSPipelineConstants.RERUN_MODE_ALL;
+            run.ChangeSummary__c = 'Changes only was requested, but there is no earlier run to compare with, so everything runs.';
+            return;
+        }
+        run.BaselineRun__c = baseline.Id;
+        run.ChangeSummary__c = 'Compared with ' + baseline.Name + ' (' + baseline.Status__c + ').';
     }
 
     /**
@@ -167,24 +214,49 @@ public without sharing class DNAMS_PackageReviewPipelineService {
         return discardedByPackage;
     }
 
+    /**
+     * @description A started (Running) run moves its package to Under Review; a Discarded run changes nothing.
+     * @param runs Inserted runs
+     **/
+    private static void markPackagesUnderReview(List<AI_Package_Review_Run__c> runs) {
+        Map<Id, DNAMS_Package__c> packages = new Map<Id, DNAMS_Package__c>();
+        for (AI_Package_Review_Run__c run : runs) {
+            if (run.Status__c == RUN_RUNNING) {
+                packages.put(run.Package__c, new DNAMS_Package__c(Id = run.Package__c, Status__c = PACKAGE_UNDER_REVIEW));
+            }
+        }
+        update as system packages.values();
+    }
+
     // ------------------------------------------------------------------ Step 1b: RMR re-run and cancel
 
     /**
-     * @description Publishes a review request, so the re-run goes through the same duplicate check (step 3).
+     * @description Publishes a Re-run all review request, so the re-run goes through the same duplicate check (step 3).
      * @param packageId Package to re-run
      **/
     public static void requestRerun(Id packageId) {
+        requestRerun(packageId, DNAMSPipelineConstants.RERUN_MODE_ALL);
+    }
+
+    /**
+     * @description Publishes a review request with a re-run mode; the subscriber records it on the new run.
+     * @param packageId Package to re-run
+     * @param mode      DNAMSPipelineConstants.RERUN_MODE_ALL or RERUN_MODE_CHANGES_ONLY (blank = All)
+     **/
+    public static void requestRerun(Id packageId, String mode) {
         EventBus.publish(
             new DNAMS_Package_Review_Requested__e(
                 Package_Id__c = packageId,
                 Trigger_Source__c = SOURCE_RMR_RERUN,
-                Requested_By_Id__c = UserInfo.getUserId()
+                Requested_By_Id__c = UserInfo.getUserId(),
+                Mode__c = DNAMSRunChangeDetector.normaliseMode(mode)
             )
         );
     }
 
     /**
-     * @description A running review is marked Cancelling and stops at its next step.
+     * @description A running review is marked Cancelling and stops at its next step; the package moves to RMR Pending
+     *              at once. Every later step of that run stops at lockRun, so nothing overwrites the status.
      * @param packageId Package whose Running run is cancelled
      **/
     public static void cancelActiveRun(Id packageId) {
@@ -200,14 +272,17 @@ public without sharing class DNAMS_PackageReviewPipelineService {
             run.Reason__c = 'Cancelled by ' + UserInfo.getName() + '.';
         }
         update as system runs;
+        if (!runs.isEmpty()) {
+            update as system new DNAMS_Package__c(Id = packageId, Status__c = PACKAGE_RMR_PENDING);
+        }
     }
 
     // ------------------------------------------------------------------ Steps 15, 16, 17, 22, 23
 
     /**
      * @description Finalises each element's Classification stage (step 15 -> 16). With issues the run completes as
-     *              Needs Review; on a pass it stays Running with Extraction Pending and extraction is started by a
-     *              DNAMSIDPEvent__e. The batch has already set Passed / Needs Review / Failed on elements that had files;
+     *              Needs Review (package Review Failed); on a pass it stays Running (package Under Review) with
+     *              Extraction Pending and extraction is started by a DNAMSIDPEvent__e. The batch has already set Passed / Needs Review / Failed on elements that had files;
      *              here, required elements without files fail as missing and any element left In Progress fails as
      *              not completed.
      * @param runId Review run to complete
@@ -235,11 +310,16 @@ public without sharing class DNAMS_PackageReviewPipelineService {
             }
         }
         Boolean anyIssue = !summary.isEmpty();
-        DNAMS_Package__c pkg = new DNAMS_Package__c(Id = run.Package__c, Health__c = 'Green', Status__c = PACKAGE_UNDER_REVIEW, AI_Narrative__c = null, AI_Narrative_JSON__c = null);
+        DNAMS_Package__c pkg = new DNAMS_Package__c(Id = run.Package__c, Health__c = 'Green', Status__c = PACKAGE_UNDER_REVIEW);
+        if (DNAMSRunChangeDetector.baselineRunIdFor(runId) == null) {
+            // All run: clear the old narrative. A Changes Only run may keep it (DNAMS_PackageNarrativeQueueable decides).
+            pkg.AI_Narrative__c = null;
+            pkg.AI_Narrative_JSON__c = null;
+        }
         run.Classification_Processing_Status__c = 'Completed';
         if (anyIssue) {
             pkg.Health__c = 'Red';
-            pkg.Status__c = PACKAGE_RMR_PENDING;
+            pkg.Status__c = PACKAGE_REVIEW_FAILED;
             run.Status__c = RUN_COMPLETED;
             run.Overall_Result__c = RESULT_NEEDS_REVIEW;
             run.Issue_Summary__c = String.join(summary, '\n').left(32768);
@@ -339,12 +419,17 @@ public without sharing class DNAMS_PackageReviewPipelineService {
     }
 
     /**
-     * @description Marks the run Failed and records the error against the stage that crashed.
+     * @description Marks the run Failed and records the error against the stage that crashed. A run that was still
+     *              Running also moves its package to Review Failed; a cancelled run keeps the package at RMR Pending.
      * @param runId            Review run to fail
      * @param stageStatusField Stage status field set to Failed, e.g. AI_Package_Review_Run__c.ExtractionProcessingStatus__c
      * @param ex               Exception that stopped the stage
      **/
     public static void failRun(Id runId, Schema.SObjectField stageStatusField, Exception ex) {
+        List<AI_Package_Review_Run__c> current = [SELECT Package__c, Status__c FROM AI_Package_Review_Run__c WHERE Id = :runId WITH SYSTEM_MODE FOR UPDATE];
+        if (!current.isEmpty() && current[0].Status__c == RUN_RUNNING) {
+            update as system new DNAMS_Package__c(Id = current[0].Package__c, Status__c = PACKAGE_REVIEW_FAILED);
+        }
         AI_Package_Review_Run__c run = new AI_Package_Review_Run__c(
             Id = runId,
             Status__c = RUN_FAILED,

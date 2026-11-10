@@ -3,13 +3,14 @@
  *                  Classification-stage constants stay in DNAMS_PackageReviewPipelineService.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-05
+ * @last modified on 2026-11-09
  * @last modified by Abhishek Dutta
- * @last modification details Transmittal drafting sources and summary types
+ * @last modification details Re-run modes (All / Changes Only)
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
  * 1.1   2026-11-05   Abhishek Dutta  Transmittal drafting sources and summary types
+ * 1.2   2026-11-09   Abhishek Dutta  Re-run modes (All / Changes Only)
  **/
 public inherited sharing class DNAMSPipelineConstants {
     // Stage names (AIReviewStageResult__c.Stage__c, AIReviewErrorLog__c.Stage__c, element Current_Stage__c)
@@ -107,4 +108,8 @@ public inherited sharing class DNAMSPipelineConstants {
     public static final String DRAFT_SOURCE_RMR_OVERRIDE = 'RMR Override';
     public static final String SUMMARY_OWNERSHIP = 'Ownership Summary';
     public static final String SUMMARY_EXECUTIVE = 'Executive Summary';
+
+    // Re-run mode: DNAMS_Package_Review_Requested__e.Mode__c and AI_Package_Review_Run__c.RerunMode__c (blank = All)
+    public static final String RERUN_MODE_ALL = 'All';
+    public static final String RERUN_MODE_CHANGES_ONLY = 'Changes Only';
 }

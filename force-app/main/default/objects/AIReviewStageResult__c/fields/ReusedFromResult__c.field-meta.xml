@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ReusedFromResult__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Changes Only runs: the earlier stage result this row was copied from (the row that actually produced the result). Blank when the row was produced in this run.</description>
+    <label>Reused From Result</label>
+    <referenceTo>AIReviewStageResult__c</referenceTo>
+    <relationshipLabel>Reused In Results</relationshipLabel>
+    <relationshipName>ReusedInResults</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

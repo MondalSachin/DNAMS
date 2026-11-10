@@ -175,6 +175,7 @@ private class DNAMS_PackageReviewPipelineTest {
             Assert.areEqual('Running', run.Status__c, 'Submit starts a Running run');
             Assert.areEqual('Dealer Submit', run.Trigger_Source__c, 'Trigger source');
             Assert.isNotNull(run.Job_Id__c, 'The classification job is recorded');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW, pkg().Status__c, 'A started run moves the package to Under Review');
         }
     }
 
@@ -193,6 +194,7 @@ private class DNAMS_PackageReviewPipelineTest {
             Assert.areEqual('Discarded', discarded.Status__c, 'Duplicate request is discarded');
             Assert.isTrue(discarded.Reason__c.contains('owned by a queue'), discarded.Reason__c);
             Assert.isNotNull(discarded.Ended_At__c, 'Discarded run is ended');
+            Assert.areEqual('Dealer Submitted', pkg().Status__c, 'A discarded run does not change the package status');
         }
     }
 
@@ -280,7 +282,7 @@ private class DNAMS_PackageReviewPipelineTest {
             Assert.areEqual('MODERATE', misc.Classification_Confidence__c, 'Confidence is stamped');
 
             Assert.areEqual('Red', pkg().Health__c, 'Package health with issues');
-            Assert.areEqual('RMR Pending', pkg().Status__c, 'Package goes to the RMR');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, pkg().Status__c, 'Classification issues fail the review');
             Assert.isTrue(done.Issue_Summary__c.contains('Org Chart [Failed]'), done.Issue_Summary__c);
 
             ContentVersion stamped = [SELECT DocumentClassifiedAs__c, Classification_Status__c FROM ContentVersion WHERE Title = 'wrong-statement'];
@@ -325,7 +327,7 @@ private class DNAMS_PackageReviewPipelineTest {
             Assert.areEqual(DNAMSPipelineConstants.EVENT_START_EXTRACTION, events[0].EventType__c, 'Event type');
             Assert.areEqual(String.valueOf(run.Id), events[0].ReviewRunId__c, 'Event carries the run');
             Assert.areEqual('Green', pkg().Health__c, 'Package health unchanged on pass');
-            Assert.areEqual('Under Review', pkg().Status__c, 'Package status unchanged on pass');
+            Assert.areEqual('Under Review', pkg().Status__c, 'Package stays Under Review while the run goes on');
             Map<String, DNAMS_Package_Element__c> byName = elements();
             Assert.areEqual('Passed', byName.get('Org Chart').Classification_Status__c, 'Org Chart passed');
             Assert.isNull(byName.get('Org Chart').Element_Narrative__c, 'No narrative for a pass');
@@ -482,6 +484,7 @@ private class DNAMS_PackageReviewPipelineTest {
             runClassification(run.Id);
 
             Assert.areEqual('Cancelled', reload(run.Id).Status__c, 'Cancelling settles as Cancelled');
+            Assert.areNotEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, pkg().Status__c, 'A cancelled run sets no result status');
             Assert.isNull(elements().get('Dealer Application').Classification_Status__c, 'No element was classified');
         }
     }
@@ -502,6 +505,7 @@ private class DNAMS_PackageReviewPipelineTest {
             AI_Package_Review_Run__c failed = reload(run.Id);
             Assert.areEqual('Failed', failed.Status__c, 'Run failed');
             Assert.isNotNull(failed.Error__c, 'Error recorded');
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, pkg().Status__c, 'A crashed run fails the review');
         }
     }
 
@@ -526,6 +530,27 @@ private class DNAMS_PackageReviewPipelineTest {
             Assert.areEqual('Failed', failed.ExtractionProcessingStatus__c, 'Extraction stage failed');
             Assert.areNotEqual('Failed', failed.Classification_Processing_Status__c, 'Classification stage untouched');
             Assert.isTrue(failed.Error__c.contains('extraction crashed'), failed.Error__c);
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, pkg().Status__c, 'A failed run fails the review');
+        }
+    }
+
+    /**
+     * @description Cancel moves the package to RMR Pending at once, and a later failure of that run does not overwrite it.
+     **/
+    @IsTest
+    static void cancelSetsRmrPendingAndFailureKeepsIt() {
+        System.runAs(DNAMSPipelineTestHelper.getAdminUser()) {
+            update new DNAMS_Package__c(Id = pkg().Id, Status__c = DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW);
+            AI_Package_Review_Run__c run = runningRun();
+
+            Test.startTest();
+            DNAMS_PackageReviewPipelineService.cancelActiveRun(pkg().Id);
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING, pkg().Status__c, 'Cancel sets RMR Pending');
+            DNAMS_PackageReviewPipelineService.failRun(run.Id, new DNAMS_PackageReviewPipelineService.PipelineException('late crash'));
+            Test.stopTest();
+
+            Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING, pkg().Status__c, 'A cancelled run keeps RMR Pending');
+            Assert.isNull(DNAMS_PackageReviewPipelineService.lockRun(run.Id), 'The run no longer continues');
         }
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Status__c</fullName>
-    <description>Package lifecycle. Initiated creates the elements; Dealer Submitted locks documents.</description>
+    <description>Package lifecycle. Initiated creates the elements; Dealer Submitted locks documents. A review run start sets Under Review; it ends in Review Failed or Review Passed; a cancelled run sets RMR Pending.</description>
     <label>Status</label>
     <required>false</required>
     <trackHistory>true</trackHistory>
@@ -35,6 +35,16 @@
                 <fullName>Under Review</fullName>
                 <default>false</default>
                 <label>Under Review</label>
+            </value>
+            <value>
+                <fullName>Review Failed</fullName>
+                <default>false</default>
+                <label>Review Failed</label>
+            </value>
+            <value>
+                <fullName>Review Passed</fullName>
+                <default>false</default>
+                <label>Review Passed</label>
             </value>
             <value>
                 <fullName>Returned</fullName>

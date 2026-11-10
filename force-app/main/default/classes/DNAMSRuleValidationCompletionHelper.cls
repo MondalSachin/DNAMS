@@ -3,20 +3,22 @@
  *                  overall, ExactMatch and AIMatch; NOT_APPLICABLE rows are left out, CANNOT_DECIDE counts as not
  *                  passed), sets the RAG band on each element and on the package (step 18: 100% Green, >= 85% Amber,
  *                  below Red; a failed PIR makes the package Red) and publishes them (step 19).
- *                  GREEN: package Under Review, the owner is emailed (steps 20-21) and the run moves on to transmittal
- *                  drafting (step 23, DNAMSTransmittalStarterQueueable). AMBER / RED: package RMR Pending, run Completed / Needs Review with
+ *                  GREEN: package stays Under Review (Review Passed once transmittal drafting completes the run), the owner is emailed (steps 20-21) and the run moves on to transmittal
+ *                  drafting (step 23, DNAMSTransmittalStarterQueueable). AMBER / RED: package Review Failed, run Completed / Needs Review with
  *                  the failed rules in Issue_Summary__c, then the AI narrative and the owner email (steps 19-22).
  *                  Element Rule_Validation_Status__c is pass/fail only: Passed when every applicable rule passed, else Failed; blank when none of
  *                  its rules applied.
  * @author          Sachin Mondal
  * @group           DNAMS AI Review
- * @last modified on 2026-11-05
+ * @last modified on 2026-11-10
  * @last modified by Abhishek Dutta
- * @last modification details GREEN sets TransmittalProcessingStatus__c Pending before queueing transmittal drafting
+ * @last modification details GREEN keeps the narrative on a Changes Only run (the narrative job decides)
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-04   Sachin Mondal   Initial version
  * 1.1   2026-11-05   Abhishek Dutta  GREEN sets TransmittalProcessingStatus__c Pending; Failed when it cannot be queued
+ * 1.2   2026-11-09   Abhishek Dutta  AMBER / RED set the package status to Review Failed
+ * 1.3   2026-11-10   Abhishek Dutta  GREEN keeps the narrative on a Changes Only run
  **/
 // Exception to guideline: without sharing because the system pipeline must update the package, its elements and the run regardless of ownership
 public without sharing class DNAMSRuleValidationCompletionHelper {
@@ -133,9 +135,10 @@ public without sharing class DNAMSRuleValidationCompletionHelper {
         DNAMS_Package__c pkg = new DNAMS_Package__c(
             Id = run.Package__c,
             Health__c = health,
-            Status__c = isGreen ? DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW : DNAMS_PackageReviewPipelineService.PACKAGE_RMR_PENDING
+            Status__c = isGreen ? DNAMS_PackageReviewPipelineService.PACKAGE_UNDER_REVIEW : DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED
         );
-        if (isGreen) {
+        if (isGreen && DNAMSRunChangeDetector.baselineRunIdFor(runId) == null) {
+            // All run: the narrative is always rewritten. A Changes Only run may keep it (DNAMS_PackageNarrativeQueueable decides).
             pkg.AI_Narrative__c = null;
             pkg.AI_Narrative_JSON__c = null;
         }

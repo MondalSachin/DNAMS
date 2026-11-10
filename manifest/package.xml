@@ -44,12 +44,18 @@
         <members>DNAMSPipelineConstants</members>
         <members>DNAMSPipelineException</members>
         <members>DNAMSPipelineTestHelper</members>
+        <members>DNAMSRerunClassificationTest</members>
+        <members>DNAMSRerunExtractionTest</members>
+        <members>DNAMSRerunRuleTest</members>
+        <members>DNAMSReviewRequestPublisher</members>
         <members>DNAMSRuleAIValidator</members>
         <members>DNAMSRuleEvaluator</members>
         <members>DNAMSRuleUtil</members>
         <members>DNAMSRuleValidationCompletionHelper</members>
         <members>DNAMSRuleValidationStarterQueueable</members>
         <members>DNAMSRuleValidationTest</members>
+        <members>DNAMSRunChangeDetector</members>
+        <members>DNAMSRunChangeDetectorTest</members>
         <members>DNAMSStageResultHelper</members>
         <members>DNAMSStageResultHelperTest</members>
         <members>DNAMSStructureValidationUtil</members>
@@ -57,6 +63,8 @@
         <members>DNAMSTransmittalAI</members>
         <members>DNAMSTransmittalController</members>
         <members>DNAMSTransmittalControllerTest</members>
+        <members>DNAMSTransmittalPdfController</members>
+        <members>DNAMSTransmittalPdfControllerTest</members>
         <members>DNAMSTransmittalStarterQueueable</members>
         <members>DNAMSTransmittalSummaryService</members>
         <members>DNAMSTransmittalSummaryServiceTest</members>
@@ -68,6 +76,7 @@
         <members>DNAMS_EinsteinNarrativeWriter</members>
         <members>DNAMS_GuestAccessTest</members>
         <members>DNAMS_GuestDiagnostic</members>
+        <members>DNAMS_GuestSubmitReviewTest</members>
         <members>DNAMS_GuestUploadController</members>
         <members>DNAMS_NarrativeWriter</members>
         <members>DNAMS_PackageController</members>
@@ -85,6 +94,10 @@
         <members>DNAMS_RmrReviewTest</members>
         <members>IDocumentExtractionClient</members>
         <name>ApexClass</name>
+    </types>
+    <types>
+        <members>DNAMS_TransmittalPdf</members>
+        <name>ApexPage</name>
     </types>
     <types>
         <members>DNAMSIDPEventTrigger</members>
@@ -151,6 +164,7 @@
         <members>AIReviewStageResult__c.Reasoning__c</members>
         <members>AIReviewStageResult__c.ReferenceValue__c</members>
         <members>AIReviewStageResult__c.RequestedBy__c</members>
+        <members>AIReviewStageResult__c.ReusedFromResult__c</members>
         <members>AIReviewStageResult__c.ReviewRun__c</members>
         <members>AIReviewStageResult__c.RuleId__c</members>
         <members>AIReviewStageResult__c.RuleName__c</members>
@@ -162,6 +176,8 @@
         <members>AIReviewStageResult__c.SummaryType__c</members>
         <members>AIReviewStageResult__c.Verdict__c</members>
         <members>AI_Package_Review_Run__c.AIMatchPassRate__c</members>
+        <members>AI_Package_Review_Run__c.BaselineRun__c</members>
+        <members>AI_Package_Review_Run__c.ChangeSummary__c</members>
         <members>AI_Package_Review_Run__c.Classification_Processing_Status__c</members>
         <members>AI_Package_Review_Run__c.ConsolidatedExtractionJSON__c</members>
         <members>AI_Package_Review_Run__c.Ended_At__c</members>
@@ -177,6 +193,7 @@
         <members>AI_Package_Review_Run__c.Prompt_Template__c</members>
         <members>AI_Package_Review_Run__c.Reason__c</members>
         <members>AI_Package_Review_Run__c.Requested_By__c</members>
+        <members>AI_Package_Review_Run__c.RerunMode__c</members>
         <members>AI_Package_Review_Run__c.RuleValidationPassRate__c</members>
         <members>AI_Package_Review_Run__c.RuleValidationProcessingStatus__c</members>
         <members>AI_Package_Review_Run__c.Started_At__c</members>
@@ -244,6 +261,7 @@
         <members>DNAMS_Package_Element__c.Sort_Order__c</members>
         <members>DNAMS_Package_Element__c.Transmittal_Icon__c</members>
         <members>DNAMS_Package_Element__c.Transmittal_Status__c</members>
+        <members>DNAMS_Package_Review_Requested__e.Mode__c</members>
         <members>DNAMS_Package_Review_Requested__e.Package_Id__c</members>
         <members>DNAMS_Package_Review_Requested__e.Requested_By_Id__c</members>
         <members>DNAMS_Package_Review_Requested__e.Trigger_Source__c</members>
@@ -546,6 +564,7 @@
         <members>DNAMS_Icon_Needs_Review</members>
         <members>DNAMS_Icon_Passed</members>
         <members>HarborMotorsLogo</members>
+        <members>HarborMotorsLogoPng</members>
         <name>StaticResource</name>
     </types>
     <types>

@@ -8,16 +8,20 @@
  *                  PIR: not required for package types outside PIRRequiredPackageTypes__c (Not Applicable, left out of
  *                  narratives); a bypass is recorded as Not Applicable; otherwise not linked or not cleared fails, and a
  *                  PIR failure makes the package Red.
+ *                  Changes Only runs (DNAMSRunChangeDetector): values are always resolved fresh and ExactMatch / PIR are
+ *                  always evaluated; an AIMatch rule whose baseline verdict is reusable and whose resolved values are
+ *                  unchanged is copied from the baseline (no model call). Only the rest is sent to the model.
  * @author          Sachin Mondal
  * @group           DNAMS AI Review
- * @last modified on 2026-11-05
+ * @last modified on 2026-11-10
  * @last modified by Abhishek Dutta
- * @last modification details Crash finalizer fails the rule validation stage, not extraction
+ * @last modification details Changes Only runs reuse unchanged AIMatch verdicts
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version (placeholder)
  * 2.0   2026-11-04   Sachin Mondal   Rule validation stage
  * 2.1   2026-11-05   Abhishek Dutta  DNAMSRuleUtil.StageFailureFinalizer
+ * 2.2   2026-11-10   Abhishek Dutta  Changes Only runs reuse unchanged AIMatch verdicts
  **/
 // Exception to guideline: without sharing because the system pipeline runs as the IDP integration user and must read all package files/records regardless of ownership
 public without sharing class DNAMSRuleValidationStarterQueueable implements Queueable {
@@ -100,6 +104,7 @@ public without sharing class DNAMSRuleValidationStarterQueueable implements Queu
         }
 
         DNAMSRuleEvaluator evaluator = new DNAMSRuleEvaluator(pkg.Id, run.ConsolidatedExtractionJSON__c);
+        ReuseTally reuse = new ReuseTally(DNAMSRunChangeDetector.baselineRunIdFor(runId));
         List<AIReviewStageResult__c> rows = new List<AIReviewStageResult__c>();
         Map<Id, DNAMS_Package_Element__c> elementUpdates = new Map<Id, DNAMS_Package_Element__c>();
         Boolean hasPending = false;
@@ -114,15 +119,20 @@ public without sharing class DNAMSRuleValidationStarterQueueable implements Queu
             row.ElementType__c = rule.RelativeElementType__c;
             if (!isPackageRule && element == null) {
                 setVerdict(row, DNAMSPipelineConstants.VERDICT_NOT_APPLICABLE, 'The package has no ' + rule.RelativeElementType__c + ' element.');
+                reuse.evaluated++;
             } else {
                 DNAMSRuleEvaluator.Outcome outcome = evaluator.evaluate(rule);
                 row.SourceValue__c = outcome.sourceValue?.left(VALUE_LENGTH);
                 row.ReferenceValue__c = outcome.referenceValue?.left(VALUE_LENGTH);
-                if (outcome.isPending) {
+                AIReviewStageResult__c reused = outcome.isPending ? reuse.reusedRow(row, outcome) : null;
+                if (reused != null) {
+                    row = reused;
+                } else if (outcome.isPending) {
                     row.ProcessingStatus__c = DNAMSPipelineConstants.ROW_PENDING;
                     hasPending = true;
                 } else {
                     setVerdict(row, outcome.verdict, outcome.reasoning);
+                    reuse.evaluated++;
                 }
             }
             rows.add(row);
@@ -135,6 +145,7 @@ public without sharing class DNAMSRuleValidationStarterQueueable implements Queu
             }
         }
         rows.add(pirRow(pkg));
+        reuse.evaluated++;
 
         Database.insert(rows, true, AccessLevel.SYSTEM_MODE);
         Database.update(elementUpdates.values(), true, AccessLevel.SYSTEM_MODE);
@@ -143,7 +154,69 @@ public without sharing class DNAMSRuleValidationStarterQueueable implements Queu
             true,
             AccessLevel.SYSTEM_MODE
         );
+        if (reuse.baselineRunId != null) {
+            DNAMSRunChangeDetector.appendChangeSummary(runId, DNAMSRunChangeDetector.SUMMARY_RULE_VALIDATION, reuse.summaryLine());
+        }
         return hasPending;
+    }
+
+    /**
+     * @description Changes Only bookkeeping for one start: the baseline's reusable AIMatch verdicts and the counts for
+     *              the ChangeSummary__c line. With no baseline (All run) nothing is ever reused.
+     **/
+    private class ReuseTally {
+        Id baselineRunId;
+        Map<String, AIReviewStageResult__c> reusableByRule = new Map<String, AIReviewStageResult__c>();
+        Integer reused = 0;
+        Integer evaluated = 0;
+        List<String> recheckReasons = new List<String>();
+
+        /**
+         * @description Loads the baseline's reusable AIMatch rows (none for an All run).
+         * @param baselineRunId DNAMSRunChangeDetector.baselineRunIdFor(runId); null for an All run
+         **/
+        ReuseTally(Id baselineRunId) {
+            this.baselineRunId = baselineRunId;
+            if (baselineRunId != null) {
+                reusableByRule = DNAMSRunChangeDetector.reusableRuleRows(baselineRunId);
+            }
+        }
+
+        /**
+         * @description The baseline verdict copied into this run when the resolved values are unchanged; otherwise
+         *              null (the rule goes to the model) and, on a Changes Only run, the reason is recorded.
+         * @param row     The new row with this run's rule, element and resolved values
+         * @param outcome The resolved AIMatch outcome
+         * @return        Unsaved reused row, or null
+         **/
+        AIReviewStageResult__c reusedRow(AIReviewStageResult__c row, DNAMSRuleEvaluator.Outcome outcome) {
+            if (baselineRunId == null) {
+                return null;
+            }
+            AIReviewStageResult__c baselineRow = reusableByRule.get(row.RuleId__c);
+            if (!DNAMSRunChangeDetector.ruleStillValid(baselineRow, outcome.sourceValue, outcome.referenceValue)) {
+                recheckReasons.add(row.RuleId__c + ': ' + (baselineRow == null ? 'no earlier AI verdict' : 'values changed'));
+                return null;
+            }
+            reused++;
+            AIReviewStageResult__c copy = DNAMSRunChangeDetector.cloneForReuse(baselineRow, row.ReviewRun__c);
+            // The rule and element of this run (same values; the element id is the current one)
+            copy.PackageElement__c = row.PackageElement__c;
+            copy.RuleName__c = row.RuleName__c;
+            copy.RuleType__c = row.RuleType__c;
+            copy.ElementType__c = row.ElementType__c;
+            return copy;
+        }
+
+        /**
+         * @description ChangeSummary__c text, e.g. "26 reused, 4 re-checked (DA_V01: values changed), 12 exact/PIR evaluated".
+         * @return      The line text
+         **/
+        String summaryLine() {
+            return reused + ' reused, ' + recheckReasons.size() + ' re-checked' +
+                (recheckReasons.isEmpty() ? '' : ' (' + String.join(recheckReasons, '; ') + ')') +
+                ', ' + evaluated + ' exact/PIR evaluated';
+        }
     }
 
     /**

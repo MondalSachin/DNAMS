@@ -1,10 +1,39 @@
 <template>
   <lightning-quick-action-panel header="Generate Transmittal">
-    <p role="status">
-      Your PDF has been successfully downloaded and will be emailed to you shortly. Please close the tab.
-    </p>
+    <template lwc:if={isLoading}>
+      <div class="spinner-holder">
+        <lightning-spinner alternative-text="Checking the package" size="medium"></lightning-spinner>
+      </div>
+    </template>
+    <template lwc:elseif={errorMessage}>
+      <p class="slds-text-color_error" role="alert">{errorMessage}</p>
+    </template>
+    <template lwc:elseif={isDownloading}>
+      <p role="status">Your transmittal PDF is downloading.</p>
+    </template>
+    <template lwc:elseif={isReady}>
+      <p>The transmittal is ready.</p>
+    </template>
+    <template lwc:else>
+      <p>The transmittal cannot be generated yet:</p>
+      <ul class="slds-list_dotted slds-m-top_x-small">
+        <template for:each={issues} for:item="issue">
+          <li key={issue}>{issue}</li>
+        </template>
+      </ul>
+    </template>
+
     <div slot="footer">
       <lightning-button label="Close" onclick={handleClose}></lightning-button>
+      <template lwc:if={showDownload}>
+        <lightning-button
+          class="slds-m-left_x-small"
+          variant="brand"
+          label="Download PDF"
+          icon-name="utility:download"
+          onclick={handleDownload}
+        ></lightning-button>
+      </template>
     </div>
   </lightning-quick-action-panel>
 </template>

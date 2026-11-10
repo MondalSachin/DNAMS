@@ -6,7 +6,7 @@ public with sharing class DNAMS_RerunReviewAction {
         for (Request request : requests) {
             Result result = new Result();
             try {
-                result.message = DNAMS_RmrReviewService.rerunReview(request.packageId);
+                result.message = DNAMS_RmrReviewService.rerunReview(request.packageId, request.mode);
             } catch (Exception e) {
                 result.message = DNAMS_RmrReviewService.failure(e);
             }
@@ -18,6 +18,9 @@ public with sharing class DNAMS_RerunReviewAction {
     public class Request {
         @InvocableVariable(required=true label='Package Id')
         public Id packageId;
+
+        @InvocableVariable(label='Mode' description='Changes Only or All (blank = All).')
+        public String mode;
     }
 
     public class Result {

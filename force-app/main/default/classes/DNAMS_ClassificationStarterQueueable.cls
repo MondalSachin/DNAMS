@@ -4,14 +4,18 @@
  *                  DNAMS_DocumentClassificationBatch over those elements (12). Elements without files are settled in
  *                  DNAMS_PackageReviewPipelineService.completeClassification. Each element with files gets
  *                  AcceptedDocumentTypes__c (the classifier prompt input) from DNAMSElementDocumentType__mdt.
+ *                  Changes Only runs work the same way: every element is reset and every file (reused or not) goes
+ *                  through pre-flight again (cheap, no AI, and the allowed types / size limit may have changed since the
+ *                  baseline); the batch decides per file whether the baseline's classification is reused.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-03
+ * @last modified on 2026-11-10
  * @last modified by Abhishek Dutta
- * @last modification details PMD clean-up: ApexDoc, run-failure finalizer
+ * @last modification details Re-run changes only: change summary when no element has files
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  PMD clean-up: ApexDoc, run-failure finalizer
+ * 1.1   2026-11-10   Abhishek Dutta  Re-run changes only: change summary when no element has files
  **/
 // Exception to guideline: without sharing because the system pipeline must reset all package elements regardless of ownership
 // Class name kept: renaming would break the callers, tests and metadata that reference it
@@ -44,6 +48,7 @@ public without sharing class DNAMS_ClassificationStarterQueueable implements Que
             }
             Integer withFiles = resetElements(run.Package__c);
             if (withFiles == 0) {
+                DNAMS_DocumentClassificationBatch.appendChangeSummary(runId, run.Package__c); // Changes Only: removed files
                 DNAMS_PackageReviewPipelineService.completeClassification(runId);
                 return;
             }

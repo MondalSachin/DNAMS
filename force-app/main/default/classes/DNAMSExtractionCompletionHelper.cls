@@ -6,13 +6,14 @@
  *                  and starts rule validation. Runs still waiting on IDP are left untouched.
  * @author          Abhishek Dutta
  * @group           DNAMS AI Review
- * @last modified on 2026-11-05
+ * @last modified on 2026-11-09
  * @last modified by Abhishek Dutta
- * @last modification details A run whose extraction is already settled is not completed (or dispatched) twice
+ * @last modification details A failed extraction sets the package status to Review Failed
  * Modifications Log
  * Ver   Date         Author          Modification
  * 1.0   2026-11-03   Abhishek Dutta  Initial version
  * 1.1   2026-11-05   Abhishek Dutta  A run whose extraction is already settled is not completed (or dispatched) twice
+ * 1.2   2026-11-09   Abhishek Dutta  A failed extraction sets the package status to Review Failed
  **/
 public inherited sharing class DNAMSExtractionCompletionHelper {
     private static final String SOURCE_CLASS = DNAMSExtractionCompletionHelper.class.getName();
@@ -247,7 +248,7 @@ public inherited sharing class DNAMSExtractionCompletionHelper {
             run.ExtractionSchemaValidation__c = DNAMSPipelineConstants.SCHEMA_PASSED;
             return;
         }
-        changes.packages.add(new DNAMS_Package__c(Id = state.run.Package__c, Health__c = 'Red'));
+        changes.packages.add(new DNAMS_Package__c(Id = state.run.Package__c, Health__c = 'Red', Status__c = DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED));
         run.ExtractionProcessingStatus__c = DNAMSPipelineConstants.RUN_STAGE_FAILED;
         // Failed on any mismatch; Passed when every checked row matched; blank when no row reached the check.
         run.ExtractionSchemaValidation__c = state.hasSchemaFailure
