@@ -540,7 +540,11 @@ public without sharing class DNAMS_PackageService {
 
     // ------------------------------------------------------------------ Helpers
 
-    private static String newUploadToken() {
+    /**
+     * @description A new 64-hex upload token (used on insert and by Return to Dealer, which sends a new link).
+     * @return      Token
+     **/
+    public static String newUploadToken() {
         return EncodingUtil.convertToHex(Crypto.generateAesKey(256));
     }
 

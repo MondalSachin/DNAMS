@@ -4,8 +4,8 @@
  * is scoped to the single package whose Upload Token matches. Queries and DML use explicit SYSTEM_MODE:
  * for the site guest, "without sharing" alone still returns no rows on this API version.
  * File uploads themselves go through lightning-file-upload and are validated by the ContentVersion trigger.
- * When a package is Returned, the page also shows the AI narrative and each element's issue, and lets the
- * dealer remove wrong files (unlinks them from the element) before resubmitting.
+ * When a package is Returned, the page shows each flagged element's issue and lets the dealer remove wrong
+ * files (unlinks them from the element) before resubmitting. A submitted package is closed (isClosed, no data).
  */
 public without sharing class DNAMS_GuestUploadController {
     private static final String NOT_FOUND = 'This upload link is not valid.';
@@ -20,6 +20,13 @@ public without sharing class DNAMS_GuestUploadController {
         view.status = pkg.Status__c;
         view.isEditable = DNAMS_PackageService.EDITABLE_STATUSES.contains(pkg.Status__c);
         view.isReturned = pkg.Status__c == DNAMS_PackageService.STATUS_RETURNED;
+        view.elements = new List<ElementView>();
+        // Once submitted the link is closed: the page only says thank you, so no elements or files are returned.
+        // A later Return to Dealer emails a new link (new Upload Token).
+        view.isClosed = !view.isEditable;
+        if (view.isClosed) {
+            return view;
+        }
         view.narrative = view.isReturned ? pkg.AI_Narrative__c : null;
         view.summaryJson = view.isReturned ? pkg.AI_Narrative_JSON__c : null; // rendered by dnamsAiSummaryView
         view.aiLabel = DNAMS_PackageNarrativeQueueable.AI_LABEL;
@@ -133,6 +140,8 @@ public without sharing class DNAMS_GuestUploadController {
         public Boolean isEditable;
         @AuraEnabled
         public Boolean isReturned;
+        @AuraEnabled
+        public Boolean isClosed;
         @AuraEnabled
         public String narrative;
         @AuraEnabled

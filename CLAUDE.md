@@ -603,3 +603,22 @@ Contract/details: `DNAMSRunChangeDetector` ApexDoc. RMR **Re-run** offers two mo
   - Org limit `ContentPublicationLimit` = **2,500 ContentVersion inserts per rolling 24 h, and Apex tests count**. Several
     full DNAMS* runs in one day exhaust it → ~90 file-based tests fail with "ContentPublication Limit exceeded" (not a
     code failure). Check `sf org list limits -o DNAMS_SDO` first; run the affected classes only, later.
+
+## Dealer portal redesign (2026-11-10)
+- `dnamsPackageUpload` rebuilt from the approved mock (Claude artifact "Harbor Motors Dealer Portal", user's own mock
+  file as the base): navy band with the page headline, bordered package card with the element table, right column
+  with a "Completed"/"Corrections" progress ring and Steps 1–2 only, footer. `dnamsBrandHeader` restyled to match
+  (white bar, teal underline). No narrative/AI summary on the dealer page any more; issues are the element narratives.
+- Table: Element (name, info tooltip with instructions, file count) | Files | standard `lightning-file-upload`
+  (`accept=.pdf`, multiple). No status column; the left edge colour shows state. Files are two equal cards per line
+  (max 250px each) in a fixed-height area (96px) that scrolls. Guest uploads must stay on lightning-file-upload
+  (a guest Apex ContentVersion insert fails), so the custom "Upload" button from the mock is not used.
+- Returned: only elements with an issue are listed; uploading/removing marks one "Updated" (client-side only).
+- Submit: own confirm modal "Are you sure you want to submit the package? This link closes after you submit."
+- **Link closes after submit:** `DNAMS_GuestUploadController.getPackage` returns `isClosed = true` and no elements for
+  any non-editable status; the page shows "Thank you / Your package has been received."
+- **New link on return:** `DNAMS_RmrReviewService.returnToDealer` writes a new `Upload_Token__c`
+  (`DNAMS_PackageService.newUploadToken`, now public) in system mode (the field is read-only for users) before the email.
+- Tests: `DNAMS_PackageServiceTest.guestUploadsThenSubmits` (closed view), `DNAMS_RmrReviewTest.returnToDealer…`
+  (new token, old link invalid). 39/39 pass across PackageService, RmrReview, GuestAccess, GuestSubmitReview.
+- PDF-only is enforced in the browser only (`accept`), not by the ContentVersion trigger.

@@ -255,7 +255,10 @@ private class DNAMS_PackageServiceTest {
         DNAMS_Package__c submitted = reload(pkg.Id);
         Assert.areEqual('Dealer Submitted', submitted.Status__c);
         Assert.areEqual([SELECT Id FROM Group WHERE Type = 'Queue' AND DeveloperName = 'CENTRAL_RMR'].Id, submitted.OwnerId);
-        Assert.isFalse(DNAMS_GuestUploadController.getPackage(pkg.Upload_Token__c).isEditable);
+        DNAMS_GuestUploadController.PackageView closed = DNAMS_GuestUploadController.getPackage(pkg.Upload_Token__c);
+        Assert.isFalse(closed.isEditable);
+        Assert.isTrue(closed.isClosed, 'A submitted link is closed');
+        Assert.areEqual(0, closed.elements.size(), 'A closed link shows no elements or files');
 
         try {
             DNAMS_GuestUploadController.submitPackage(pkg.Upload_Token__c);

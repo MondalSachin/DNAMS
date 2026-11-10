@@ -326,6 +326,11 @@ public with sharing class DNAMS_RmrReviewService {
             ),
             AccessLevel.USER_MODE
         );
+        // Each return sends a new link; the previous link (closed at submit) stops working.
+        // Written in system mode: the token is read-only for every user.
+        String newToken = DNAMS_PackageService.newUploadToken();
+        Database.update(new DNAMS_Package__c(Id = pkg.Id, Upload_Token__c = newToken), AccessLevel.SYSTEM_MODE);
+        pkg.Upload_Token__c = newToken;
 
         Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
         message.setToAddresses(new List<String>{ recipientEmail });

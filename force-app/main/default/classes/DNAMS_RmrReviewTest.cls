@@ -433,6 +433,7 @@ public class DNAMS_RmrReviewTest {
             submitAndClassify(); // Dealer Application missing, Org Chart wrong type -> Needs Review
             Assert.areEqual(DNAMS_PackageReviewPipelineService.PACKAGE_REVIEW_FAILED, pkg().Status__c, 'Issues fail the review');
 
+            String oldToken = [SELECT Upload_Token__c FROM DNAMS_Package__c LIMIT 1].Upload_Token__c;
             DNAMS_RmrReviewService.sentHistoryStub = false;
             String neverSent = sendReturnViaFlow(pkg().Id);
             Assert.isTrue(neverSent.contains('cannot be returned'), neverSent);
@@ -454,7 +455,16 @@ public class DNAMS_RmrReviewTest {
 
             // The dealer page shows each stuck element's narrative after the return.
             String token = [SELECT Upload_Token__c FROM DNAMS_Package__c LIMIT 1].Upload_Token__c;
+            Assert.areEqual(64, token.length(), 'Return sends a new 64-hex token');
+            Assert.isFalse(token.equals(oldToken), 'Return replaces the upload link');
+            try {
+                DNAMS_GuestUploadController.getPackage(oldToken);
+                Assert.fail('The old link must stop working');
+            } catch (AuraHandledException e) {
+                Assert.isTrue(e.getMessage().contains('not valid'), e.getMessage());
+            }
             DNAMS_GuestUploadController.PackageView view = DNAMS_GuestUploadController.getPackage(token);
+            Assert.isFalse(view.isClosed, 'A returned package is open again');
             Assert.isTrue(view.elements[1].issue.contains('Found Bank Statement instead of Org Chart'), view.elements[1].issue);
         }
     }

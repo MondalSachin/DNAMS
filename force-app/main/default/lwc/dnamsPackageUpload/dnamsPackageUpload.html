@@ -1,113 +1,243 @@
 <template>
-  <template lwc:if={showNoLinkMessage}>
-    <div class="slds-card slds-p-around_large slds-text-align_center">
-      <h1 class="slds-text-heading_medium slds-m-bottom_small">Welcome to the Harbor Motors Dealer Portal</h1>
-      <p>To upload documents, open the package link from the email you received.</p>
-    </div>
-  </template>
-
-  <template lwc:if={hasToken}>
-    <div class="slds-card slds-p-around_medium dnams-upload">
-      <template lwc:if={isLoading}>
-        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
-      </template>
-
-      <template lwc:if={errorMessage}>
-        <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
-          <h2>{errorMessage}</h2>
+  <template lwc:if={showPage}>
+    <div class="page">
+      <div class="band">
+        <div class="band-in">
+          <svg class="waves" viewBox="0 0 560 140" fill="none" stroke="#3CC4C9" stroke-width="3" stroke-linecap="round" aria-hidden="true">
+            <path d="M0 30c35-24 70-24 105 0s70 24 105 0 70-24 105 0 70 24 105 0 70-24 105 0 70 24 105 0"></path>
+            <path d="M0 75c35-24 70-24 105 0s70 24 105 0 70-24 105 0 70 24 105 0 70-24 105 0 70 24 105 0"></path>
+            <path d="M0 120c35-24 70-24 105 0s70 24 105 0 70-24 105 0 70 24 105 0 70-24 105 0 70 24 105 0"></path>
+          </svg>
+          <p class="band-title">{bandTitle}</p>
+          <p class="band-sub">{bandSubtitle}</p>
         </div>
-      </template>
+      </div>
 
-      <template lwc:if={pkg}>
-        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-start slds-m-bottom_medium">
-          <div>
-            <span class="slds-text-heading_medium">{pkg.packageNumber}</span>
-            <span class="slds-m-left_small"><lightning-badge label={pkg.status}></lightning-badge></span>
-            <p class="slds-m-top_xx-small">{pkg.packageName}</p>
-            <p class="slds-text-color_weak slds-m-top_xx-small">Type: {pkg.packageType}</p>
-          </div>
-          <template lwc:if={pkg.isEditable}>
-            <lightning-button variant="brand" label="Submit Package" onclick={handleSubmit}></lightning-button>
-          </template>
-        </div>
-
-        <template lwc:if={pkg.isReturned}>
-          <div class="slds-box slds-theme_shade slds-m-bottom_medium">
-            <p class="slds-text-title_bold slds-m-bottom_x-small">This package was returned for corrections</p>
-            <template lwc:if={pkg.narrative}>
-              <c-dnams-ai-summary-view summary-json={pkg.summaryJson} plain-text={pkg.narrative} health={pkg.health} ai-label={pkg.aiLabel} audience="dealer"></c-dnams-ai-summary-view>
-            </template>
-            <p class="slds-m-top_x-small">Fix the elements marked below (remove wrong files, upload the right ones), then click Submit Package.</p>
-          </div>
-        </template>
-        <template lwc:if={pkg.isEditable}>
-          <p class="slds-text-title slds-m-bottom_small">{requiredProgress}</p>
-        </template>
-        <template lwc:else>
-          <div class="slds-notify slds-notify_alert slds-alert_offline slds-m-bottom_medium" role="status">
-            <h2>This package has been submitted. Thank you — documents can no longer be changed.</h2>
-          </div>
+      <main class="main">
+        <!-- No token: guest opened the site without the email link -->
+        <template lwc:if={showNoLink}>
+          <section class="card center empty">
+            <div>
+              <div class="ic blue">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.5 6.5 8.5 6 8.5-6"></path></svg>
+              </div>
+              <h1>Open your package from the email link</h1>
+              <p>Harbor Motors emails a link for each package. Open it to upload your documents.</p>
+            </div>
+          </section>
         </template>
 
-        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
-          <thead>
-            <tr class="slds-line-height_reset">
-              <th scope="col">#</th>
-              <th scope="col">Element</th>
-              <th scope="col">Instructions</th>
-              <th scope="col">Documents</th>
-              <th scope="col">Upload</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template for:each={elements} for:item="element">
-              <tr key={element.id} class={element.rowClass}>
-                <td>{element.position}</td>
-                <td class="slds-cell-wrap">
-                  {element.name}
-                  <template lwc:if={element.isRequired}>
-                    <lightning-badge label="Required" class="slds-m-left_x-small slds-theme_warning"></lightning-badge>
-                  </template>
-                  <template lwc:if={element.issue}>
-                    <div class="slds-text-color_error slds-text-body_small slds-m-top_xx-small dnams-issue">{element.issue}</div>
-                  </template>
-                </td>
-                <td class="slds-cell-wrap slds-text-body_small">{element.instructions}</td>
-                <td class="slds-cell-wrap">
-                  <template for:each={element.documents} for:item="doc">
-                    <div key={doc.id} class="slds-text-body_small">
-                      {doc.name}
-                      <template lwc:if={element.canRemove}>
-                        <lightning-button-icon
-                          icon-name="utility:delete"
-                          variant="bare"
-                          size="small"
-                          alternative-text="Remove file"
-                          title="Remove file"
-                          data-id={doc.id}
-                          onclick={handleRemove}
-                          class="slds-m-left_xx-small"
-                        ></lightning-button-icon>
-                      </template>
+        <template lwc:if={showLoading}>
+          <section class="card center empty">
+            <lightning-spinner alternative-text="Loading your package" size="medium"></lightning-spinner>
+          </section>
+        </template>
+
+        <template lwc:if={showInvalid}>
+          <section class="card center empty">
+            <div>
+              <div class="ic red">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.6h.01"></path></svg>
+              </div>
+              <h1>This link doesn't open a package</h1>
+              <p>The link may be incomplete or already used. Open the most recent email from Harbor Motors, or reply to it for a new link.</p>
+            </div>
+          </section>
+        </template>
+
+        <template lwc:if={showClosed}>
+          <section class="card center empty">
+            <div>
+              <div class="ic green">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 5 5 10-11"></path></svg>
+              </div>
+              <h1>Thank you</h1>
+              <p>Your package has been received.</p>
+              <p class="ref">Package {pkg.packageNumber} · {pkg.packageName}</p>
+            </div>
+          </section>
+        </template>
+
+        <template lwc:if={showPackage}>
+          <div class="layout">
+            <section class="card">
+              <template lwc:if={isLoading}>
+                <lightning-spinner alternative-text="Working" size="small"></lightning-spinner>
+              </template>
+
+              <div class="card-head">
+                <div>
+                  <div class="pkg-line">
+                    <h1 class="pkg-number">{pkg.packageNumber}</h1>
+                    <span class={statusClass}>{statusLabel}</span>
+                  </div>
+                  <div class="pkg-name">{pkg.packageName}</div>
+                </div>
+                <button class="btn-submit" type="button" disabled={submitDisabled} onclick={handleSubmitClick}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 3 10.5l7 2.5 2.5 7L21 3Z"></path><path d="m10 13 4-4" stroke-linecap="round"></path></svg>
+                  {submitLabel}
+                </button>
+              </div>
+
+              <template lwc:if={actionError}>
+                <p class="note red" role="alert">{actionError}</p>
+              </template>
+
+              <template lwc:if={isReturned}>
+                <p class={returnedNoteClass}><b>{returnedNote}</b>&nbsp;{returnedNoteDetail}</p>
+              </template>
+
+              <div class="table" role="table" aria-label="Package elements">
+                <div class="row head" role="row">
+                  <div role="columnheader">Element</div>
+                  <div role="columnheader">Files</div>
+                  <div></div>
+                </div>
+                <template for:each={elements} for:item="element">
+                  <div key={element.id} class={element.rowClass} role="row">
+                    <div class="el-cell">
+                      <span class="el-name">
+                        {element.name}
+                        <template lwc:if={element.instructions}>
+                          <button
+                            class="info"
+                            type="button"
+                            aria-label={element.infoLabel}
+                            aria-describedby={element.tipId}
+                            aria-expanded={element.tipExpanded}
+                            data-id={element.id}
+                            onclick={handleInfo}
+                          >
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 11v6" stroke-linecap="round"></path><circle cx="12" cy="7.6" r=".6" fill="currentColor"></circle></svg>
+                            <span class="tip" role="tooltip" id={element.tipId}>{element.instructions}</span>
+                          </button>
+                        </template>
+                      </span>
+                      <div class="el-count">{element.countLabel}</div>
                     </div>
-                  </template>
-                </td>
-                <td>
-                  <template lwc:if={element.canUpload}>
-                    <lightning-file-upload
-                      label="Upload"
-                      variant="label-hidden"
-                      multiple
-                      file-field-name={uploadField}
-                      file-field-value={element.uploadValue}
-                      onuploadfinished={handleUploadFinished}
-                    ></lightning-file-upload>
-                  </template>
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
+
+                    <template lwc:if={element.hasFiles}>
+                      <div class="files" role="list" aria-label={element.filesLabel}>
+                        <template for:each={element.documents} for:item="doc">
+                          <div key={doc.key} class="file" role="listitem" title={doc.name}>
+                            <svg class="ficon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8l-5-5Z"></path><path d="M14 3v5h5"></path></svg>
+                            <span class="fname">{doc.name}</span>
+                            <button
+                              class="trash"
+                              type="button"
+                              aria-label={doc.removeLabel}
+                              title={doc.removeLabel}
+                              data-id={doc.id}
+                              data-element={element.id}
+                              data-name={doc.name}
+                              onclick={handleRemove}
+                            >
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5h16M9.5 6.5V4h5v2.5M6.5 6.5l1 13.5h9l1-13.5M10.2 10.5v6M13.8 10.5v6"></path></svg>
+                            </button>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
+                    <template lwc:else>
+                      <div class="files empty">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4 14v5h16v-5"></path></svg>
+                        <span>No files yet.</span>
+                      </div>
+                    </template>
+
+                    <div class="up-cell">
+                      <lightning-file-upload
+                        label="Upload"
+                        variant="label-hidden"
+                        multiple
+                        accept={acceptedFormats}
+                        file-field-name={uploadField}
+                        file-field-value={element.uploadValue}
+                        data-id={element.id}
+                        onuploadfinished={handleUploadFinished}
+                      ></lightning-file-upload>
+                    </div>
+
+                    <template lwc:if={element.showFix}>
+                      <div class="fix">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.6h.01"></path></svg>
+                        <span><b>What to fix:</b> {element.issue}</span>
+                      </div>
+                    </template>
+                    <template lwc:if={element.showFixed}>
+                      <div class="fix done">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 5 5 10-11"></path></svg>
+                        <span><b>Updated.</b> This will be checked again after you resubmit. <s>{element.issue}</s></span>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </section>
+
+            <aside class="rail" aria-label="Progress">
+              <section class="panel">
+                <h3>{panelTitle}</h3>
+                <div class="progress">
+                  <svg width="62" height="62" viewBox="0 0 62 62" aria-hidden="true">
+                    <circle cx="31" cy="31" r="24" fill="none" class="ring-track" stroke-width="7"></circle>
+                    <circle cx="31" cy="31" r="24" fill="none" class={ringClass} stroke-width="7" stroke-linecap="round" stroke-dasharray={ringDash} transform="rotate(-90 31 31)"></circle>
+                    <text x="31" y="36" text-anchor="middle" class="ring-text">{ringText}</text>
+                  </svg>
+                  <div>
+                    <b>{progressHeadline}</b>
+                    <span>{progressDetail}</span>
+                  </div>
+                </div>
+              </section>
+              <section class="panel">
+                <h3>Steps</h3>
+                <ol class="steps">
+                  <li class={step1Class}>
+                    <span class="sd">
+                      <template lwc:if={progress.complete}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 5 5 10-11"></path></svg>
+                      </template>
+                      <template lwc:else>1</template>
+                    </span>
+                    <span><span class="st">{step1Title}</span><span class="ss">{step1Detail}</span></span>
+                  </li>
+                  <li class={step2Class}>
+                    <span class="sd">2</span>
+                    <span><span class="st">{step2Title}</span><span class="ss">This closes the link</span></span>
+                  </li>
+                </ol>
+              </section>
+            </aside>
+          </div>
+        </template>
+      </main>
+
+      <footer class="site-foot">
+        <span class="foot-brand">
+          <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0B3A5B"></rect><path d="M19 14v26M45 14v26" stroke="#fff" stroke-width="6" stroke-linecap="round"></path><path d="M12 48c3.3-3 6.7-3 10 0s6.7 3 10 0 6.7-3 10 0 6.7 3 10 0" fill="none" stroke="#3CC4C9" stroke-width="3.5" stroke-linecap="round"></path></svg>
+          Harbor Motors Dealer Network
+        </span>
+        <span>This link is personal to your package. Please don't forward it.</span>
+        <span class="spacer"></span>
+        <span>© 2026 Harbor Motors</span>
+      </footer>
+
+      <template lwc:if={showConfirm}>
+        <div class="scrim" onkeydown={handleConfirmKeydown}>
+          <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+            <h2 id="dlg-title">{submitLabel}</h2>
+            <p>{confirmText}</p>
+            <div class="actions">
+              <button class="btn-ghost" type="button" onclick={handleCancelConfirm}>Cancel</button>
+              <button class="btn-submit" type="button" onclick={handleConfirmSubmit}>{submitLabel}</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template lwc:if={toastMessage}>
+        <div class="toast" role="status">{toastMessage}</div>
       </template>
     </div>
   </template>
